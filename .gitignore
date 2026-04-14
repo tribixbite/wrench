@@ -2,6 +2,8 @@
 node_modules/
 /build
 /.svelte-kit
+# Bun creates a literal ~ dir as local cache on some systems
+/~/
 /package
 .env
 .env.*
@@ -14,3 +16,6 @@ vite.config.ts.timestamp-*
 *.db-shm
 *.db-wal
 drizzle/
+
+# Static assets copied from assets/ by postinstall.sh
+/static/assets/

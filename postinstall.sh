@@ -31,4 +31,13 @@ if [ -d "$ROLLUP_WASM/dist" ] && [ -d "$ROLLUP_DIST" ]; then
   cp -r "$ROLLUP_WASM/dist/wasm-node" "$ROLLUP_DIST/wasm-node"
 fi
 
+# ── static assets ──────────────────────────────────────────────────────────
+# Copy founder/facility photos to static/assets/ for SvelteKit to serve.
+# The originals live in assets/ (committed); static/assets/ is gitignored.
+if [ -d "assets" ]; then
+  echo "postinstall: copying assets/ → static/assets/"
+  mkdir -p static/assets
+  cp assets/*.jpg assets/*.png assets/*.webp static/assets/ 2>/dev/null || true
+fi
+
 echo "postinstall: done"
