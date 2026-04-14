@@ -2,6 +2,7 @@
   import '../app.css';
   import Header from '$lib/components/layout/Header.svelte';
   import Footer from '$lib/components/layout/Footer.svelte';
+  import StructuredData from '$lib/components/layout/StructuredData.svelte';
   import { page } from '$app/stores';
 
   interface Props {
@@ -18,6 +19,7 @@
   );
 </script>
 
+<StructuredData />
 <Header user={data.user} />
 
 <main>

@@ -40,18 +40,30 @@ export const actions: Actions = {
     const passwordHash = await new Argon2id().hash(password);
     const userId = nanoid();
 
+    // Create Square Customer first so we can store their ID
+    let squareCustomerId: string | null = null;
+    try {
+      const { createSquareCustomer } = await import('$lib/server/square');
+      const nameParts = name.trim().split(' ');
+      const sqCustomer = await createSquareCustomer({
+        email,
+        givenName: nameParts[0],
+        familyName: nameParts.slice(1).join(' ') || undefined
+      });
+      squareCustomerId = sqCustomer?.id ?? null;
+    } catch (sqErr) {
+      // Non-fatal: log but don't block registration
+      console.error('Square customer creation failed:', sqErr);
+    }
+
     await db.insert(users).values({
       id: userId,
       email,
       name,
       passwordHash,
-      role: 'member'
-      // squareCustomerId: set after Square Customer creation in Phase 2
+      role: 'member',
+      squareCustomerId
     });
-
-    // TODO: Phase 2 — create Square Customer and store squareCustomerId
-    // const sqCustomer = await createSquareCustomer({ email, givenName: name.split(' ')[0] });
-    // await db.update(users).set({ squareCustomerId: sqCustomer?.id }).where(eq(users.id, userId));
 
     const session = await lucia.createSession(userId, {});
     const cookie = lucia.createSessionCookie(session.id);

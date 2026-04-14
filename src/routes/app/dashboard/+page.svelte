@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { CalendarDays, Clock, Wrench, ArrowRight, AlertCircle } from 'lucide-svelte';
+  import { CalendarDays, Clock, Wrench, ArrowRight, AlertCircle, MapPin } from 'lucide-svelte';
+  import BayGrid from '$lib/components/app/BayGrid.svelte';
 
   interface Props {
     data: {
@@ -31,48 +32,80 @@
 
   <!-- Pre-launch notice -->
   <div class="notice">
-    <AlertCircle size={18} style="color: var(--accent); flex-shrink: 0;" />
+    <AlertCircle size={18} style="color: var(--accent); flex-shrink: 0; margin-top: 1px;" />
     <div>
       <p class="notice-title">Wrench Club opens in 2026</p>
       <p class="notice-body">
-        Your account is registered and ready. Bay booking will open when we launch.
-        We'll email you as soon as scheduling goes live.
+        Your account is ready. Bay booking opens at launch — you'll get an email the moment
+        scheduling goes live. Check the bay grid below for a preview of the live status system.
       </p>
     </div>
   </div>
 
-  <!-- Stats grid -->
-  <div class="stats-grid">
-    <div class="stat-card card">
-      <div class="stat-icon"><CalendarDays size={20} /></div>
-      <div>
-        <p class="stat-label">Upcoming Reservations</p>
-        <p class="stat-value font-display">0</p>
+  <!-- Stats + Bay Grid -->
+  <div class="main-grid">
+    <div class="left-col">
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card card">
+          <div class="stat-icon"><CalendarDays size={20} /></div>
+          <div>
+            <p class="stat-label">Upcoming Reservations</p>
+            <p class="stat-value font-display">0</p>
+          </div>
+        </div>
+        <div class="stat-card card">
+          <div class="stat-icon"><Clock size={20} /></div>
+          <div>
+            <p class="stat-label">Bay Hours Used</p>
+            <p class="stat-value font-display">0 hrs</p>
+          </div>
+        </div>
+        <div class="stat-card card">
+          <div class="stat-icon"><Wrench size={20} /></div>
+          <div>
+            <p class="stat-label">Status</p>
+            <p class="stat-value font-display" style="font-size: 1.25rem;">Waitlist</p>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="stat-card card">
-      <div class="stat-icon"><Clock size={20} /></div>
-      <div>
-        <p class="stat-label">Bay Hours Used</p>
-        <p class="stat-value font-display">0 hrs</p>
-      </div>
-    </div>
-    <div class="stat-card card">
-      <div class="stat-icon"><Wrench size={20} /></div>
-      <div>
-        <p class="stat-label">Membership Status</p>
-        <p class="stat-value font-display">Waitlist</p>
-      </div>
-    </div>
-  </div>
 
-  <!-- Reservations placeholder -->
-  <div class="section-block">
-    <h2 class="block-title font-display">Upcoming Reservations</h2>
-    <div class="empty-state">
-      <CalendarDays size={40} style="color: var(--text-muted); margin-bottom: 1rem;" />
-      <p class="empty-title">No reservations yet</p>
-      <p class="empty-body">Bay booking opens at launch. Check back in 2026.</p>
+      <!-- Reservations placeholder -->
+      <div class="section-block card">
+        <h2 class="block-title font-display">Upcoming Reservations</h2>
+        <div class="empty-state">
+          <CalendarDays size={36} style="color: var(--text-muted); margin-bottom: 0.875rem;" />
+          <p class="empty-title">No reservations yet</p>
+          <p class="empty-body">Bay booking opens at launch in 2026.</p>
+          <a href="/app/reservations" class="btn btn-outline btn-sm" style="margin-top: 1rem;">
+            Learn about booking
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <!-- Live bay grid -->
+      <BayGrid />
+
+      <!-- Location card -->
+      <div class="location-card card">
+        <div class="location-inner">
+          <MapPin size={18} style="color: var(--accent); flex-shrink: 0; margin-top: 2px;" />
+          <div>
+            <p class="location-name">Wrench Club</p>
+            <p class="location-addr">522 Stocking Ave NW, Grand Rapids, MI</p>
+            <a
+              href="https://maps.google.com/?q=522+Stocking+Ave+NW+Grand+Rapids+MI"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="location-link"
+            >
+              Get Directions →
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -80,13 +113,11 @@
 <style>
   .dashboard {
     padding: 2.5rem;
-    max-width: 1000px;
+    max-width: 1100px;
   }
 
   @media (max-width: 768px) {
-    .dashboard {
-      padding: 1.5rem 1.25rem;
-    }
+    .dashboard { padding: 1.5rem 1.25rem; }
   }
 
   .dash-header {
@@ -94,7 +125,7 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 2rem;
+    margin-bottom: 1.75rem;
     flex-wrap: wrap;
   }
 
@@ -119,7 +150,7 @@
     background: var(--accent-muted);
     border: 1px solid var(--accent-border);
     border-radius: 0.75rem;
-    padding: 1.25rem 1.5rem;
+    padding: 1.125rem 1.5rem;
     margin-bottom: 2rem;
   }
 
@@ -127,40 +158,57 @@
     font-weight: 600;
     font-size: 0.9375rem;
     color: var(--text-primary);
-    margin: 0 0 0.375rem;
+    margin: 0 0 0.25rem;
   }
 
   .notice-body {
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     color: var(--text-secondary);
     line-height: 1.6;
     margin: 0;
   }
 
-  .stats-grid {
+  /* Main 2-col layout */
+  .main-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
-    margin-bottom: 2rem;
+    grid-template-columns: 1fr 360px;
+    gap: 1.5rem;
+    align-items: start;
   }
 
-  @media (max-width: 640px) {
-    .stats-grid {
+  @media (max-width: 900px) {
+    .main-grid {
       grid-template-columns: 1fr;
     }
   }
 
+  .left-col, .right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.875rem;
+  }
+
+  @media (max-width: 640px) {
+    .stats-grid { grid-template-columns: 1fr; }
+  }
+
   .stat-card {
     display: flex;
-    gap: 1rem;
+    gap: 0.875rem;
     align-items: center;
-    padding: 1.25rem 1.5rem;
+    padding: 1.125rem 1.25rem;
   }
 
   .stat-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 0.625rem;
+    width: 40px;
+    height: 40px;
+    border-radius: 0.5rem;
     background: var(--bg-elevated);
     display: flex;
     align-items: center;
@@ -170,9 +218,9 @@
   }
 
   .stat-label {
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
-    margin: 0 0 0.25rem;
+    margin: 0 0 0.2rem;
   }
 
   .stat-value {
@@ -184,17 +232,14 @@
   }
 
   .section-block {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 0.875rem;
-    padding: 2rem;
+    padding: 1.5rem;
   }
 
   .block-title {
-    font-size: 1.375rem;
+    font-size: 1.25rem;
     font-weight: 800;
     color: var(--text-primary);
-    margin-bottom: 1.5rem;
+    margin: 0 0 1.25rem;
   }
 
   .empty-state {
@@ -202,20 +247,55 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3rem 2rem;
+    padding: 2.5rem 1.5rem;
     text-align: center;
   }
 
   .empty-title {
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.375rem;
+  }
+
+  .empty-body {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* Location card */
+  .location-card {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .location-inner {
+    display: flex;
+    gap: 0.875rem;
+    align-items: flex-start;
+  }
+
+  .location-name {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem;
+  }
+
+  .location-addr {
+    font-size: 0.875rem;
     color: var(--text-secondary);
     margin: 0 0 0.5rem;
   }
 
-  .empty-body {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    margin: 0;
+  .location-link {
+    font-size: 0.875rem;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .btn-sm {
+    padding: 0.5rem 1.25rem;
+    font-size: 0.875rem;
   }
 </style>
