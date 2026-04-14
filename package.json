@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "bun scripts/vite-cli.ts dev",
     "build": "bun scripts/vite-cli.ts build",
+    "build:railway": "vite build",
     "preview": "bun scripts/vite-cli.ts preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",

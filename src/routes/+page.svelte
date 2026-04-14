@@ -56,9 +56,24 @@
 <svelte:head>
   <title>Wrench Club — West Michigan's Premier DIY Auto Shop</title>
   <meta name="description" content="A membership-based DIY auto shop at 522 Stocking Ave NW, Grand Rapids, MI. Professional hoists, full tool library, and a community built for gearheads. Coming 2026." />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Wrench Club" />
+  <meta property="og:url" content="https://wrenchclub.com" />
   <meta property="og:title" content="Wrench Club — West Michigan's Premier DIY Auto Shop" />
-  <meta property="og:description" content="Members-only bay rentals, professional hoists, and a gearhead community in Downtown Grand Rapids. Coming 2026." />
-  <meta property="og:image" content="/assets/team-cars.jpg" />
+  <meta property="og:description" content="Members-only bay rentals, professional hoists, and a gearhead community in Grand Rapids. Coming 2026." />
+  <!-- Animated WebP for Discord/Telegram; PNG fallback via og:image -->
+  <meta property="og:image" content="https://wrenchclub.com/og-preview.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Wrench Club — DIY auto shop, Grand Rapids MI" />
+
+  <!-- Twitter / X card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Wrench Club — West Michigan's Premier DIY Auto Shop" />
+  <meta name="twitter:description" content="Members-only bay rentals, professional hoists, and a gearhead community. Coming 2026." />
+  <meta name="twitter:image" content="https://wrenchclub.com/og-preview.png" />
 </svelte:head>
 
 <!-- ── HERO ──────────────────────────────────────────────────────────────── -->

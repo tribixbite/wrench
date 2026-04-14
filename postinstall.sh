@@ -1,34 +1,41 @@
 #!/usr/bin/env bash
-# Termux/Android native module compatibility fixes
-# Run automatically after bun install via postinstall script
+# Native module compatibility fixes + static asset copy.
+# Termux-specific fixes are skipped on standard Linux (Railway, Vercel, etc.)
+# Run automatically after bun install via postinstall script.
 
 set -e
 
 MODULES="node_modules"
 
-# ── esbuild ────────────────────────────────────────────────────────────────
-# Termux reports android-arm64; esbuild ships linux-arm64 binaries.
-# Symlink so esbuild can find its binary.
-ESBUILD_LINUX="$MODULES/@esbuild/linux-arm64"
-ESBUILD_ANDROID="$MODULES/@esbuild/android-arm64"
-
-if [ -d "$ESBUILD_LINUX" ] && [ ! -L "$ESBUILD_ANDROID" ]; then
-  echo "postinstall: symlinking @esbuild/linux-arm64 → android-arm64"
-  ln -sf linux-arm64 "$ESBUILD_ANDROID"
+# Detect Termux / Android environment
+IS_ANDROID=false
+if [ "$(uname -o 2>/dev/null)" = "Android" ] || [ -d "/data/data/com.termux" ]; then
+  IS_ANDROID=true
 fi
 
-# ── rollup ─────────────────────────────────────────────────────────────────
-# Replace rollup native binaries with the wasm-node build.
-# On Termux (android), rollup's native .node binary targets glibc and can't
-# load under bionic. @rollup/wasm-node provides a pure WASM alternative.
-ROLLUP_WASM="$MODULES/@rollup/wasm-node"
-ROLLUP_DIST="$MODULES/rollup/dist"
+if [ "$IS_ANDROID" = "true" ]; then
+  # ── esbuild ──────────────────────────────────────────────────────────────
+  # Termux reports android-arm64; esbuild ships linux-arm64 binaries.
+  ESBUILD_LINUX="$MODULES/@esbuild/linux-arm64"
+  ESBUILD_ANDROID="$MODULES/@esbuild/android-arm64"
 
-if [ -d "$ROLLUP_WASM/dist" ] && [ -d "$ROLLUP_DIST" ]; then
-  echo "postinstall: replacing rollup dist with @rollup/wasm-node"
-  cp "$ROLLUP_WASM/dist/native.js" "$ROLLUP_DIST/native.js"
-  cp "$ROLLUP_WASM/dist/rollup.js" "$ROLLUP_DIST/rollup.js"
-  cp -r "$ROLLUP_WASM/dist/wasm-node" "$ROLLUP_DIST/wasm-node"
+  if [ -d "$ESBUILD_LINUX" ] && [ ! -L "$ESBUILD_ANDROID" ]; then
+    echo "postinstall: symlinking @esbuild/linux-arm64 → android-arm64"
+    ln -sf linux-arm64 "$ESBUILD_ANDROID"
+  fi
+
+  # ── rollup ────────────────────────────────────────────────────────────────
+  # On Termux (Android bionic), rollup's native .node binary targets glibc
+  # and can't load. @rollup/wasm-node provides a pure WASM alternative.
+  ROLLUP_WASM="$MODULES/@rollup/wasm-node"
+  ROLLUP_DIST="$MODULES/rollup/dist"
+
+  if [ -d "$ROLLUP_WASM/dist" ] && [ -d "$ROLLUP_DIST" ]; then
+    echo "postinstall: replacing rollup dist with @rollup/wasm-node"
+    cp "$ROLLUP_WASM/dist/native.js" "$ROLLUP_DIST/native.js"
+    cp "$ROLLUP_WASM/dist/rollup.js" "$ROLLUP_DIST/rollup.js"
+    cp -r "$ROLLUP_WASM/dist/wasm-node" "$ROLLUP_DIST/wasm-node"
+  fi
 fi
 
 # ── static assets ──────────────────────────────────────────────────────────
