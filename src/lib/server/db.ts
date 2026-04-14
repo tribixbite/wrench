@@ -1,10 +1,26 @@
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
 import { env } from '$env/dynamic/private';
+import { mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import * as schema from './schema';
 
+const dbUrl = env.DATABASE_URL ?? 'file:./wrench.db';
+
+// Ensure parent directory exists for file-based SQLite (e.g. /app/data/wrench.db on Railway)
+if (dbUrl.startsWith('file:')) {
+  const filePath = dbUrl.replace(/^file:/, '');
+  if (filePath && !filePath.startsWith(':')) {
+    try {
+      mkdirSync(dirname(filePath), { recursive: true });
+    } catch {
+      // Non-fatal: directory may already exist or be read-only
+    }
+  }
+}
+
 const client = createClient({
-  url: env.DATABASE_URL ?? 'file:./wrench.db',
+  url: dbUrl,
   authToken: env.DATABASE_AUTH_TOKEN
 });
 
