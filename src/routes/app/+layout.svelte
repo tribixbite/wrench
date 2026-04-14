@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { LayoutDashboard, CalendarDays, User, LogOut, Wrench, ShieldCheck } from 'lucide-svelte';
+  import { LayoutDashboard, CalendarDays, User, LogOut, Wrench, ShieldCheck, MailCheck, X } from 'lucide-svelte';
   import { page } from '$app/stores';
 
   interface Props {
@@ -16,6 +16,22 @@
   ];
 
   const isAdmin = $derived(data.user?.role === 'admin');
+  const needsVerification = $derived(!data.user?.emailVerified);
+
+  /** Banner state */
+  let bannerDismissed = $state(false);
+  let resendState = $state<'idle' | 'sending' | 'sent' | 'error'>('idle');
+
+  async function resendVerification() {
+    if (resendState === 'sending' || resendState === 'sent') return;
+    resendState = 'sending';
+    try {
+      const res = await fetch('/api/resend-verification', { method: 'POST' });
+      resendState = res.ok ? 'sent' : 'error';
+    } catch {
+      resendState = 'error';
+    }
+  }
 </script>
 
 <div class="app-shell">
@@ -69,6 +85,28 @@
 
   <!-- Main content -->
   <main class="app-main">
+    {#if needsVerification && !bannerDismissed}
+      <div class="verify-banner" role="alert">
+        <MailCheck size={16} class="banner-icon" />
+        <span class="banner-text">
+          Verify your email to secure your account.
+        </span>
+        <button
+          class="banner-resend"
+          onclick={resendVerification}
+          disabled={resendState === 'sending' || resendState === 'sent'}
+        >
+          {#if resendState === 'sending'}Sending…
+          {:else if resendState === 'sent'}Email sent ✓
+          {:else if resendState === 'error'}Try again
+          {:else}Resend link
+          {/if}
+        </button>
+        <button class="banner-close" onclick={() => (bannerDismissed = true)} aria-label="Dismiss">
+          <X size={14} />
+        </button>
+      </div>
+    {/if}
     {@render children()}
   </main>
 </div>
@@ -206,6 +244,57 @@
     overflow-x: hidden;
   }
 
+  /* Email verification banner */
+  .verify-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.625rem 1.25rem;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+  }
+
+  :global(.banner-icon) { color: var(--accent); flex-shrink: 0; }
+
+  .banner-text { flex: 1; min-width: 0; }
+
+  .banner-resend {
+    background: none;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+
+  .banner-resend:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+  }
+
+  .banner-resend:disabled { opacity: 0.6; cursor: default; }
+
+  .banner-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    border-radius: 4px;
+    transition: color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .banner-close:hover { color: var(--text-primary); }
+
   @media (max-width: 768px) {
     .sidebar {
       width: 100%;
@@ -247,5 +336,7 @@
       margin-left: 0;
       margin-top: 56px;
     }
+
+    .verify-banner { font-size: 0.75rem; padding: 0.5rem 1rem; }
   }
 </style>

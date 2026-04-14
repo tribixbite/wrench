@@ -11,7 +11,19 @@ export const users = sqliteTable('users', {
   role: text('role').notNull().default('member'),
   /** Links to Square Customers API — all business data lives in Square */
   squareCustomerId: text('square_customer_id'),
+  /** 1 once the user clicks the verification link */
+  emailVerified: integer('email_verified').notNull().default(0),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`)
+});
+
+/** Time-limited tokens for email address verification */
+export const emailVerificationTokens = sqliteTable('email_verification_tokens', {
+  id: text('id').primaryKey(), // nanoid
+  userId: text('user_id').notNull().references(() => users.id),
+  /** URL-safe token sent in the verification link */
+  token: text('token').notNull().unique(),
+  /** Unix timestamp — 24 h after creation */
+  expiresAt: integer('expires_at').notNull()
 });
 
 /** Lucia v3 session table */
@@ -35,3 +47,4 @@ export const waitlist = sqliteTable('waitlist', {
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type WaitlistEntry = typeof waitlist.$inferSelect;
+export type EmailVerificationToken = typeof emailVerificationTokens.$inferSelect;

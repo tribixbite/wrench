@@ -8,6 +8,7 @@ declare global {
         name: string;
         role: 'member' | 'admin' | 'staff';
         squareCustomerId: string | null;
+      emailVerified: boolean;
       } | null;
       session: import('lucia').Session | null;
     }

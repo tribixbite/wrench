@@ -2,11 +2,12 @@ import type { Actions, PageServerLoad } from './$types';
 import { redirect, fail } from '@sveltejs/kit';
 import { lucia } from '$lib/server/auth';
 import { db } from '$lib/server/db';
-import { users } from '$lib/server/schema';
+import { users, emailVerificationTokens } from '$lib/server/schema';
 import { eq } from 'drizzle-orm';
 import { Argon2id } from 'oslo/password';
 import { nanoid } from 'nanoid';
-import { sendRegistrationWelcome } from '$lib/server/email';
+import { sendEmailVerification } from '$lib/server/email';
+import { env } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (locals.user) throw redirect(302, '/app/dashboard');
@@ -70,10 +71,23 @@ export const actions: Actions = {
     const cookie = lucia.createSessionCookie(session.id);
     cookies.set(cookie.name, cookie.value, { path: '/', ...cookie.attributes });
 
-    // Non-blocking welcome email
-    sendRegistrationWelcome({ to: email, name }).catch((err) =>
-      console.error('[register] email error:', err)
-    );
+    // Generate email verification token (24 h expiry)
+    const verifyToken = nanoid(32);
+    const expiresAt = Math.floor(Date.now() / 1000) + 60 * 60 * 24;
+    await db.insert(emailVerificationTokens).values({
+      id: nanoid(),
+      userId,
+      token: verifyToken,
+      expiresAt
+    });
+
+    // Non-blocking verification email
+    const origin = env.ORIGIN ?? 'https://wrenchclub.com';
+    sendEmailVerification({
+      to: email,
+      name,
+      verifyUrl: `${origin}/auth/verify/${verifyToken}`
+    }).catch((err) => console.error('[register] verification email error:', err));
 
     throw redirect(302, '/app/dashboard');
   }

@@ -18,7 +18,8 @@ export const lucia = new Lucia(adapter, {
       email: attributes.email,
       name: attributes.name,
       role: attributes.role,
-      squareCustomerId: attributes.squareCustomerId
+      squareCustomerId: attributes.squareCustomerId,
+      emailVerified: attributes.emailVerified === 1
     };
   }
 });
@@ -31,6 +32,8 @@ declare module 'lucia' {
       name: string;
       role: 'member' | 'admin' | 'staff';
       squareCustomerId: string | null;
+      /** Stored as 0/1 in SQLite */
+      emailVerified: number;
     };
   }
 }

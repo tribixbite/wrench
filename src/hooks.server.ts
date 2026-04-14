@@ -44,7 +44,8 @@ export const handle: Handle = async ({ event, resolve }) => {
         email: user.email,
         name: user.name,
         role: user.role as 'member' | 'admin' | 'staff',
-        squareCustomerId: user.squareCustomerId
+        squareCustomerId: user.squareCustomerId,
+        emailVerified: user.emailVerified
       }
     : null;
 

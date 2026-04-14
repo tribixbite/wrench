@@ -34,9 +34,16 @@ async function ensureTables() {
       name TEXT NOT NULL,
       role TEXT NOT NULL DEFAULT 'member',
       square_customer_id TEXT,
+      email_verified INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER DEFAULT (unixepoch())
     )
   `);
+  // Backfill: add email_verified to existing databases that pre-date this column
+  try {
+    await client.execute(`ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0`);
+  } catch {
+    // Column already exists — safe to ignore
+  }
   await client.execute(`
     CREATE TABLE IF NOT EXISTS sessions (
       id TEXT PRIMARY KEY,
@@ -50,6 +57,14 @@ async function ensureTables() {
       email TEXT NOT NULL UNIQUE,
       name TEXT,
       created_at INTEGER DEFAULT (unixepoch())
+    )
+  `);
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS email_verification_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id),
+      token TEXT NOT NULL UNIQUE,
+      expires_at INTEGER NOT NULL
     )
   `);
 }

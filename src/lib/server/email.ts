@@ -15,6 +15,13 @@ interface RegistrationWelcomeData {
   name: string;
 }
 
+interface EmailVerificationData {
+  to: string;
+  name: string;
+  /** Full URL including token — e.g. https://wrenchclub.com/auth/verify/abc123 */
+  verifyUrl: string;
+}
+
 const FROM = 'Wrench Club <hello@wrenchclub.com>';
 
 async function send(payload: {
@@ -88,6 +95,53 @@ export async function sendWaitlistConfirmation({ to, name }: WaitlistConfirmatio
     <hr style="border:none;border-top:1px solid #262626;margin:0 0 24px;">
     <p style="color:#525252;font-size:0.75rem;margin:0;">
       522 Stocking Ave NW, Grand Rapids, MI 49504<br>
+      <a href="mailto:info@wrenchclub.com" style="color:#525252;">info@wrenchclub.com</a>
+    </p>
+  </div>
+</body>
+</html>
+    `.trim()
+  });
+}
+
+/** Email address verification link sent after registration. */
+export async function sendEmailVerification({ to, name, verifyUrl }: EmailVerificationData) {
+  const first = name.split(' ')[0];
+
+  await send({
+    from: FROM,
+    to,
+    subject: 'Verify your Wrench Club email',
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:system-ui,-apple-system,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;padding:48px 24px;">
+    <div style="margin-bottom:32px;">
+      <span style="font-size:1.5rem;font-weight:900;color:#ED0C85;letter-spacing:-0.02em;">WRENCH CLUB</span>
+    </div>
+    <h1 style="color:#f8f8f8;font-size:1.75rem;font-weight:900;margin:0 0 16px;line-height:1.2;">
+      Verify your email, ${first}.
+    </h1>
+    <p style="color:#a3a3a3;font-size:1rem;line-height:1.7;margin:0 0 32px;">
+      Click below to confirm your email address. This link expires in 24 hours.
+    </p>
+    <div style="margin:0 0 32px;">
+      <a href="${verifyUrl}"
+         style="display:inline-block;background:#ED0C85;color:#fff;text-decoration:none;
+                font-weight:700;font-size:0.9375rem;padding:14px 32px;border-radius:8px;">
+        Verify Email Address →
+      </a>
+    </div>
+    <p style="color:#525252;font-size:0.875rem;line-height:1.6;margin:0 0 24px;">
+      Or copy this link into your browser:<br>
+      <span style="color:#a3a3a3;word-break:break-all;">${verifyUrl}</span>
+    </p>
+    <hr style="border:none;border-top:1px solid #262626;margin:0 0 24px;">
+    <p style="color:#525252;font-size:0.75rem;margin:0;">
+      If you didn't create a Wrench Club account, you can ignore this email.<br>
+      522 Stocking Ave NW, Grand Rapids, MI 49504 ·
       <a href="mailto:info@wrenchclub.com" style="color:#525252;">info@wrenchclub.com</a>
     </p>
   </div>
