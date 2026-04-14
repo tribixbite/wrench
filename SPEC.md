@@ -337,29 +337,32 @@ Everything else — bays, reservations, orders, catalog, subscriptions — lives
 ## Roadmap
 
 ### Phase 1: Marketing & Waitlist (MVP — 2-3 weeks)
-- [ ] Project scaffold: SvelteKit + Tailwind v4 + shadcn-svelte
-- [ ] Branding: extract colors from logo, select typography, establish design system
-- [ ] Home page: hero, features, membership uses, pillars, waitlist signup
-- [ ] Pricing page: bay types, membership rate, clear transparent pricing
-- [ ] Membership page: benefits breakdown
-- [ ] About page: location, founder bios with daily drivers
-- [ ] Store page: link to Square Online (or minimal embedded catalog)
-- [ ] Waitlist form: email capture → Square Marketing API or Resend
-- [ ] SEO: meta tags, OG images, structured data (LocalBusiness schema)
+- [x] Project scaffold: SvelteKit + Tailwind v4, Bun runtime
+- [x] Branding: #ED0C85 hot pink, Barlow Condensed display, Inter body, dark-first CSS vars
+- [x] Home page: hero (team-cars.jpg), features, membership uses, pillars, waitlist form
+- [x] Pricing page: bay types, membership rate, transparent pricing
+- [x] Membership page: benefits breakdown, founder quotes
+- [x] About page: location, founder bios with daily driver specs, map embed
+- [x] Store page: live Square catalog (bay rentals + membership), merch placeholder
+- [x] Waitlist form: email + name → SQLite DB + Resend confirmation email
+- [x] SEO: meta tags, LocalBusiness/AutoRepair JSON-LD structured data
+- [ ] OG image — static social share preview (og-preview.png)
 - [ ] Deploy to Vercel/Fly.io, point wrenchclub.com DNS
-- [ ] Mobile responsive, dark theme, performance audit
+- [ ] Mobile responsive audit, Lighthouse performance pass
 
 ### Phase 2: Member Portal (4-6 weeks after launch)
-- [ ] Auth: registration, login, sessions (Lucia), email verification
-- [ ] Square Customer creation on registration (store squareCustomerId locally)
+- [x] Auth: registration, login, sessions (Lucia v3 + Drizzle SQLite)
+- [x] Square Customer creation on registration (squareCustomerId linked)
+- [x] Member dashboard: stat cards, live bay grid, location card
+- [x] Live bay grid: SSE endpoint, BayGrid.svelte with status colors + skeleton
+- [x] Transactional emails: Resend — waitlist confirmation + registration welcome
+- [ ] Email verification flow on registration
 - [ ] Bay reservations: calendar UI → Square Bookings API → payment
-- [ ] Member dashboard: upcoming reservations, quick-book, profile
-- [ ] Live bay grid: SSE endpoint, real-time status component
-- [ ] In-app merch store: Square Catalog → cart → checkout → webhooks
-- [ ] Transactional emails: booking confirmations, reminders
+  - Blocked: Square Bookings must be enabled in Developer portal for the sandbox app
+- [ ] In-app merch store: Square Catalog → cart → Square Web Payments checkout → webhooks
 
 ### Phase 3: Growth (ongoing)
-- [ ] Admin panel: member management, bay management, analytics
+- [x] Admin panel: waitlist viewer + member list at /app/admin/ (admin role only)
 - [ ] Event calendar with RSVP
 - [ ] Racing sim leaderboards
 - [ ] Community project gallery
