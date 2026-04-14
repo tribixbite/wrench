@@ -1,0 +1,37 @@
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
+
+/** Local auth users — Square Customer ID links to Square's data */
+export const users = sqliteTable('users', {
+  id: text('id').primaryKey(), // nanoid
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  name: text('name').notNull(),
+  /** member | admin | staff */
+  role: text('role').notNull().default('member'),
+  /** Links to Square Customers API — all business data lives in Square */
+  squareCustomerId: text('square_customer_id'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`)
+});
+
+/** Lucia v3 session table */
+export const sessions = sqliteTable('sessions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id),
+  /** Unix timestamp — Lucia stores/reads as number, not Date */
+  expiresAt: integer('expires_at').notNull()
+});
+
+/** Pre-launch waitlist — migrates to Square Marketing API at launch */
+export const waitlist = sqliteTable('waitlist', {
+  id: text('id').primaryKey(), // nanoid
+  email: text('email').notNull().unique(),
+  name: text('name'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`)
+});
+
+export type User = typeof users.$inferSelect;
+export type Session = typeof sessions.$inferSelect;
+export type WaitlistEntry = typeof waitlist.$inferSelect;

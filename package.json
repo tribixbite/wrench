@@ -1,0 +1,39 @@
+{
+  "name": "wrench-club",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun scripts/vite-cli.ts dev",
+    "build": "bun scripts/vite-cli.ts build",
+    "preview": "bun scripts/vite-cli.ts preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "postinstall": "bash postinstall.sh"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "@lucia-auth/adapter-drizzle": "^1.1.0",
+    "drizzle-orm": "^0.40.0",
+    "lucide-svelte": "^0.469.0",
+    "lucia": "^3.2.2",
+    "nanoid": "^5.0.9",
+    "oslo": "^1.2.1",
+    "square": "^42.0.0"
+  },
+  "devDependencies": {
+    "@rollup/wasm-node": "4.60.1",
+    "@sveltejs/adapter-node": "^5.2.0",
+    "@sveltejs/kit": "^2.15.0",
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "drizzle-kit": "^0.30.0",
+    "svelte": "^5.0.0",
+    "svelte-check": "^4.0.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0"
+  }
+}
