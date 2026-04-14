@@ -356,7 +356,7 @@ Everything else — bays, reservations, orders, catalog, subscriptions — lives
 - [x] Member dashboard: stat cards, live bay grid, location card
 - [x] Live bay grid: SSE endpoint, BayGrid.svelte with status colors + skeleton
 - [x] Transactional emails: Resend — waitlist confirmation + registration welcome
-- [ ] Email verification flow on registration
+- [x] Email verification flow on registration
 - [ ] Bay reservations: calendar UI → Square Bookings API → payment
   - Blocked: Square Bookings must be enabled in Developer portal for the sandbox app
 - [ ] In-app merch store: Square Catalog → cart → Square Web Payments checkout → webhooks
