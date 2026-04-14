@@ -9,7 +9,8 @@ import { square } from '$lib/server/square';
  */
 export const GET: RequestHandler = async () => {
   try {
-    const result = await square.catalog.list();
+    // catalog.list() omits items in sandbox; catalog.search() is reliable
+    const result = await square.catalog.search({ objectTypes: ['ITEM'] });
     const items = (result.objects ?? [])
       .filter(o => o.type === 'ITEM')
       .map(o => ({

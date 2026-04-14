@@ -15,7 +15,8 @@ export interface CatalogItem {
 
 export const load: PageServerLoad = async () => {
   try {
-    const result = await square.catalog.list();
+    // catalog.list() omits items in sandbox; catalog.search() is reliable
+    const result = await square.catalog.search({ objectTypes: ['ITEM'] });
     const items: CatalogItem[] = (result.objects ?? [])
       .filter(o => o.type === 'ITEM')
       .map(o => ({
