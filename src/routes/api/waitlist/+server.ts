@@ -4,6 +4,7 @@ import { db } from '$lib/server/db';
 import { waitlist } from '$lib/server/schema';
 import { nanoid } from 'nanoid';
 import { eq } from 'drizzle-orm';
+import { sendWaitlistConfirmation } from '$lib/server/email';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -34,6 +35,11 @@ export const POST: RequestHandler = async ({ request }) => {
     email,
     name: name || null
   });
+
+  // Non-blocking — email failure must not break the signup response
+  sendWaitlistConfirmation({ to: email, name }).catch((err) =>
+    console.error('[waitlist] email error:', err)
+  );
 
   return json(
     { message: "You're on the list! We'll reach out when Wrench Club opens in 2026." },

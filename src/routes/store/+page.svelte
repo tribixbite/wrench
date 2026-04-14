@@ -1,32 +1,51 @@
 <script lang="ts">
-  import { ShoppingBag, Tag, Gift, Shirt, ArrowRight } from 'lucide-svelte';
+  import { ShoppingBag, Tag, Gift, Shirt, ArrowRight, Wrench } from 'lucide-svelte';
   import WaitlistForm from '$lib/components/marketing/WaitlistForm.svelte';
+  import type { CatalogItem } from './+page.server';
 
-  const items = [
-    {
-      icon: Shirt,
-      name: 'Wrench Club Tees',
-      desc: 'Premium heavyweight cotton tees with the Wrench Club logo. Rep the club.',
-      status: 'coming-soon'
-    },
-    {
-      icon: ShoppingBag,
-      name: 'Hats & Headwear',
-      desc: 'Structured snapbacks and dad hats. Club logo embroidered, not printed.',
-      status: 'coming-soon'
-    },
-    {
-      icon: Gift,
-      name: 'Gift Cards & Bay Credits',
-      desc: 'Give the gift of shop time. Bay credits never expire and work for any bay type.',
-      status: 'coming-soon'
-    }
+  interface Props {
+    data: {
+      merch: CatalogItem[];
+      bays: CatalogItem[];
+      allItems: CatalogItem[];
+    };
+  }
+
+  const { data }: Props = $props();
+
+  /** Format price from cents to a readable string */
+  function formatPrice(cents: number, currency = 'USD'): string {
+    if (cents === 0) return 'Contact us';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(cents / 100);
+  }
+
+  /** Pick representative icon for a bay/membership item by name */
+  function categoryIcon(name: string) {
+    const n = name.toLowerCase();
+    if (n.includes('hoist')) return Wrench;
+    if (n.includes('detail')) return Tag;
+    if (n.includes('gift') || n.includes('credit')) return Gift;
+    return ShoppingBag;
+  }
+
+  // Placeholder merch cards when Square has no merch items yet
+  const placeholderMerch = [
+    { name: 'Wrench Club Tees', desc: 'Premium heavyweight cotton tees with the Wrench Club logo.' },
+    { name: 'Hats & Headwear', desc: 'Structured snapbacks and dad hats. Club logo embroidered, not printed.' }
   ];
+
+  const hasMerch = data.merch.length > 0;
+  const hasBays = data.bays.length > 0;
 </script>
 
 <svelte:head>
   <title>Shop — Wrench Club</title>
-  <meta name="description" content="Wrench Club merch — tees, hats, and gift cards. Powered by Square POS. Coming 2026." />
+  <meta name="description" content="Wrench Club merch — tees, hats, and bay credits. Powered by Square POS." />
 </svelte:head>
 
 <!-- Page Header -->
@@ -35,40 +54,107 @@
     <p class="overline">Wrench Club Store</p>
     <h1 class="page-title font-display">Gear for<br />Gearheads</h1>
     <p class="page-sub">
-      Tees, hats, and bay credits. All Wrench Club merch is sold through our Square store —
-      buy online or pick up at the shop.
+      Tees, hats, and bay credits — all sold through our Square store.
+      Buy online or pick up at the shop.
     </p>
   </div>
 </div>
 
-<!-- Coming Soon Grid -->
-<section class="section" style="background: var(--bg-secondary)">
+<!-- Bay & Membership Pricing -->
+{#if hasBays}
+  <section class="section" style="background: var(--bg-secondary)">
+    <div class="container mx-auto px-6">
+      <div class="section-header">
+        <div class="divider"></div>
+        <h2 class="section-title font-display">Bay Rentals &amp; Membership</h2>
+        <p class="section-sub">
+          All bay time is sold in blocks through Square. Prices are per session unless otherwise noted.
+        </p>
+      </div>
+      <div class="bays-grid">
+        {#each data.bays as item}
+          {@const Icon = categoryIcon(item.name)}
+          <div class="bay-card card">
+            <div class="bay-icon">
+              <Icon size={22} />
+            </div>
+            <div class="bay-body">
+              <h3 class="bay-name">{item.name}</h3>
+              {#if item.description}
+                <p class="bay-desc">{item.description}</p>
+              {/if}
+              <div class="variations">
+                {#each item.variations as v}
+                  <div class="variation-row">
+                    <span class="variation-name">{v.name}</span>
+                    <span class="variation-price">{formatPrice(v.priceCents, v.currency)}</span>
+                  </div>
+                {/each}
+              </div>
+            </div>
+          </div>
+        {/each}
+      </div>
+    </div>
+  </section>
+{/if}
+
+<!-- Merch -->
+<section class="section" style="background: {hasBays ? 'var(--bg-primary)' : 'var(--bg-secondary)'}">
   <div class="container mx-auto px-6">
     <div class="section-header">
       <div class="divider"></div>
-      <h2 class="section-title font-display">Store Opening with the Club</h2>
-      <p class="section-sub">
-        Our online store launches when Wrench Club opens in 2026. Join the waitlist to be
-        notified and get early access to founding member merch.
-      </p>
+      <h2 class="section-title font-display">
+        {hasMerch ? 'Club Merch' : 'Merch Coming in 2026'}
+      </h2>
+      {#if !hasMerch}
+        <p class="section-sub">
+          Our online store launches when Wrench Club opens. Join the waitlist for early access
+          to founding member merch drops.
+        </p>
+      {/if}
     </div>
 
-    <div class="items-grid">
-      {#each items as item}
-        <div class="item-card card">
-          <div class="item-icon">
-            <item.icon size={24} />
+    {#if hasMerch}
+      <div class="items-grid">
+        {#each data.merch as item}
+          <div class="item-card card">
+            <div class="item-icon">
+              <Shirt size={22} />
+            </div>
+            <div class="item-body">
+              <h3 class="item-name">{item.name}</h3>
+              {#if item.description}
+                <p class="item-desc">{item.description}</p>
+              {/if}
+              <div class="variations">
+                {#each item.variations as v}
+                  <div class="variation-row">
+                    <span class="variation-name">{v.name}</span>
+                    <span class="variation-price">{formatPrice(v.priceCents, v.currency)}</span>
+                  </div>
+                {/each}
+              </div>
+            </div>
           </div>
-          <div class="item-body">
-            <h3 class="item-name">{item.name}</h3>
-            <p class="item-desc">{item.desc}</p>
+        {/each}
+      </div>
+    {:else}
+      <div class="items-grid">
+        {#each placeholderMerch as item}
+          <div class="item-card card placeholder">
+            <div class="item-icon">
+              <Shirt size={22} />
+            </div>
+            <div class="item-body">
+              <h3 class="item-name">{item.name}</h3>
+              <p class="item-desc">{item.desc}</p>
+            </div>
+            <div class="coming-badge"><span>Coming 2026</span></div>
           </div>
-          <div class="coming-badge">
-            <span>Coming 2026</span>
-          </div>
-        </div>
-      {/each}
-    </div>
+        {/each}
+      </div>
+    {/if}
 
     <!-- Gift Card callout -->
     <div class="gift-callout">
@@ -79,10 +165,13 @@
         <h3 class="gift-title font-display">Bay Credits Make the Best Gift</h3>
         <p class="gift-desc">
           Know a car enthusiast who doesn't have a lift? Bay credits work for any bay type,
-          never expire, and are redeemable via our online booking system. Gift cards sold in
-          any denomination — contact us to arrange before the store launches.
+          never expire, and are redeemable through our booking system.
+          Gift cards sold in any denomination — contact us to arrange.
         </p>
-        <a href="mailto:info@wrenchclub.com?subject=Bay Credit Gift Card" class="btn btn-outline mt-4 inline-flex">
+        <a
+          href="mailto:info@wrenchclub.com?subject=Bay Credit Gift Card"
+          class="btn btn-outline mt-4 inline-flex"
+        >
           Inquire About Gift Cards <ArrowRight size={16} />
         </a>
       </div>
@@ -141,8 +230,12 @@
     line-height: 1.7;
   }
 
+  .section {
+    padding: 5rem 0;
+  }
+
   .section-header {
-    margin-bottom: 3rem;
+    margin-bottom: 2.5rem;
   }
 
   .section-title {
@@ -160,6 +253,53 @@
     max-width: 580px;
   }
 
+  /* Bay cards */
+  .bays-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .bay-card {
+    padding: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .bay-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 0.625rem;
+    background: var(--accent-muted);
+    border: 1px solid var(--accent-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .bay-body {
+    flex: 1;
+  }
+
+  .bay-name {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 0.375rem;
+  }
+
+  .bay-desc {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0 0 0.875rem;
+  }
+
+  /* Merch cards */
   .items-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -172,8 +312,10 @@
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
-    position: relative;
-    overflow: visible;
+  }
+
+  .item-card.placeholder {
+    opacity: 0.75;
   }
 
   .item-icon {
@@ -188,6 +330,10 @@
     color: var(--accent);
   }
 
+  .item-body {
+    flex: 1;
+  }
+
   .item-name {
     font-size: 1.125rem;
     font-weight: 700;
@@ -200,6 +346,37 @@
     color: var(--text-secondary);
     line-height: 1.65;
     margin: 0;
+  }
+
+  /* Shared variation table */
+  .variations {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    margin-top: 0.75rem;
+  }
+
+  .variation-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.875rem;
+    padding: 0.375rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .variation-row:last-child {
+    border-bottom: none;
+  }
+
+  .variation-name {
+    color: var(--text-secondary);
+  }
+
+  .variation-price {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
   }
 
   .coming-badge {
@@ -219,6 +396,7 @@
     letter-spacing: 0.06em;
   }
 
+  /* Gift card callout */
   .gift-callout {
     display: flex;
     gap: 1.75rem;
@@ -255,11 +433,19 @@
     margin: 0;
   }
 
+  /* Waitlist CTA */
   .cta-inner {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 5rem;
     align-items: center;
+  }
+
+  .form-wrap {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 2rem;
   }
 
   @media (max-width: 768px) {
@@ -271,12 +457,5 @@
     .gift-callout {
       flex-direction: column;
     }
-  }
-
-  .form-wrap {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 1rem;
-    padding: 2rem;
   }
 </style>

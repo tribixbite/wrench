@@ -6,6 +6,7 @@ import { users } from '$lib/server/schema';
 import { eq } from 'drizzle-orm';
 import { Argon2id } from 'oslo/password';
 import { nanoid } from 'nanoid';
+import { sendRegistrationWelcome } from '$lib/server/email';
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (locals.user) throw redirect(302, '/app/dashboard');
@@ -68,6 +69,11 @@ export const actions: Actions = {
     const session = await lucia.createSession(userId, {});
     const cookie = lucia.createSessionCookie(session.id);
     cookies.set(cookie.name, cookie.value, { path: '/', ...cookie.attributes });
+
+    // Non-blocking welcome email
+    sendRegistrationWelcome({ to: email, name }).catch((err) =>
+      console.error('[register] email error:', err)
+    );
 
     throw redirect(302, '/app/dashboard');
   }

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { LayoutDashboard, CalendarDays, User, LogOut, Wrench } from 'lucide-svelte';
+  import { LayoutDashboard, CalendarDays, User, LogOut, Wrench, ShieldCheck } from 'lucide-svelte';
   import { page } from '$app/stores';
 
   interface Props {
@@ -14,6 +14,8 @@
     { href: '/app/reservations', icon: CalendarDays, label: 'Reservations' },
     { href: '/app/profile', icon: User, label: 'Profile' }
   ];
+
+  const isAdmin = $derived(data.user?.role === 'admin');
 </script>
 
 <div class="app-shell">
@@ -37,6 +39,17 @@
           <span>{item.label}</span>
         </a>
       {/each}
+      {#if isAdmin}
+        <a
+          href="/app/admin"
+          class="sidebar-link admin-link"
+          class:active={$page.url.pathname.startsWith('/app/admin')}
+          aria-current={$page.url.pathname.startsWith('/app/admin') ? 'page' : undefined}
+        >
+          <ShieldCheck size={18} />
+          <span>Admin</span>
+        </a>
+      {/if}
     </nav>
 
     <div class="sidebar-bottom">
@@ -167,6 +180,14 @@
     color: var(--text-muted);
     margin: 0;
     text-transform: capitalize;
+  }
+
+  .admin-link {
+    margin-top: auto;
+    border-top: 1px solid var(--border);
+    border-radius: 0;
+    padding-top: 0.875rem;
+    margin-top: 0.5rem;
   }
 
   .logout-link {

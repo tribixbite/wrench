@@ -17,10 +17,11 @@
     "@libsql/client": "^0.14.0",
     "@lucia-auth/adapter-drizzle": "^1.1.0",
     "drizzle-orm": "^0.40.0",
-    "lucide-svelte": "^0.469.0",
     "lucia": "^3.2.2",
+    "lucide-svelte": "^0.469.0",
     "nanoid": "^5.0.9",
     "oslo": "^1.2.1",
+    "resend": "6.11.0",
     "square": "^42.0.0"
   },
   "devDependencies": {
