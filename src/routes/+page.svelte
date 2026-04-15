@@ -293,10 +293,11 @@
 
   .badge {
     display: inline-flex;
+    align-self: flex-start;
     align-items: center;
     gap: 0.375rem;
     background: rgba(237, 12, 133, 0.15);
-    border: 1px solid rgba(237, 12, 133, 0.3);
+    border: 1px solid rgba(237, 12, 133, 0.4);
     color: var(--accent);
     font-size: 0.8125rem;
     font-weight: 500;
@@ -328,6 +329,17 @@
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
+  }
+
+  /* Ghost button needs a visible border over the photo overlay */
+  .hero-ctas :global(.btn-ghost) {
+    border-color: rgba(255, 255, 255, 0.45);
+    color: #fff;
+  }
+
+  .hero-ctas :global(.btn-ghost:hover) {
+    border-color: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.1);
   }
 
   .scroll-hint {
