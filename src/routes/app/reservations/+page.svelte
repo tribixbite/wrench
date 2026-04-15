@@ -141,9 +141,9 @@
 
   function bayLabel(teamMemberId: string) {
     const map: Record<string, string> = {
-      TMKSGvOnHLXY9Qf1: 'Bay 1', TMAQYKApwSTWO88t: 'Bay 2',
-      TMwAqjOFVf517b3h: 'Bay 3', TMTjzsKd1G7PU43M: 'Bay 4',
-      'TM4sarrWNHu5-kXb': 'Bay 5'
+      TMkMik9RL18tkTF7: 'Bay 1', TMLm78Z2tt7iGsxE: 'Bay 2',
+      'TM-ELEPsnFgo279C': 'Bay 3', TMUSbWTh7cqWRCUM: 'Bay 4',
+      TMYcymhGNoUvtitQ: 'Bay 5'
     };
     return map[teamMemberId] ?? 'Bay';
   }
