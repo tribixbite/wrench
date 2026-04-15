@@ -1,5 +1,5 @@
 [build]
-buildCommand = "echo 'Using pre-built output'"
+buildCommand = "bun install && bun run build:railway"
 
 [deploy]
 startCommand = "node build/index.js"
