@@ -21,7 +21,7 @@
     "test:e2e:headed": "bunx playwright test --headed"
   },
   "dependencies": {
-    "@asteasolutions/zod-to-openapi": "8.5.0",
+    "@asteasolutions/zod-to-openapi": "^7",
     "@libsql/client": "^0.14.0",
     "@lucia-auth/adapter-drizzle": "^1.1.0",
     "drizzle-orm": "^0.40.0",
@@ -31,7 +31,7 @@
     "oslo": "^1.2.1",
     "resend": "6.11.0",
     "square": "^42.0.0",
-    "zod": "4.3.6"
+    "zod": "3.24.1"
   },
   "devDependencies": {
     "@playwright/test": "1.59.1",
