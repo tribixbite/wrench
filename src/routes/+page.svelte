@@ -85,7 +85,7 @@
     <!-- Location badge -->
     <div class="badge">
       <MapPin size={13} />
-      <span>Coming 2026 · 522 Stocking Ave NW, Grand Rapids, MI</span>
+      <span>Grand Rapids, MI · Opening 2026</span>
     </div>
 
     <!-- Headline -->
@@ -293,11 +293,12 @@
 
   .badge {
     display: inline-flex;
-    align-self: flex-start;
+    width: fit-content;
     align-items: center;
     gap: 0.375rem;
-    background: rgba(237, 12, 133, 0.15);
-    border: 1px solid rgba(237, 12, 133, 0.4);
+    background: rgba(237, 12, 133, 0.22);
+    border: 1px solid rgba(237, 12, 133, 0.6);
+    backdrop-filter: blur(8px);
     color: var(--accent);
     font-size: 0.8125rem;
     font-weight: 500;
@@ -305,6 +306,7 @@
     border-radius: 999px;
     margin-bottom: 1.75rem;
     letter-spacing: 0.01em;
+    white-space: nowrap;
   }
 
   .hero-headline {
