@@ -1,6 +1,7 @@
 <script lang="ts">
   import { MapPin, ExternalLink, ArrowRight } from 'lucide-svelte';
   import WaitlistForm from '$lib/components/marketing/WaitlistForm.svelte';
+  import SEO from '$lib/components/layout/SEO.svelte';
 
   const founders = [
     {
@@ -47,9 +48,7 @@ I am excited to take my expertise as a mechanic and auto shop owner, and use it 
 </script>
 
 <svelte:head>
-  <title>About — Wrench Club</title>
-  <meta property="og:title" content="About — Wrench Club" />
-  <meta property="og:description" content="Meet the founders of Wrench Club — four gearheads building West Michigan's first membership-based DIY auto shop at 522 Stocking Ave NW, Grand Rapids." />
+  <SEO title="About" description="Meet the founders of Wrench Club — four gearheads building West Michigan's first membership-based DIY auto shop at 522 Stocking Ave NW, Grand Rapids." url="https://thewrench.club/about" />
   <meta name="description" content="Meet the team behind Wrench Club — four gearheads building West Michigan's premier DIY auto shop at 522 Stocking Ave NW, Grand Rapids, MI." />
 </svelte:head>
 

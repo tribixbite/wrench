@@ -1,6 +1,7 @@
 <script lang="ts">
   import { ShoppingBag, Tag, Gift, Shirt, ArrowRight, Wrench } from 'lucide-svelte';
   import WaitlistForm from '$lib/components/marketing/WaitlistForm.svelte';
+  import SEO from '$lib/components/layout/SEO.svelte';
   import type { CatalogItem } from './+page.server';
 
   interface Props {
@@ -33,10 +34,13 @@
     return ShoppingBag;
   }
 
-  // Placeholder merch cards when Square has no merch items yet
+  // Placeholder merch with rendered product images
   const placeholderMerch = [
-    { name: 'Wrench Club Tees', desc: 'Premium heavyweight cotton tees with the Wrench Club logo.' },
-    { name: 'Hats & Headwear', desc: 'Structured snapbacks and dad hats. Club logo embroidered, not printed.' }
+    { key: 'tshirt',  name: 'Club Tee',      desc: 'Heavyweight cotton tee. Logo front chest, "522" on sleeve.' },
+    { key: 'tacker',  name: 'Tacker Hat',     desc: 'Structured snapback with foam front panel. Club logo embroidered.' },
+    { key: 'patch',   name: 'Iron-On Patch',  desc: '3.5" woven patch with high-density embroidery. Sew or iron on.' },
+    { key: 'sticker', name: 'Die-Cut Sticker', desc: 'Weatherproof vinyl die-cut, 4" wide. Goes anywhere.' },
+    { key: 'decal',   name: 'Vinyl Decal',    desc: 'Cut vinyl, 6" wide. Car-safe adhesive, outdoor rated.' },
   ];
 
   const hasMerch = data.merch.length > 0;
@@ -44,9 +48,7 @@
 </script>
 
 <svelte:head>
-  <title>Shop — Wrench Club</title>
-  <meta property="og:title" content="Shop — Wrench Club" />
-  <meta property="og:description" content="Wrench Club merch and bay credits. Tees, hats, and gift cards — sold through our Square store." />
+  <SEO title="Shop" description="Wrench Club merch and bay credits. Tees, hats, patches, stickers, and gift cards — sold through our Square store." url="https://thewrench.club/store" />
   <meta name="description" content="Wrench Club merch — tees, hats, and bay credits. Powered by Square POS." />
 </svelte:head>
 
@@ -145,8 +147,15 @@
       <div class="items-grid">
         {#each placeholderMerch as item}
           <div class="item-card card placeholder">
-            <div class="item-icon">
-              <Shirt size={22} />
+            <div class="merch-render">
+              <img
+                src="/assets/merch/{item.key}.webp"
+                alt="{item.name} product render"
+                class="merch-img"
+                loading="lazy"
+                width="800"
+                height="800"
+              />
             </div>
             <div class="item-body">
               <h3 class="item-name">{item.name}</h3>
@@ -317,7 +326,35 @@
   }
 
   .item-card.placeholder {
-    opacity: 0.75;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .item-card.placeholder .item-body {
+    padding: 1.25rem 1.75rem 0;
+  }
+
+  .item-card.placeholder .coming-badge {
+    padding: 0 1.75rem 1.5rem;
+  }
+
+  .merch-render {
+    width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--bg-elevated);
+  }
+
+  .merch-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+  }
+
+  .item-card.placeholder:hover .merch-img {
+    transform: scale(1.03);
   }
 
   .item-icon {

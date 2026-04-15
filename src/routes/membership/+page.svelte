@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Monitor, Wrench, Tag, Calendar, Car, Users, ArrowRight, CheckCircle2 } from 'lucide-svelte';
   import WaitlistForm from '$lib/components/marketing/WaitlistForm.svelte';
+  import SEO from '$lib/components/layout/SEO.svelte';
 
   const benefits = [
     {
@@ -43,9 +44,7 @@
 </script>
 
 <svelte:head>
-  <title>Membership — Wrench Club</title>
-  <meta property="og:title" content="Membership — Wrench Club" />
-  <meta property="og:description" content="Everything included with Wrench Club membership: hoist access, full tool library, parts discounts, and a community of gearheads." />
+  <SEO title="Membership" description="Everything included with Wrench Club membership: hoist access, full tool library, parts discounts, and a community of gearheads in Grand Rapids, MI." url="https://thewrench.club/membership" />
   <meta name="description" content="Everything included with a Wrench Club membership — tool library, clubhouse, parts discounts, events, and priority bay booking in Grand Rapids, MI." />
 </svelte:head>
 

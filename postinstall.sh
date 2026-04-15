@@ -47,4 +47,10 @@ if [ -d "assets" ]; then
   cp assets/*.jpg assets/*.png assets/*.webp static/assets/ 2>/dev/null || true
 fi
 
+if [ -d "assets/merch" ]; then
+  echo "postinstall: copying assets/merch/ → static/assets/merch/"
+  mkdir -p static/assets/merch
+  cp assets/merch/*.webp static/assets/merch/ 2>/dev/null || true
+fi
+
 echo "postinstall: done"
