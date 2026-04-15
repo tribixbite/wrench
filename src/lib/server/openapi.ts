@@ -1,14 +1,20 @@
 /**
  * OpenAPI 3.1 spec generator for the Wrench Club API.
  *
- * Uses @asteasolutions/zod-to-openapi to derive schemas from Zod definitions
- * so the spec always stays in sync with actual runtime validation.
+ * Calls extendZodWithOpenApi here (not in schemas/api.ts) so that pure Zod
+ * schemas remain importable in test environments without side effects.
+ * The .openapi() metadata extension is applied at registration time below.
  *
  * Exposed as a cached singleton via getOpenApiSpec() — safe to call on every
  * request since the result is memoized after the first call.
  */
-import { OpenAPIRegistry, OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
+import { OpenAPIRegistry, OpenApiGeneratorV31, extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
+
+// Extend Zod's ZodType prototype with .openapi() — must run before any
+// .openapi() calls below. Safe to call multiple times (idempotent).
+extendZodWithOpenApi(z);
+
 import {
   WaitlistPostBody,
   WaitlistSuccessResponse,
@@ -37,19 +43,43 @@ const cookieAuth = registry.registerComponent('securitySchemes', 'cookieAuth', {
 });
 
 // ---------------------------------------------------------------------------
-// Register schemas as reusable components
+// Register schemas as reusable components (with OpenAPI titles + descriptions)
 // ---------------------------------------------------------------------------
 
-registry.register('WaitlistPostBody', WaitlistPostBody);
-registry.register('WaitlistSuccessResponse', WaitlistSuccessResponse);
-registry.register('ErrorResponse', ErrorResponse);
-registry.register('AvailabilityPostBody', AvailabilityPostBody);
-registry.register('AvailabilityPostResponse', AvailabilityPostResponse);
-registry.register('BookingCreateBody', BookingCreateBody);
-registry.register('BookingCreateResponse', BookingCreateResponse);
-registry.register('BookingListResponse', BookingListResponse);
-registry.register('CatalogResponse', CatalogResponse);
-registry.register('ResendVerificationResponse', ResendVerificationResponse);
+registry.register('WaitlistPostBody', WaitlistPostBody.openapi({
+  title: 'WaitlistPostBody',
+  description: 'Request body for joining the waitlist'
+}));
+registry.register('WaitlistSuccessResponse', WaitlistSuccessResponse.openapi({
+  title: 'WaitlistSuccessResponse'
+}));
+registry.register('ErrorResponse', ErrorResponse.openapi({
+  title: 'ErrorResponse',
+  description: 'Human-readable error returned on 4xx/5xx responses'
+}));
+registry.register('AvailabilityPostBody', AvailabilityPostBody.openapi({
+  title: 'AvailabilityPostBody',
+  description: 'Request body for bay availability search'
+}));
+registry.register('AvailabilityPostResponse', AvailabilityPostResponse.openapi({
+  title: 'AvailabilityPostResponse'
+}));
+registry.register('BookingCreateBody', BookingCreateBody.openapi({
+  title: 'BookingCreateBody',
+  description: 'Request body for creating a bay reservation'
+}));
+registry.register('BookingCreateResponse', BookingCreateResponse.openapi({
+  title: 'BookingCreateResponse'
+}));
+registry.register('BookingListResponse', BookingListResponse.openapi({
+  title: 'BookingListResponse'
+}));
+registry.register('CatalogResponse', CatalogResponse.openapi({
+  title: 'CatalogResponse'
+}));
+registry.register('ResendVerificationResponse', ResendVerificationResponse.openapi({
+  title: 'ResendVerificationResponse'
+}));
 
 // ---------------------------------------------------------------------------
 // POST /api/waitlist
@@ -65,9 +95,7 @@ registry.registerPath({
   request: {
     body: {
       required: true,
-      content: {
-        'application/json': { schema: WaitlistPostBody }
-      }
+      content: { 'application/json': { schema: WaitlistPostBody } }
     }
   },
   responses: {
@@ -101,9 +129,7 @@ registry.registerPath({
   request: {
     body: {
       required: true,
-      content: {
-        'application/json': { schema: AvailabilityPostBody }
-      }
+      content: { 'application/json': { schema: AvailabilityPostBody } }
     }
   },
   responses: {
@@ -141,9 +167,7 @@ registry.registerPath({
   request: {
     body: {
       required: true,
-      content: {
-        'application/json': { schema: BookingCreateBody }
-      }
+      content: { 'application/json': { schema: BookingCreateBody } }
     }
   },
   responses: {
@@ -199,22 +223,12 @@ registry.registerPath({
   path: '/api/catalog',
   summary: 'Fetch catalog items',
   description:
-    'Returns Square catalog items (membership tiers, bay bookings, add-ons) with pricing. Cached for 5 minutes at the CDN layer. Uses catalog.search() — not catalog.list() — for sandbox compatibility.',
+    'Returns Square catalog items (membership tiers, bay bookings, add-ons) with pricing. Uses catalog.search() — not catalog.list() — for sandbox compatibility.',
   tags: ['Catalog'],
   responses: {
     200: {
       description: 'Catalog items with variations and pricing',
       content: { 'application/json': { schema: CatalogResponse } }
-    },
-    503: {
-      description: 'Square catalog unavailable',
-      content: {
-        'application/json': {
-          schema: z
-            .object({ items: z.array(z.unknown()), error: z.string() })
-            .openapi({ title: 'CatalogError' })
-        }
-      }
     }
   }
 });
@@ -273,7 +287,7 @@ export function getOpenApiSpec() {
       }
     },
     servers: [
-      { url: 'https://wrench-club-production.up.railway.app', description: 'Production' },
+      { url: 'https://thewrench.club', description: 'Production' },
       { url: 'http://localhost:5173', description: 'Local dev' }
     ]
   });
