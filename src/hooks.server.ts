@@ -23,20 +23,27 @@ export const handle: Handle = async ({ event, resolve }) => {
   if (!dbReady) await dbInit;
 
   // Rate-limit sensitive POST endpoints by IP
+  // Bypass with X-Test-Key header matching TEST_SECRET env var (for e2e testing)
   const limiterKey = RATE_LIMITED[event.url.pathname];
   if (limiterKey && event.request.method === 'POST') {
-    const ip =
-      event.request.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
-      event.getClientAddress();
-    const limited =
-      limiterKey === 'resend'
-        ? verifyResendLimiter.isLimited(ip)
-        : authLimiter.isLimited(ip);
-    if (limited) {
-      return new Response(JSON.stringify({ error: 'Too many requests — try again later' }), {
-        status: 429,
-        headers: { 'Content-Type': 'application/json', 'Retry-After': '60' }
-      });
+    const testSecret = process.env.TEST_SECRET;
+    const testKey = event.request.headers.get('x-test-key');
+    const bypassRateLimit = testSecret && testKey === testSecret;
+
+    if (!bypassRateLimit) {
+      const ip =
+        event.request.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
+        event.getClientAddress();
+      const limited =
+        limiterKey === 'resend'
+          ? verifyResendLimiter.isLimited(ip)
+          : authLimiter.isLimited(ip);
+      if (limited) {
+        return new Response(JSON.stringify({ error: 'Too many requests — try again later' }), {
+          status: 429,
+          headers: { 'Content-Type': 'application/json', 'Retry-After': '60' }
+        });
+      }
     }
   }
 

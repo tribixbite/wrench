@@ -22,3 +22,4 @@ drizzle/
 screenshot-*.png\nss-*.png\nsq-probe.ts
 test-results/
 playwright-report/
+e2e/.auth/

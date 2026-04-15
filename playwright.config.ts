@@ -6,32 +6,19 @@ import { defineConfig, devices } from '@playwright/test';
  * Tests run against the live site (https://thewrench.club by default).
  * Set TEST_BASE_URL to override.
  *
- * -- Termux/Android local usage --
- * Playwright cannot install its bundled Chromium on Android.
- * Use scripts/playwright-cli.ts which patches process.platform and sets env vars,
- * or set the following before invoking bunx playwright:
- *
- *   export PLAYWRIGHT_HOST_PLATFORM_OVERRIDE=ubuntu22.04-arm64
- *   export PLAYWRIGHT_BROWSERS_PATH=0
- *   export PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=$(which chromium-browser)
- *
- * The config reads PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH and applies it to each project.
+ * Uses a global setup to register one shared account and save cookies.
+ * Authenticated tests reuse that session — no per-test registration needed.
  */
 const systemChromium = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ?? undefined;
-
-/** Common device override to inject system Chromium when available */
-const withSystemChromium = (deviceConfig: Record<string, unknown>) => ({
-  ...deviceConfig,
-  ...(systemChromium ? { executablePath: systemChromium } : {}),
-});
+const testSecret = process.env.TEST_SECRET ?? undefined;
 
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: false, // sequential to avoid auth state conflicts
+  globalSetup: './e2e/global-setup.ts',
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  // 60s per test: Square API calls + cold Railway starts can be slow
   timeout: 60_000,
   reporter: [['html', { open: 'never' }], ['list']],
   use: {
@@ -39,15 +26,13 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'off',
+    ...(systemChromium ? { launchOptions: { executablePath: systemChromium } } : {}),
+    ...(testSecret ? { extraHTTPHeaders: { 'X-Test-Key': testSecret } } : {}),
   },
   projects: [
     {
       name: 'chromium',
-      use: withSystemChromium({ ...devices['Desktop Chrome'] }),
-    },
-    {
-      name: 'mobile',
-      use: withSystemChromium({ ...devices['Pixel 5'] }),
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
 });

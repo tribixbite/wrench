@@ -9,22 +9,38 @@ import { square } from '$lib/server/square';
  */
 export const GET: RequestHandler = async () => {
   try {
-    // catalog.list() omits items in sandbox; catalog.search() is reliable
-    const result = await square.catalog.search({ objectTypes: ['ITEM'] });
-    const items = (result.objects ?? [])
-      .filter(o => o.type === 'ITEM')
-      .map(o => ({
-        id: o.id,
-        name: o.itemData?.name ?? '',
-        description: o.itemData?.description ?? '',
-        variations: (o.itemData?.variations ?? []).map((v: any) => ({
+    // Use catalog.list() — confirmed working with sandbox token
+    const result = await square.catalog.list({ types: 'ITEM' });
+
+    const items: Array<{
+      id: string;
+      name: string;
+      description: string;
+      variations: Array<{
+        id: string;
+        name: string;
+        priceCents: number;
+        currency: string;
+        pricingType: string;
+      }>;
+    }> = [];
+
+    // catalog.list() returns an async iterator
+    for await (const obj of result) {
+      if (obj.type !== 'ITEM') continue;
+      items.push({
+        id: obj.id,
+        name: obj.itemData?.name ?? '',
+        description: obj.itemData?.description ?? '',
+        variations: (obj.itemData?.variations ?? []).map((v: any) => ({
           id: v.id,
           name: v.itemVariationData?.name ?? '',
           priceCents: Number(v.itemVariationData?.priceMoney?.amount ?? 0),
           currency: v.itemVariationData?.priceMoney?.currency ?? 'USD',
           pricingType: v.itemVariationData?.pricingType ?? 'FIXED_PRICING'
         }))
-      }));
+      });
+    }
 
     return json({ items }, {
       headers: {

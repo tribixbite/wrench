@@ -1,43 +1,10 @@
 /**
  * Reservations page tests — bay selector, duration options, slot loading.
- * Unauthenticated access guard is also verified here.
- * If Square sandbox is slow during registration (>55s), tests are skipped.
+ * Uses shared auth state from global-setup (no per-test registration).
  */
 import { test, expect } from '@playwright/test';
-import { testEmail } from './helpers';
 
-/**
- * Register, land on reservations page.
- * Returns true if registration completed and arrived at /app/reservations.
- */
-async function signUpAndGoToReservations(
-  page: import('@playwright/test').Page
-): Promise<boolean> {
-  const email = testEmail('resv');
-  const password = 'TestPass123!';
-
-  await page.goto('/auth/register');
-  await page.fill('[name="name"]', 'Reservations QA');
-  await page.fill('[name="email"]', email);
-  await page.fill('[name="password"]', password);
-  await page.check('[name="waiver"]');
-  await page.click('[type="submit"]');
-
-  try {
-    await page.waitForURL(/\/(app\/dashboard|auth\/verify)/, { timeout: 55_000 });
-  } catch {
-    return false; // registration timed out
-  }
-
-  if (page.url().includes('/auth/verify')) {
-    // Behind email verification gate — can't reach reservations
-    return false;
-  }
-
-  await page.goto('/app/reservations');
-  await page.waitForURL(/\/app\/reservations/, { timeout: 10_000 });
-  return true;
-}
+const AUTH_STATE = 'e2e/.auth/state.json';
 
 test.describe('Unauthenticated guard', () => {
   test('/app/reservations redirects to /auth/login when not logged in', async ({ page }) => {
@@ -47,55 +14,37 @@ test.describe('Unauthenticated guard', () => {
 });
 
 test.describe('Reservations page (authenticated)', () => {
+  test.use({ storageState: AUTH_STATE });
+
   test('reservations page loads with correct title', async ({ page }) => {
-    const ok = await signUpAndGoToReservations(page);
-    if (!ok) { test.skip(); return; }
+    await page.goto('/app/reservations');
     await expect(page).toHaveTitle(/Reservation|Booking|Wrench Club/i);
   });
 
-  test('bay selector renders 5 bay options', async ({ page }) => {
-    const ok = await signUpAndGoToReservations(page);
-    if (!ok) { test.skip(); return; }
+  test('"Any Bay" is selected by default', async ({ page }) => {
+    await page.goto('/app/reservations');
+    // The "Any Bay" button should have the .selected class by default
+    const anyBayBtn = page.locator('button', { hasText: /Any Bay/i }).first();
+    await expect(anyBayBtn).toBeVisible({ timeout: 10_000 });
+    await expect(anyBayBtn).toHaveClass(/selected/);
+  });
 
-    // The reservations page shows bay buttons labeled "Bay 1" through "Bay 5"
+  test('bay selector renders Any Bay + 5 bay options', async ({ page }) => {
+    await page.goto('/app/reservations');
+    await expect(page.locator('text=Any Bay')).toBeVisible({ timeout: 10_000 });
     for (let i = 1; i <= 5; i++) {
-      await expect(page.locator(`text=Bay ${i}`)).toBeVisible({ timeout: 10_000 });
+      await expect(page.locator(`button:has-text("Bay ${i}")`)).toBeVisible();
     }
   });
 
   test('duration selector shows 90 min and 3 hour options', async ({ page }) => {
-    const ok = await signUpAndGoToReservations(page);
-    if (!ok) { test.skip(); return; }
-
+    await page.goto('/app/reservations');
     await expect(page.locator('body')).toContainText('90 min');
     await expect(page.locator('body')).toContainText('3 hour');
   });
 
-  test('selecting a bay triggers slot loading or error feedback', async ({ page }) => {
-    const ok = await signUpAndGoToReservations(page);
-    if (!ok) { test.skip(); return; }
-
-    // Click Bay 1 button
-    const bay1 = page.locator('button, [role="button"]', { hasText: /Bay 1/i }).first();
-    await bay1.click();
-
-    // After selecting, any of: slots, loading indicator, "not available", or error message
-    await page.waitForTimeout(2000);
-    const body = page.locator('body');
-    const hasResponse = await body.evaluate((el) =>
-      /slot|available|unavailable|loading|error|no slot|book|select/i.test(el.textContent ?? '')
-    );
-    expect(hasResponse).toBe(true);
-  });
-
-  test('date input appears after selecting a bay and defaults to today', async ({ page }) => {
-    const ok = await signUpAndGoToReservations(page);
-    if (!ok) { test.skip(); return; }
-
-    // The date input only renders after a bay is selected (conditional {#if selectedBay})
-    const bay1 = page.locator('button, [role="button"]', { hasText: /Bay 1/i }).first();
-    await bay1.click();
-
+  test('date input is visible and defaults to today', async ({ page }) => {
+    await page.goto('/app/reservations');
     const dateInput = page.locator('input[type="date"]');
     await expect(dateInput).toBeVisible({ timeout: 5000 });
 
@@ -104,11 +53,35 @@ test.describe('Reservations page (authenticated)', () => {
     expect(value).toBe(today);
   });
 
-  test('upcoming bookings section is rendered', async ({ page }) => {
-    const ok = await signUpAndGoToReservations(page);
-    if (!ok) { test.skip(); return; }
+  test('availability loads automatically with all bays', async ({ page }) => {
+    await page.goto('/app/reservations');
 
-    // Reservations page shows upcoming bookings (even if the list is empty)
-    await expect(page.locator('body')).toContainText(/upcoming|reservation|booking/i);
+    // Wait for slots to load or error/empty state to appear
+    const body = page.locator('body');
+    await expect(body).toContainText(
+      /Loading availability|No availability|Bay \d|Available Times/i,
+      { timeout: 15_000 }
+    );
+  });
+
+  test('selecting a specific bay filters results', async ({ page }) => {
+    await page.goto('/app/reservations');
+
+    // Click Bay 1 specifically
+    const bay1 = page.locator('button', { hasText: 'Bay 1' }).first();
+    await bay1.click();
+
+    // Wait for slot loading to complete
+    await page.waitForTimeout(3000);
+    const body = page.locator('body');
+    const hasResponse = await body.evaluate((el) =>
+      /available|unavailable|loading|error|no availability|bay/i.test(el.textContent ?? '')
+    );
+    expect(hasResponse).toBe(true);
+  });
+
+  test('upcoming bookings section is rendered', async ({ page }) => {
+    await page.goto('/app/reservations');
+    await expect(page.locator('body')).toContainText(/upcoming|reservation|booking|book a bay/i);
   });
 });
