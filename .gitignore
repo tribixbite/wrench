@@ -21,3 +21,4 @@ drizzle/
 /static/assets/
 screenshot-*.png\nss-*.png\nsq-probe.ts
 test-results/
+playwright-report/

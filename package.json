@@ -17,6 +17,7 @@
     "db:studio": "drizzle-kit studio",
     "postinstall": "bash postinstall.sh",
     "test:e2e": "bunx playwright test",
+    "test:e2e:termux": "bun scripts/playwright-cli.ts test",
     "test:e2e:ui": "bunx playwright test --ui",
     "test:e2e:headed": "bunx playwright test --headed"
   },
