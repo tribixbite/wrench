@@ -34,7 +34,8 @@ export const ErrorResponse = z.object({
 
 /** Request body for POST /api/bookings/availability */
 export const AvailabilityPostBody = z.object({
-  bayNumber: z.number().int().min(1).max(5),
+  /** Omit or null to search all bays at once */
+  bayNumber: z.number().int().min(1).max(5).optional(),
   variationKey: z.enum(['min90', 'hr3']),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 });

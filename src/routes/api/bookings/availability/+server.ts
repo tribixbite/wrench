@@ -5,8 +5,10 @@ import { AvailabilityPostBody } from '$lib/schemas/api';
 
 /**
  * POST /api/bookings/availability
- * Body: { bayNumber: 1-5, variationKey: "min90"|"hr3", date: "YYYY-MM-DD" }
- * Returns: { slots: [{ startAt: string, appointmentSegments: unknown[] }] }
+ * Body: { bayNumber?: 1-5, variationKey: "min90"|"hr3", date: "YYYY-MM-DD" }
+ *
+ * When bayNumber is omitted, searches all 5 bays at once (returns any available bay).
+ * Returns: { slots: [{ startAt: string, teamMemberId: string, bayNumber: number, appointmentSegments: unknown[] }] }
  */
 export const POST: RequestHandler = async ({ request, locals }) => {
   if (!locals.user) throw error(401, 'Not authenticated');
@@ -23,8 +25,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
   const { bayNumber, variationKey, date } = parsed.data;
 
-  const teamMemberId = BAY_TEAM_MEMBERS[bayNumber];
   const serviceVariationId = BAY_VARIATIONS[variationKey];
+
+  // Build team member filter — single bay or all bays
+  const teamMemberIds = bayNumber
+    ? [BAY_TEAM_MEMBERS[bayNumber]]
+    : Object.values(BAY_TEAM_MEMBERS);
 
   // Search from 00:00 to 23:59 on the requested date (UTC)
   const startAt = `${date}T00:00:00Z`;
@@ -39,17 +45,29 @@ export const POST: RequestHandler = async ({ request, locals }) => {
           segmentFilters: [
             {
               serviceVariationId,
-              teamMemberIdFilter: { any: [teamMemberId] }
+              teamMemberIdFilter: { any: teamMemberIds }
             }
           ]
         }
       }
     });
 
-    const slots = (result.availabilities ?? []).map((a) => ({
-      startAt: a.startAt,
-      appointmentSegments: a.appointmentSegments
-    }));
+    // Reverse-lookup team member ID → bay number
+    const memberToBay: Record<string, number> = {};
+    for (const [num, id] of Object.entries(BAY_TEAM_MEMBERS)) {
+      memberToBay[id] = Number(num);
+    }
+
+    const slots = (result.availabilities ?? []).map((a) => {
+      const seg = a.appointmentSegments?.[0];
+      const tmId = seg?.teamMemberId ?? '';
+      return {
+        startAt: a.startAt,
+        teamMemberId: tmId,
+        bayNumber: memberToBay[tmId] ?? 0,
+        appointmentSegments: a.appointmentSegments
+      };
+    });
 
     return json({ slots });
   } catch (err: unknown) {

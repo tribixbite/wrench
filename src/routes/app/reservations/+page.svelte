@@ -13,6 +13,8 @@
 
   interface Slot {
     startAt: string;
+    teamMemberId: string;
+    bayNumber: number;
     appointmentSegments: unknown[];
   }
 
@@ -25,10 +27,11 @@
   }
 
   // ── State ───────────────────────────────────────────────────────────────────
+  /** null = "Any Bay" (search all), number = specific bay */
   let selectedBay = $state<Bay | null>(null);
   let selectedVariation = $state<VariationKey>('min90');
   let selectedDate = $state<string>(todayStr());
-  let selectedSlot = $state<string | null>(null);
+  let selectedSlot = $state<Slot | null>(null);
 
   let slots = $state<Slot[]>([]);
   let slotsLoading = $state(false);
@@ -51,21 +54,27 @@
 
   /** Load availability whenever bay, variation, or date changes. */
   $effect(() => {
-    if (!selectedBay) { slots = []; return; }
-    void fetchSlots(selectedBay, selectedVariation, selectedDate);
+    // Track reactive deps (selectedBay can be null = "any")
+    const _bay = selectedBay;
+    const _var = selectedVariation;
+    const _date = selectedDate;
+    void fetchSlots(_bay, _var, _date);
   });
 
-  async function fetchSlots(bay: Bay, variation: VariationKey, date: string) {
+  async function fetchSlots(bay: Bay | null, variation: VariationKey, date: string) {
     slotsLoading = true;
     slotsError = null;
     slots = [];
     selectedSlot = null;
 
     try {
+      const payload: Record<string, unknown> = { variationKey: variation, date };
+      if (bay) payload.bayNumber = bay;
+
       const res = await fetch('/api/bookings/availability', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bayNumber: bay, variationKey: variation, date })
+        body: JSON.stringify(payload)
       });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
@@ -81,7 +90,7 @@
   }
 
   async function confirmBooking() {
-    if (!selectedSlot || !selectedBay) return;
+    if (!selectedSlot) return;
     bookingState = 'booking';
     bookingError = null;
 
@@ -90,9 +99,9 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          bayNumber: selectedBay,
+          bayNumber: selectedSlot.bayNumber,
           variationKey: selectedVariation,
-          startAt: selectedSlot
+          startAt: selectedSlot.startAt
         })
       });
       if (!res.ok) {
@@ -102,7 +111,6 @@
       const data = await res.json();
       bookingId = data.bookingId;
       bookingState = 'success';
-      // Refresh upcoming bookings
       void fetchUpcoming();
     } catch (e: unknown) {
       bookingError = e instanceof Error ? e.message : 'Booking failed';
@@ -128,7 +136,7 @@
     bookingId = null;
     bookingError = null;
     selectedSlot = null;
-    if (selectedBay) void fetchSlots(selectedBay, selectedVariation, selectedDate);
+    void fetchSlots(selectedBay, selectedVariation, selectedDate);
   }
 
   function fmtTime(iso: string) {
@@ -147,6 +155,20 @@
     };
     return map[teamMemberId] ?? 'Bay';
   }
+
+  /** Deduplicate slots by startAt — keep earliest bay number */
+  function dedupeSlots(allSlots: Slot[]): Slot[] {
+    const seen = new Map<string, Slot>();
+    for (const s of allSlots) {
+      if (!seen.has(s.startAt) || s.bayNumber < (seen.get(s.startAt)!.bayNumber)) {
+        seen.set(s.startAt, s);
+      }
+    }
+    return [...seen.values()].sort((a, b) => a.startAt.localeCompare(b.startAt));
+  }
+
+  /** Derived: when searching all bays, group by time for display */
+  let displaySlots = $derived(selectedBay ? slots : dedupeSlots(slots));
 
   onMount(() => { void fetchUpcoming(); });
 </script>
@@ -209,10 +231,18 @@
       </div>
 
     {:else}
-      <!-- ── Step 1: Bay + Duration ───────────────────────────────── -->
+      <!-- ── Step 1: Bay filter + Duration ───────────────────────── -->
       <div class="step">
-        <p class="step-label">Select Bay</p>
+        <p class="step-label">Bay Filter</p>
         <div class="bay-grid">
+          <button
+            class="bay-btn"
+            class:selected={selectedBay === null}
+            onclick={() => { selectedBay = null; selectedSlot = null; }}
+          >
+            <Car size={16} />
+            <span>Any Bay</span>
+          </button>
           {#each BAYS as bay}
             <button
               class="bay-btn"
@@ -244,62 +274,61 @@
       </div>
 
       <!-- ── Step 2: Date ────────────────────────────────────────── -->
-      {#if selectedBay}
-        <div class="step">
-          <p class="step-label">Date</p>
-          <input
-            type="date"
-            class="date-input input"
-            bind:value={selectedDate}
-            min={minDate()}
-          />
-        </div>
+      <div class="step">
+        <p class="step-label">Date</p>
+        <input
+          type="date"
+          class="date-input input"
+          bind:value={selectedDate}
+          min={minDate()}
+        />
+      </div>
 
-        <!-- ── Step 3: Time slots ──────────────────────────────── -->
-        <div class="step">
-          <p class="step-label">Available Times</p>
+      <!-- ── Step 3: Time slots ──────────────────────────────── -->
+      <div class="step">
+        <p class="step-label">Available Times</p>
 
-          {#if slotsLoading}
-            <div class="slots-loading">
-              <Loader2 size={20} class="spin" />
-              <span>Loading availability…</span>
-            </div>
-          {:else if slotsError}
-            <div class="slots-error">{slotsError}</div>
-          {:else if slots.length === 0}
-            <div class="slots-empty">No availability for this date. Try another day.</div>
-          {:else}
-            <div class="slots-grid">
-              {#each slots as slot}
-                <button
-                  class="slot-btn"
-                  class:selected={selectedSlot === slot.startAt}
-                  onclick={() => { selectedSlot = slot.startAt; bookingState = 'confirming'; }}
-                >
-                  {fmtTime(slot.startAt ?? '')}
-                </button>
-              {/each}
-            </div>
-          {/if}
-        </div>
-      {/if}
+        {#if slotsLoading}
+          <div class="slots-loading">
+            <Loader2 size={20} class="spin" />
+            <span>Loading availability…</span>
+          </div>
+        {:else if slotsError}
+          <div class="slots-error">{slotsError}</div>
+        {:else if displaySlots.length === 0}
+          <div class="slots-empty">No availability for this date. Try another day.</div>
+        {:else}
+          <div class="slots-grid">
+            {#each displaySlots as slot}
+              <button
+                class="slot-btn"
+                class:selected={selectedSlot?.startAt === slot.startAt}
+                onclick={() => { selectedSlot = slot; bookingState = 'confirming'; }}
+              >
+                <span class="slot-time">{fmtTime(slot.startAt ?? '')}</span>
+                <span class="slot-bay">Bay {slot.bayNumber}</span>
+              </button>
+            {/each}
+          </div>
+        {/if}
+      </div>
 
       <!-- ── Confirmation panel ──────────────────────────────────── -->
-      {#if (bookingState === 'confirming' || bookingState === 'booking') && selectedSlot && selectedBay}
+      {#if (bookingState === 'confirming' || bookingState === 'booking') && selectedSlot}
         <div class="confirm-panel">
           <p class="confirm-title">Confirm your reservation</p>
           <div class="confirm-row">
-            <span>Bay</span><strong>Bay {selectedBay}</strong>
+            <span>Bay</span><strong>Bay {selectedSlot.bayNumber}</strong>
           </div>
           <div class="confirm-row">
             <span>Duration</span>
             <strong>{selectedVariation === 'min90' ? '90 min' : '3 hours'}</strong>
           </div>
           <div class="confirm-row">
-            <span>Date</span><strong>{fmtDate(selectedSlot)}</strong>
+            <span>Date</span><strong>{fmtDate(selectedSlot.startAt)}</strong>
           </div>
           <div class="confirm-row">
-            <span>Time</span><strong>{fmtTime(selectedSlot)}</strong>
+            <span>Time</span><strong>{fmtTime(selectedSlot.startAt)}</strong>
           </div>
           <div class="confirm-row">
             <span>Price</span>
@@ -433,6 +462,7 @@
   .slots-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
   .slot-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 0.125rem;
     padding: 0.5rem 1rem; border-radius: 0.375rem;
     border: 1px solid var(--border); background: var(--bg-elevated);
     color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;
@@ -440,6 +470,10 @@
   }
   .slot-btn:hover { border-color: var(--accent-border); color: var(--accent); }
   .slot-btn.selected { border-color: var(--accent); background: var(--accent-muted); color: var(--accent); font-weight: 700; }
+
+  .slot-time { font-weight: 600; }
+  .slot-bay { font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .slot-btn.selected .slot-bay { color: var(--accent); }
 
   /* Confirmation */
   .confirm-panel {
