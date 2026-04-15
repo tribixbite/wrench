@@ -21,11 +21,11 @@ export const LOCATION_ID =
 /** Square Bookings — bay team member IDs (each bay = one bookable resource).
  *  TODO: Move to env vars / DB when switching to production Square account. */
 export const BAY_TEAM_MEMBERS: Record<number, string> = {
-  1: 'TMKSGvOnHLXY9Qf1',
-  2: 'TMAQYKApwSTWO88t',
-  3: 'TMwAqjOFVf517b3h',
-  4: 'TMTjzsKd1G7PU43M',
-  5: 'TM4sarrWNHu5-kXb'
+  1: 'TMkMik9RL18tkTF7',
+  2: 'TMLm78Z2tt7iGsxE',
+  3: 'TM-ELEPsnFgo279C',
+  4: 'TMUSbWTh7cqWRCUM',
+  5: 'TMYcymhGNoUvtitQ'
 };
 
 /** Bay Reservation service variation IDs */

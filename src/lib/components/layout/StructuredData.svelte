@@ -6,13 +6,13 @@
   const schema = {
     '@context': 'https://schema.org',
     '@type': 'AutoRepair',
-    '@id': 'https://wrenchclub.com',
+    '@id': 'https://thewrench.club',
     name: 'Wrench Club',
     description:
       "West Michigan's premier membership-based DIY auto shop. Members rent hoist bays, flat bays, and a detail bay with access to a full tool library, professional lifts, and a gearhead community.",
-    url: 'https://wrenchclub.com',
+    url: 'https://thewrench.club',
     telephone: '',
-    email: 'info@wrenchclub.com',
+    email: 'info@thewrench.club',
     address: {
       '@type': 'PostalAddress',
       streetAddress: '522 Stocking Ave NW',
@@ -34,7 +34,7 @@
       description: 'Opening 2026 — hours TBD'
     },
     sameAs: ['https://www.facebook.com/wrenchclubb'],
-    image: 'https://wrenchclub.com/assets/team-cars.jpg',
+    image: 'https://thewrench.club/assets/team-cars.jpg',
     founder: [
       { '@type': 'Person', name: 'Coleman Brook' },
       { '@type': 'Person', name: 'Derick Brower' },
