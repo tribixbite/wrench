@@ -86,7 +86,7 @@ export const actions: Actions = {
     });
 
     // Non-blocking verification email
-    const origin = env.ORIGIN ?? 'https://wrenchclub.com';
+    const origin = env.ORIGIN ?? 'https://thewrench.club';
     sendEmailVerification({
       to: email,
       name,

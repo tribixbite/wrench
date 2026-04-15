@@ -73,12 +73,12 @@
           </a>
 
           <a
-            href="mailto:info@wrenchclub.com"
+            href="mailto:info@thewrench.club"
             class="flex items-center gap-3 text-sm group"
             style="color: var(--text-secondary)"
           >
             <Mail size={16} class="shrink-0" style="color: var(--text-muted)" />
-            <span class="group-hover:text-white transition-colors">info@wrenchclub.com</span>
+            <span class="group-hover:text-white transition-colors">info@thewrench.club</span>
           </a>
 
           <a

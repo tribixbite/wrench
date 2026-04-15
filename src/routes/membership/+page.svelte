@@ -44,6 +44,8 @@
 
 <svelte:head>
   <title>Membership — Wrench Club</title>
+  <meta property="og:title" content="Membership — Wrench Club" />
+  <meta property="og:description" content="Everything included with Wrench Club membership: hoist access, full tool library, parts discounts, and a community of gearheads." />
   <meta name="description" content="Everything included with a Wrench Club membership — tool library, clubhouse, parts discounts, events, and priority bay booking in Grand Rapids, MI." />
 </svelte:head>
 

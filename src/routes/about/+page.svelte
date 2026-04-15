@@ -48,6 +48,8 @@ I am excited to take my expertise as a mechanic and auto shop owner, and use it 
 
 <svelte:head>
   <title>About — Wrench Club</title>
+  <meta property="og:title" content="About — Wrench Club" />
+  <meta property="og:description" content="Meet the founders of Wrench Club — four gearheads building West Michigan's first membership-based DIY auto shop at 522 Stocking Ave NW, Grand Rapids." />
   <meta name="description" content="Meet the team behind Wrench Club — four gearheads building West Michigan's premier DIY auto shop at 522 Stocking Ave NW, Grand Rapids, MI." />
 </svelte:head>
 
@@ -150,7 +152,7 @@ I am excited to take my expertise as a mechanic and auto shop owner, and use it 
           </div>
           <div class="detail-row">
             <span class="detail-label font-mono-spec">EMAIL</span>
-            <a href="mailto:info@wrenchclub.com" class="detail-link">info@wrenchclub.com</a>
+            <a href="mailto:info@thewrench.club" class="detail-link">info@thewrench.club</a>
           </div>
           <div class="detail-row">
             <span class="detail-label font-mono-spec">FACEBOOK</span>

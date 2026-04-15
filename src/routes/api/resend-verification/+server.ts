@@ -44,7 +44,7 @@ export const POST: RequestHandler = async ({ locals }) => {
     expiresAt
   });
 
-  const origin = env.ORIGIN ?? 'https://wrenchclub.com';
+  const origin = env.ORIGIN ?? 'https://thewrench.club';
   await sendEmailVerification({
     to: locals.user.email,
     name: locals.user.name,

@@ -48,7 +48,7 @@
 
   <p class="edit-note">
     Profile editing and membership management will be available at launch.
-    Contact <a href="mailto:info@wrenchclub.com" style="color: var(--accent);">info@wrenchclub.com</a>
+    Contact <a href="mailto:info@thewrench.club" style="color: var(--accent);">info@thewrench.club</a>
     for any changes.
   </p>
 </div>

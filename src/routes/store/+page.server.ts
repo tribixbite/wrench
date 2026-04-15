@@ -31,20 +31,32 @@ export const load: PageServerLoad = async () => {
         }))
       }));
 
-    // Separate merch from bay/membership items
-    const merch = items.filter(i =>
-      i.name.toLowerCase().includes('shirt') ||
-      i.name.toLowerCase().includes('hat') ||
-      i.name.toLowerCase().includes('tee') ||
-      i.name.toLowerCase().includes('gift')
-    );
+    // Deduplicate by name — Square sandbox often contains duplicate entries
+    const seen = new Set<string>();
+    const unique = items.filter(i => {
+      const key = i.name.toLowerCase().trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 
-    const bays = items.filter(i =>
-      i.name.toLowerCase().includes('bay') ||
-      i.name.toLowerCase().includes('membership')
-    );
+    // Bay/membership items — categorised first so gift cards with "bay" in name
+    // don't bleed into the merch section
+    const bays = unique.filter(i => {
+      const n = i.name.toLowerCase();
+      return n.includes('bay') || n.includes('membership');
+    });
 
-    return { merch, bays, allItems: items };
+    const bayIds = new Set(bays.map(i => i.id));
+
+    // Merch = clothing/accessories that are NOT already in the bays list
+    const merch = unique.filter(i => {
+      if (bayIds.has(i.id)) return false;
+      const n = i.name.toLowerCase();
+      return n.includes('shirt') || n.includes('hat') || n.includes('tee') || n.includes('gift');
+    });
+
+    return { merch, bays, allItems: unique };
   } catch (err) {
     console.error('Square catalog error:', err);
     return { merch: [], bays: [], allItems: [] };

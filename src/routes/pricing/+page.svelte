@@ -65,6 +65,8 @@
 
 <svelte:head>
   <title>Pricing — Wrench Club</title>
+  <meta property="og:title" content="Pricing — Wrench Club" />
+  <meta property="og:description" content="Transparent bay rental and membership pricing for Wrench Club, Grand Rapids' DIY auto shop." />
   <meta name="description" content="Transparent bay and membership pricing at Wrench Club — Grand Rapids, MI. Flat bays, hoist bays, and detail bays available by the hour, day, or month." />
 </svelte:head>
 

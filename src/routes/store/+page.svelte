@@ -45,6 +45,8 @@
 
 <svelte:head>
   <title>Shop — Wrench Club</title>
+  <meta property="og:title" content="Shop — Wrench Club" />
+  <meta property="og:description" content="Wrench Club merch and bay credits. Tees, hats, and gift cards — sold through our Square store." />
   <meta name="description" content="Wrench Club merch — tees, hats, and bay credits. Powered by Square POS." />
 </svelte:head>
 
@@ -169,7 +171,7 @@
           Gift cards sold in any denomination — contact us to arrange.
         </p>
         <a
-          href="mailto:info@wrenchclub.com?subject=Bay Credit Gift Card"
+          href="mailto:info@thewrench.club?subject=Bay Credit Gift Card"
           class="btn btn-outline mt-4 inline-flex"
         >
           Inquire About Gift Cards <ArrowRight size={16} />
