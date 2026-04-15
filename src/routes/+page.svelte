@@ -67,7 +67,7 @@
   <meta property="og:image" content="https://thewrench.club/og-preview.webp" />
   <meta property="og:image:type" content="image/webp" />
   <meta property="og:image:width" content="800" />
-  <meta property="og:image:height" content="420" />
+  <meta property="og:image:height" content="500" />
   <meta property="og:image:alt" content="Wrench Club — DIY auto shop, Grand Rapids MI" />
 
   <!-- Twitter / X card — use static PNG (Twitter doesn't support animated WebP) -->
