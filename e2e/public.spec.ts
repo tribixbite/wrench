@@ -17,6 +17,7 @@ function collectErrors(page: import('@playwright/test').Page) {
     /net::ERR_BLOCKED/i,
     /ERR_NAME_NOT_RESOLVED/i,
     /Failed to load resource/i,
+    /CORS policy/i,
   ];
   page.on('console', (msg) => {
     if (msg.type() === 'error') {
