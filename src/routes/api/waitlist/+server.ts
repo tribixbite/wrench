@@ -5,11 +5,10 @@ import { waitlist } from '$lib/server/schema';
 import { nanoid } from 'nanoid';
 import { eq } from 'drizzle-orm';
 import { sendWaitlistConfirmation } from '$lib/server/email';
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { WaitlistPostBody } from '$lib/schemas/api';
 
 export const POST: RequestHandler = async ({ request }) => {
-  let body: { email?: unknown; name?: unknown };
+  let body: unknown;
 
   try {
     body = await request.json();
@@ -17,12 +16,14 @@ export const POST: RequestHandler = async ({ request }) => {
     return json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
-  const name = typeof body.name === 'string' ? body.name.trim().slice(0, 80) : null;
-
-  if (!email || !EMAIL_RE.test(email)) {
-    return json({ error: 'Please enter a valid email address.' }, { status: 400 });
+  const parsed = WaitlistPostBody.safeParse(body);
+  if (!parsed.success) {
+    return json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
+
+  // Normalise email to lowercase — Zod validates format, we normalise here
+  const email = parsed.data.email.trim().toLowerCase();
+  const name = parsed.data.name?.trim() ?? null;
 
   // Check for existing entry
   const existing = await db.select().from(waitlist).where(eq(waitlist.email, email)).limit(1);

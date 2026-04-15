@@ -2,6 +2,7 @@ import type { RequestHandler } from './$types';
 import { json, error } from '@sveltejs/kit';
 import { square, LOCATION_ID, BAY_TEAM_MEMBERS, BAY_VARIATIONS } from '$lib/server/square';
 import { nanoid } from 'nanoid';
+import { BookingCreateBody } from '$lib/schemas/api';
 
 /**
  * POST /api/bookings/create
@@ -11,15 +12,17 @@ import { nanoid } from 'nanoid';
 export const POST: RequestHandler = async ({ request, locals }) => {
   if (!locals.user) throw error(401, 'Not authenticated');
 
-  const body = await request.json();
-  const bayNumber = Number(body.bayNumber);
-  const variationKey = body.variationKey as keyof typeof BAY_VARIATIONS;
-  const startAt = body.startAt as string;
-  const note = body.note as string | undefined;
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    throw error(400, 'Invalid request body');
+  }
 
-  if (!BAY_TEAM_MEMBERS[bayNumber]) throw error(400, 'Invalid bay number');
-  if (!BAY_VARIATIONS[variationKey]) throw error(400, 'Invalid variation');
-  if (!startAt) throw error(400, 'Missing startAt');
+  const parsed = BookingCreateBody.safeParse(body);
+  if (!parsed.success) throw error(400, parsed.error.issues[0].message);
+
+  const { bayNumber, variationKey, startAt, note } = parsed.data;
 
   const teamMemberId = BAY_TEAM_MEMBERS[bayNumber];
   const serviceVariationId = BAY_VARIATIONS[variationKey];

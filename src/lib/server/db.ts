@@ -1,3 +1,16 @@
+/**
+ * Database connection for the Wrench Club app.
+ *
+ * Architecture notes:
+ * - The DB is intentionally thin — it stores auth sessions and waitlist only.
+ * - All business data (members as customers, bookings, subscriptions, orders,
+ *   catalog items) lives in Square and is queried via the Square APIs.
+ * - In production (Railway) the database file lives on a persistent volume at
+ *   /app/data/wrench.db (DATABASE_URL=file:/app/data/wrench.db).
+ * - In dev, defaults to file:./wrench.db in the project root.
+ * - Parent directory is created automatically on startup to handle Railway's
+ *   volume mount path.
+ */
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
 import { env } from '$env/dynamic/private';
@@ -79,10 +92,27 @@ async function ensureTables() {
 
 // Run once on module load — safe to call repeatedly (IF NOT EXISTS)
 let _initialized = false;
+
+/**
+ * Ensures all required tables exist, creating them if absent.
+ * Call this before the first database operation in hooks.server.ts or
+ * any server-side entry point. Idempotent — uses IF NOT EXISTS everywhere.
+ *
+ * Tables managed: users, sessions, waitlist,
+ * email_verification_tokens, password_reset_tokens.
+ */
 export async function initDb() {
   if (_initialized) return;
   await ensureTables();
   _initialized = true;
 }
 
+/**
+ * Drizzle ORM database client — server-only.
+ * Never import this in client-side code or Svelte components without `.server.ts` guards.
+ *
+ * @example
+ * import { db } from '$lib/server/db';
+ * const rows = await db.select().from(waitlist).all();
+ */
 export const db = drizzle(client, { schema });

@@ -5,31 +5,50 @@
  */
 import { env } from '$env/dynamic/private';
 
+/** Data required to send a waitlist confirmation email. */
 interface WaitlistConfirmationData {
+  /** Recipient email address */
   to: string;
+  /** Optional first name for personalised greeting */
   name?: string | null;
 }
 
+/** Data required to send a registration welcome email. */
 interface RegistrationWelcomeData {
+  /** Recipient email address */
   to: string;
+  /** Member's full name */
   name: string;
 }
 
+/** Data required to send a password reset email. */
 interface PasswordResetData {
+  /** Recipient email address */
   to: string;
-  /** Full reset URL including token */
+  /** Full reset URL including token — valid for 1 hour */
   resetUrl: string;
 }
 
+/** Data required to send an email verification link. */
 interface EmailVerificationData {
+  /** Recipient email address */
   to: string;
+  /** Member's full name */
   name: string;
-  /** Full URL including token — e.g. https://thewrench.club/auth/verify/abc123 */
+  /** Full URL including token — e.g. https://thewrench.club/auth/verify/abc123 — valid for 24 hours */
   verifyUrl: string;
 }
 
+/** Sender identity used on all outbound emails. */
 const FROM = 'Wrench Club <hello@thewrench.club>';
 
+/**
+ * Internal dispatcher — sends a single email via Resend.
+ * Silently no-ops if RESEND_API_KEY is absent (dev/staging without Resend).
+ * Never throws — email failure must not interrupt user-facing flows.
+ *
+ * @param payload - from/to/subject/html for the email
+ */
 async function send(payload: {
   from: string;
   to: string;
@@ -110,7 +129,12 @@ export async function sendWaitlistConfirmation({ to, name }: WaitlistConfirmatio
   });
 }
 
-/** Password reset link — expires in 1 hour. */
+/**
+ * Sends a password reset email with a one-hour expiry link.
+ *
+ * @param opts.to - Recipient email address
+ * @param opts.resetUrl - Full URL with embedded reset token
+ */
 export async function sendPasswordReset({ to, resetUrl }: PasswordResetData) {
   await send({
     from: FROM,
@@ -157,7 +181,15 @@ export async function sendPasswordReset({ to, resetUrl }: PasswordResetData) {
   });
 }
 
-/** Email address verification link sent after registration. */
+/**
+ * Sends an email address verification link after account registration.
+ * The link expires after 24 hours. A new token can be issued via
+ * POST /api/resend-verification.
+ *
+ * @param opts.to - Recipient email address
+ * @param opts.name - Member's full name (first name used in greeting)
+ * @param opts.verifyUrl - Full URL with embedded verification token
+ */
 export async function sendEmailVerification({ to, name, verifyUrl }: EmailVerificationData) {
   const first = name.split(' ')[0];
 
@@ -204,7 +236,13 @@ export async function sendEmailVerification({ to, name, verifyUrl }: EmailVerifi
   });
 }
 
-/** Welcome email sent on account registration. */
+/**
+ * Sends a welcome email immediately after a new member registers.
+ * Informs them that bay booking opens at launch in 2026.
+ *
+ * @param opts.to - Recipient email address
+ * @param opts.name - Member's full name (first name used in greeting)
+ */
 export async function sendRegistrationWelcome({ to, name }: RegistrationWelcomeData) {
   const first = name.split(' ')[0];
 
