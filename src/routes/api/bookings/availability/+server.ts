@@ -53,8 +53,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     return json({ slots });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Square API error';
-    console.error('[bookings/availability]', msg);
-    throw error(502, msg);
+    console.error('[bookings/availability]', err instanceof Error ? err.message : err);
+    throw error(502, 'Availability service temporarily unavailable');
   }
 };

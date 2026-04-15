@@ -76,10 +76,12 @@
           <p class="user-role">{data.user?.role}</p>
         </div>
       </div>
-      <a href="/auth/logout" class="sidebar-link logout-link">
-        <LogOut size={16} />
-        <span>Sign Out</span>
-      </a>
+      <form method="POST" action="/auth/logout" style="display:contents">
+        <button type="submit" class="sidebar-link logout-link">
+          <LogOut size={16} />
+          <span>Sign Out</span>
+        </button>
+      </form>
     </div>
   </aside>
 

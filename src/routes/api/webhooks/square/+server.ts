@@ -1,18 +1,26 @@
 import type { RequestHandler } from './$types';
 import { env } from '$env/dynamic/private';
 import { json } from '@sveltejs/kit';
+import { createHmac, timingSafeEqual } from 'crypto';
 
 /**
  * Square webhook endpoint.
  * Validates Square-Signature header before processing.
  * Handles: payment.completed, subscription.created, booking.created
  */
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, url }) => {
   const signature = request.headers.get('Square-Signature');
   const body = await request.text();
 
-  // Validate webhook signature in production
-  if (env.SQUARE_WEBHOOK_SECRET && !isValidSquareSignature(body, signature, env.SQUARE_WEBHOOK_SECRET)) {
+  // Reject all requests when webhook secret is not configured
+  if (!env.SQUARE_WEBHOOK_SECRET) {
+    console.warn('[webhooks/square] SQUARE_WEBHOOK_SECRET not set — rejecting all requests');
+    return json({ error: 'Webhook not configured' }, { status: 503 });
+  }
+
+  // Validate Square HMAC-SHA256 signature
+  if (!isValidSquareSignature(body, signature, env.SQUARE_WEBHOOK_SECRET, url.toString())) {
+    console.warn('[webhooks/square] Invalid signature');
     return json({ error: 'Invalid signature' }, { status: 401 });
   }
 
@@ -50,17 +58,28 @@ export const POST: RequestHandler = async ({ request }) => {
 
 /**
  * Validates Square's HMAC-SHA256 webhook signature.
+ * Square signs: HMAC-SHA256(secret, notificationUrl + body), base64-encoded.
+ * Uses timingSafeEqual to prevent timing attacks.
  * See: https://developer.squareup.com/docs/webhooks/validate-notifications
  */
 function isValidSquareSignature(
   body: string,
   signature: string | null,
-  secret: string
+  secret: string,
+  notificationUrl: string
 ): boolean {
   if (!signature) return false;
-  // TODO: implement HMAC-SHA256 validation when webhook secret is available
-  // import { createHmac } from 'crypto';
-  // const expected = createHmac('sha256', secret).update(body).digest('base64');
-  // return expected === signature;
-  return true; // placeholder — validates all in dev
+  try {
+    const hmac = createHmac('sha256', secret);
+    hmac.update(notificationUrl + body);
+    const expected = hmac.digest('base64');
+    // timingSafeEqual requires Uint8Array; use TextEncoder for consistent typing
+    const enc = new TextEncoder();
+    const expectedBuf = enc.encode(expected);
+    const signatureBuf = enc.encode(signature);
+    if (expectedBuf.length !== signatureBuf.length) return false;
+    return timingSafeEqual(expectedBuf, signatureBuf);
+  } catch {
+    return false;
+  }
 }

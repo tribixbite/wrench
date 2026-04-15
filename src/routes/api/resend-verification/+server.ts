@@ -15,6 +15,22 @@ export const POST: RequestHandler = async ({ locals }) => {
 
   const userId = locals.user.id;
 
+  // 60-second cooldown: check when the last token was issued
+  const [lastToken] = await db
+    .select({ expiresAt: emailVerificationTokens.expiresAt })
+    .from(emailVerificationTokens)
+    .where(eq(emailVerificationTokens.userId, userId))
+    .limit(1);
+
+  if (lastToken) {
+    // Tokens expire 24 h after creation; cooldown window = 24h - 60s
+    const issuedAt = lastToken.expiresAt - 60 * 60 * 24;
+    const now = Math.floor(Date.now() / 1000);
+    if (now - issuedAt < 60) {
+      return json({ ok: false, message: 'Please wait 60 seconds before requesting another link.' }, { status: 429 });
+    }
+  }
+
   // Delete any existing tokens for this user before issuing a new one
   await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, userId));
 

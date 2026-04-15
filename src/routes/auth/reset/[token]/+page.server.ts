@@ -1,5 +1,6 @@
 import type { Actions, PageServerLoad } from './$types';
 import { fail, redirect } from '@sveltejs/kit';
+import { lucia } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { users, passwordResetTokens } from '$lib/server/schema';
 import { eq, and, gt } from 'drizzle-orm';
@@ -54,6 +55,9 @@ export const actions: Actions = {
 
     await db.update(users).set({ passwordHash }).where(eq(users.id, row.userId));
     await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, row.userId));
+
+    // Invalidate all active sessions so stolen cookies can't be reused
+    await lucia.invalidateUserSessions(row.userId);
 
     throw redirect(302, '/auth/login?reset=1');
   }

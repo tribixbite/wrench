@@ -59,7 +59,9 @@
     <div class="hidden md:flex items-center gap-3">
       {#if user}
         <a href="/app/dashboard" class="nav-link text-sm font-medium">Dashboard</a>
-        <a href="/auth/logout" class="btn btn-ghost text-sm py-2 px-4">Sign Out</a>
+        <form method="POST" action="/auth/logout" style="display:contents">
+          <button type="submit" class="btn btn-ghost text-sm py-2 px-4">Sign Out</button>
+        </form>
       {:else}
         <a href="/auth/login" class="nav-link text-sm font-medium">Member Login</a>
         <a href="#waitlist" class="btn btn-primary py-2 px-5 text-sm" onclick={closeMobile}>

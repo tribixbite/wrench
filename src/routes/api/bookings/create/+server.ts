@@ -55,8 +55,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     return json({ bookingId });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Square API error';
-    console.error('[bookings/create]', msg);
-    throw error(502, msg);
+    console.error('[bookings/create]', err instanceof Error ? err.message : err);
+    throw error(502, 'Booking service temporarily unavailable');
   }
 };

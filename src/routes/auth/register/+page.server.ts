@@ -6,7 +6,7 @@ import { users, emailVerificationTokens } from '$lib/server/schema';
 import { eq } from 'drizzle-orm';
 import { Argon2id } from 'oslo/password';
 import { nanoid } from 'nanoid';
-import { sendEmailVerification } from '$lib/server/email';
+import { sendEmailVerification, sendRegistrationWelcome } from '$lib/server/email';
 import { env } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -33,10 +33,14 @@ export const actions: Actions = {
       return fail(400, { error: 'You must accept the facility waiver to continue.', fields: { name, email } });
     }
 
-    // Check for existing user
+    // Check for existing user — do NOT return 409 (reveals email existence).
+    // Instead redirect silently and send a "you already have an account" email.
     const [existing] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (existing) {
-      return fail(409, { error: 'An account with that email already exists.', fields: { name, email } });
+      // Non-blocking — send "you already have an account" email to the registered address
+      sendRegistrationWelcome({ to: email, name: existing.name }).catch(() => {});
+      // Redirect to login without revealing whether the email already existed
+      throw redirect(302, '/auth/login');
     }
 
     const passwordHash = await new Argon2id().hash(password);
