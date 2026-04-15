@@ -90,7 +90,12 @@ test.describe('GET /api/catalog (public or auth-gated)', () => {
   test('returns a valid response (200 or 401)', async ({ request }) => {
     const res = await request.get(`${base()}/api/catalog`);
     // Catalog may be public (200) or auth-gated (401) — both are acceptable
-    expect([200, 401, 404, 503]).toContain(res.status());
+    // 503 = Square sandbox token lacks catalog scope — flag but don't block CI
+    const status = res.status();
+    if (status === 503) {
+      console.warn('[catalog] Square sandbox returned UNAUTHORIZED — token may lack ITEMS_READ scope');
+    }
+    expect([200, 401, 404, 503]).toContain(status);
   });
 });
 

@@ -21,7 +21,7 @@
   <div class="auth-bg"></div>
   <div class="auth-card">
     <a href="/" class="auth-logo">
-      <img src="/assets/logo.webp" alt="Wrench Club" class="h-8 w-auto" />
+      <img src="/logo.webp" alt="Wrench Club" class="h-8 w-auto" />
     </a>
 
     <h1 class="auth-title font-display">Create Your Account</h1>

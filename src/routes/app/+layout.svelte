@@ -39,7 +39,7 @@
   <aside class="sidebar">
     <div class="sidebar-top">
       <a href="/" class="sidebar-logo">
-        <img src="/assets/logo.webp" alt="Wrench Club" class="h-7 w-auto" />
+        <img src="/logo.webp" alt="Wrench Club" class="h-7 w-auto" />
       </a>
     </div>
 
