@@ -285,7 +285,7 @@
       {/if}
 
       <!-- ── Confirmation panel ──────────────────────────────────── -->
-      {#if bookingState === 'confirming' && selectedSlot && selectedBay}
+      {#if (bookingState === 'confirming' || bookingState === 'booking') && selectedSlot && selectedBay}
         <div class="confirm-panel">
           <p class="confirm-title">Confirm your reservation</p>
           <div class="confirm-row">

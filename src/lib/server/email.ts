@@ -43,6 +43,21 @@ interface EmailVerificationData {
 const FROM = 'Wrench Club <hello@thewrench.club>';
 
 /**
+ * Escapes HTML special characters in user-supplied strings before
+ * interpolating them into email HTML templates, preventing XSS.
+ *
+ * @param str - Raw user input (name, URL, etc.)
+ */
+function h(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
  * Internal dispatcher — sends a single email via Resend.
  * Silently no-ops if RESEND_API_KEY is absent (dev/staging without Resend).
  * Never throws — email failure must not interrupt user-facing flows.
@@ -80,7 +95,7 @@ async function send(payload: {
 
 /** Confirmation email sent when someone joins the waitlist. */
 export async function sendWaitlistConfirmation({ to, name }: WaitlistConfirmationData) {
-  const greeting = name ? `Hey ${name.split(' ')[0]},` : 'Hey,';
+  const greeting = name ? `Hey ${h(name.split(' ')[0])},` : 'Hey,';
 
   await send({
     from: FROM,
@@ -157,7 +172,7 @@ export async function sendPasswordReset({ to, resetUrl }: PasswordResetData) {
       Click below to choose a new one. This link expires in <strong style="color:#f0f0f0;">1 hour</strong>.
     </p>
     <div style="margin:0 0 32px;">
-      <a href="${resetUrl}"
+      <a href="${h(resetUrl)}"
          style="display:inline-block;background:#ED0C85;color:#fff;text-decoration:none;
                 font-weight:700;font-size:0.9375rem;padding:14px 32px;border-radius:8px;">
         Reset Password →
@@ -167,7 +182,7 @@ export async function sendPasswordReset({ to, resetUrl }: PasswordResetData) {
       If you didn't request a password reset, you can safely ignore this email —
       your password won't change.<br><br>
       Or copy this link:<br>
-      <span style="color:#a3a3a3;word-break:break-all;">${resetUrl}</span>
+      <span style="color:#a3a3a3;word-break:break-all;">${h(resetUrl)}</span>
     </p>
     <hr style="border:none;border-top:1px solid #262626;margin:0 0 24px;">
     <p style="color:#525252;font-size:0.75rem;margin:0;">
@@ -191,7 +206,8 @@ export async function sendPasswordReset({ to, resetUrl }: PasswordResetData) {
  * @param opts.verifyUrl - Full URL with embedded verification token
  */
 export async function sendEmailVerification({ to, name, verifyUrl }: EmailVerificationData) {
-  const first = name.split(' ')[0];
+  const first = h(name.split(' ')[0]);
+  const safeVerifyUrl = h(verifyUrl);
 
   await send({
     from: FROM,
@@ -213,7 +229,7 @@ export async function sendEmailVerification({ to, name, verifyUrl }: EmailVerifi
       Click below to confirm your email address. This link expires in 24 hours.
     </p>
     <div style="margin:0 0 32px;">
-      <a href="${verifyUrl}"
+      <a href="${safeVerifyUrl}"
          style="display:inline-block;background:#ED0C85;color:#fff;text-decoration:none;
                 font-weight:700;font-size:0.9375rem;padding:14px 32px;border-radius:8px;">
         Verify Email Address →
@@ -221,7 +237,7 @@ export async function sendEmailVerification({ to, name, verifyUrl }: EmailVerifi
     </div>
     <p style="color:#525252;font-size:0.875rem;line-height:1.6;margin:0 0 24px;">
       Or copy this link into your browser:<br>
-      <span style="color:#a3a3a3;word-break:break-all;">${verifyUrl}</span>
+      <span style="color:#a3a3a3;word-break:break-all;">${safeVerifyUrl}</span>
     </p>
     <hr style="border:none;border-top:1px solid #262626;margin:0 0 24px;">
     <p style="color:#525252;font-size:0.75rem;margin:0;">
@@ -244,7 +260,7 @@ export async function sendEmailVerification({ to, name, verifyUrl }: EmailVerifi
  * @param opts.name - Member's full name (first name used in greeting)
  */
 export async function sendRegistrationWelcome({ to, name }: RegistrationWelcomeData) {
-  const first = name.split(' ')[0];
+  const first = h(name.split(' ')[0]);
 
   await send({
     from: FROM,

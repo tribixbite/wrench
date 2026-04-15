@@ -1,14 +1,44 @@
 import type { Handle } from '@sveltejs/kit';
 import { lucia } from '$lib/server/auth';
 import { initDb } from '$lib/server/db';
+import { authLimiter, verifyResendLimiter } from '$lib/server/rate-limit';
 
 // Initialize DB tables on first server request
 let dbReady = false;
 const dbInit = initDb().then(() => { dbReady = true; }).catch(console.error);
 
+/**
+ * Auth endpoints that are subject to rate limiting.
+ * Keyed by pathname → which limiter to apply.
+ */
+const RATE_LIMITED: Record<string, 'auth' | 'resend'> = {
+  '/auth/login': 'auth',
+  '/auth/register': 'auth',
+  '/auth/forgot-password': 'auth',
+  '/api/resend-verification': 'resend'
+};
+
 export const handle: Handle = async ({ event, resolve }) => {
   // Ensure DB is ready before handling requests
   if (!dbReady) await dbInit;
+
+  // Rate-limit sensitive POST endpoints by IP
+  const limiterKey = RATE_LIMITED[event.url.pathname];
+  if (limiterKey && event.request.method === 'POST') {
+    const ip =
+      event.request.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
+      event.getClientAddress();
+    const limited =
+      limiterKey === 'resend'
+        ? verifyResendLimiter.isLimited(ip)
+        : authLimiter.isLimited(ip);
+    if (limited) {
+      return new Response(JSON.stringify({ error: 'Too many requests — try again later' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json', 'Retry-After': '60' }
+      });
+    }
+  }
 
   // Validate session cookie and attach user to locals
   const sessionId = event.cookies.get(lucia.sessionCookieName);
