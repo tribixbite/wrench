@@ -4,6 +4,7 @@
  * and no uncaught console errors occur.
  */
 import { test, expect } from '@playwright/test';
+import { gotoOrSkipIfCloudflare } from './helpers';
 
 // Collect console errors during each test, excluding benign network/resource errors
 // that are outside the app's control (e.g. analytics, fonts, or CDN assets blocked
@@ -114,29 +115,20 @@ test.describe('Membership page (/membership)', () => {
 });
 
 test.describe('About page (/about)', () => {
-  // Cloudflare bot protection sometimes blocks CI runners — skip gracefully
-  async function gotoAboutOrSkip(page: import('@playwright/test').Page) {
-    const resp = await page.goto('/about');
-    const body = await page.locator('body').textContent();
-    if (resp?.status() === 502 || body?.includes('cloudflare')) {
-      test.skip(true, 'Cloudflare blocked the request');
-    }
-  }
-
   test('loads with correct title', async ({ page }) => {
-    await gotoAboutOrSkip(page);
+    await gotoOrSkipIfCloudflare(page, '/about');
     await expect(page).toHaveTitle(/About|Wrench Club/);
   });
 
   test('team member names are visible', async ({ page }) => {
-    await gotoAboutOrSkip(page);
+    await gotoOrSkipIfCloudflare(page, '/about');
     await expect(page.locator('body')).toContainText('Coleman Brook');
     await expect(page.locator('body')).toContainText('Derick Brower');
     await expect(page.locator('body')).toContainText('Mike Zandstra');
   });
 
   test('Adrian Hoogerheide is listed as advisor', async ({ page }) => {
-    await gotoAboutOrSkip(page);
+    await gotoOrSkipIfCloudflare(page, '/about');
     await expect(page.locator('body')).toContainText('Adrian');
   });
 });

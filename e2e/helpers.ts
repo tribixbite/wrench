@@ -1,4 +1,5 @@
 import type { Page, APIRequestContext } from '@playwright/test';
+import { test } from '@playwright/test';
 import { readFileSync } from 'fs';
 
 /**
@@ -71,6 +72,21 @@ export function loadSharedCredentials(): { email: string; password: string } | n
     return JSON.parse(data);
   } catch {
     return null;
+  }
+}
+
+/**
+ * Navigate to a URL and skip the test if Cloudflare intercepts the request.
+ * Cloudflare bot protection intermittently blocks CI runner IPs with 502/403.
+ */
+export async function gotoOrSkipIfCloudflare(page: Page, path: string) {
+  const resp = await page.goto(path);
+  const status = resp?.status() ?? 200;
+  if (status === 502 || status === 403) {
+    const body = await page.locator('body').textContent();
+    if (body?.toLowerCase().includes('cloudflare')) {
+      test.skip(true, `Cloudflare blocked ${path} (HTTP ${status})`);
+    }
   }
 }
 

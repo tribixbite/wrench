@@ -6,11 +6,11 @@
  * Uses shared credentials from global-setup wherever possible.
  */
 import { test, expect } from '@playwright/test';
-import { testEmail, registerUser, loginUser, loadSharedCredentials } from './helpers';
+import { testEmail, registerUser, loginUser, loadSharedCredentials, gotoOrSkipIfCloudflare } from './helpers';
 
 test.describe('Registration (/auth/register)', () => {
   test('page loads with correct title', async ({ page }) => {
-    await page.goto('/auth/register');
+    await gotoOrSkipIfCloudflare(page, '/auth/register');
     await expect(page).toHaveTitle(/Create|Register|Join|Wrench Club/i);
   });
 
@@ -66,7 +66,7 @@ test.describe('Registration (/auth/register)', () => {
 
 test.describe('Login (/auth/login)', () => {
   test('page loads with correct title', async ({ page }) => {
-    await page.goto('/auth/login');
+    await gotoOrSkipIfCloudflare(page, '/auth/login');
     await expect(page).toHaveTitle(/Login|Sign in|Wrench Club/i);
   });
 
@@ -149,7 +149,7 @@ test.describe('Logout (/auth/logout)', () => {
 
 test.describe('Forgot password (/auth/forgot-password)', () => {
   test('page loads correctly', async ({ page }) => {
-    await page.goto('/auth/forgot-password');
+    await gotoOrSkipIfCloudflare(page, '/auth/forgot-password');
     await expect(page).toHaveTitle(/Forgot|Password|Wrench Club/i);
     await expect(page.locator('body')).toContainText(/forgot|reset/i);
   });
