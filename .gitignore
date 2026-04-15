@@ -19,3 +19,4 @@ drizzle/
 
 # Static assets copied from assets/ by postinstall.sh
 /static/assets/
+screenshot-*.png\nss-*.png\nsq-probe.ts
