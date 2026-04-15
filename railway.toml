@@ -2,4 +2,4 @@
 buildCommand = "bun install && bun run build:railway"
 
 [deploy]
-startCommand = "node build/index.js"
+startCommand = "bun build/index.js"
