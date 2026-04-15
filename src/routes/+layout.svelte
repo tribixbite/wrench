@@ -12,20 +12,22 @@
 
   const { data, children }: Props = $props();
 
-  // Hide footer on auth/app pages to let those layouts control their own chrome
-  const hideFooter = $derived(
+  // Hide marketing chrome on auth/app pages — those layouts control their own chrome
+  const hideChrome = $derived(
     $page.url.pathname.startsWith('/app/') ||
     $page.url.pathname.startsWith('/auth/')
   );
 </script>
 
 <StructuredData />
-<Header user={data.user} />
+{#if !hideChrome}
+  <Header user={data.user} />
+{/if}
 
 <main>
   {@render children()}
 </main>
 
-{#if !hideFooter}
+{#if !hideChrome}
   <Footer />
 {/if}
