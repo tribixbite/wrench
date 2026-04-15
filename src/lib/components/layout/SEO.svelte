@@ -16,8 +16,10 @@
   const DEFAULT_DESC =
     "West Michigan's premier membership-based DIY auto shop. Members rent hoist bays, flat bays, " +
     'and a detail bay with access to a full tool library. Opening 2026 in Grand Rapids, MI.';
-  const DEFAULT_IMG      = `${BASE_URL}/og-discord.webp`;
-  const DEFAULT_IMG_PNG  = `${BASE_URL}/og-discord.webp`; // Discord supports WebP; PNG only needed for Twitter/X
+  /** Cache-bust version — increment when og-discord.webp changes to force Discord/social re-crawl */
+  const OG_V = 2;
+  const DEFAULT_IMG      = `${BASE_URL}/og-discord.webp?v=${OG_V}`;
+  const DEFAULT_IMG_PNG  = `${BASE_URL}/og-discord.webp?v=${OG_V}`;
   const DEFAULT_IMG_W    = 900;
   const DEFAULT_IMG_H    = 900;
   const DEFAULT_IMG_ALT  = 'Wrench Club — DIY auto shop, Grand Rapids MI';
