@@ -16,6 +16,15 @@ export const users = sqliteTable('users', {
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`)
 });
 
+/** Time-limited tokens for password reset links */
+export const passwordResetTokens = sqliteTable('password_reset_tokens', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  token: text('token').notNull().unique(),
+  /** Unix timestamp — 1 h after creation */
+  expiresAt: integer('expires_at').notNull()
+});
+
 /** Time-limited tokens for email address verification */
 export const emailVerificationTokens = sqliteTable('email_verification_tokens', {
   id: text('id').primaryKey(), // nanoid
@@ -48,3 +57,4 @@ export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type WaitlistEntry = typeof waitlist.$inferSelect;
 export type EmailVerificationToken = typeof emailVerificationTokens.$inferSelect;
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;

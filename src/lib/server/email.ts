@@ -15,6 +15,12 @@ interface RegistrationWelcomeData {
   name: string;
 }
 
+interface PasswordResetData {
+  to: string;
+  /** Full reset URL including token */
+  resetUrl: string;
+}
+
 interface EmailVerificationData {
   to: string;
   name: string;
@@ -95,6 +101,53 @@ export async function sendWaitlistConfirmation({ to, name }: WaitlistConfirmatio
     <hr style="border:none;border-top:1px solid #262626;margin:0 0 24px;">
     <p style="color:#525252;font-size:0.75rem;margin:0;">
       522 Stocking Ave NW, Grand Rapids, MI 49504<br>
+      <a href="mailto:info@thewrench.club" style="color:#525252;">info@thewrench.club</a>
+    </p>
+  </div>
+</body>
+</html>
+    `.trim()
+  });
+}
+
+/** Password reset link — expires in 1 hour. */
+export async function sendPasswordReset({ to, resetUrl }: PasswordResetData) {
+  await send({
+    from: FROM,
+    to,
+    subject: 'Reset your Wrench Club password',
+    html: `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0a0a0a;font-family:system-ui,-apple-system,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;padding:48px 24px;">
+    <div style="margin-bottom:32px;">
+      <span style="font-size:1.5rem;font-weight:900;color:#ED0C85;letter-spacing:-0.02em;">WRENCH CLUB</span>
+    </div>
+    <h1 style="color:#f8f8f8;font-size:1.75rem;font-weight:900;margin:0 0 16px;line-height:1.2;">
+      Reset your password.
+    </h1>
+    <p style="color:#a3a3a3;font-size:1rem;line-height:1.7;margin:0 0 32px;">
+      We received a request to reset your Wrench Club password.
+      Click below to choose a new one. This link expires in <strong style="color:#f0f0f0;">1 hour</strong>.
+    </p>
+    <div style="margin:0 0 32px;">
+      <a href="${resetUrl}"
+         style="display:inline-block;background:#ED0C85;color:#fff;text-decoration:none;
+                font-weight:700;font-size:0.9375rem;padding:14px 32px;border-radius:8px;">
+        Reset Password →
+      </a>
+    </div>
+    <p style="color:#525252;font-size:0.875rem;line-height:1.6;margin:0 0 24px;">
+      If you didn't request a password reset, you can safely ignore this email —
+      your password won't change.<br><br>
+      Or copy this link:<br>
+      <span style="color:#a3a3a3;word-break:break-all;">${resetUrl}</span>
+    </p>
+    <hr style="border:none;border-top:1px solid #262626;margin:0 0 24px;">
+    <p style="color:#525252;font-size:0.75rem;margin:0;">
+      522 Stocking Ave NW, Grand Rapids, MI 49504 ·
       <a href="mailto:info@thewrench.club" style="color:#525252;">info@thewrench.club</a>
     </p>
   </div>

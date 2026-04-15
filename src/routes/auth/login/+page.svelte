@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import { Wrench, Eye, EyeOff } from 'lucide-svelte';
+  import { page } from '$app/stores';
 
   interface Props {
     form: { error?: string } | null;
@@ -10,6 +11,8 @@
 
   let showPassword = $state(false);
   let loading = $state(false);
+
+  const justReset = $derived($page.url.searchParams.get('reset') === '1');
 </script>
 
 <svelte:head>
@@ -27,6 +30,12 @@
 
     <h1 class="auth-title font-display">Member Login</h1>
     <p class="auth-sub">Access your dashboard, reservations, and member benefits.</p>
+
+    {#if justReset}
+      <div class="form-success" role="status">
+        Password updated. Sign in with your new password.
+      </div>
+    {/if}
 
     {#if form?.error}
       <div class="form-error" role="alert">
@@ -83,6 +92,10 @@
             {/if}
           </button>
         </div>
+      </div>
+
+      <div class="forgot-row">
+        <a href="/auth/forgot-password" class="auth-link forgot-link">Forgot password?</a>
       </div>
 
       <button type="submit" class="btn btn-primary w-full" disabled={loading}>
@@ -144,6 +157,24 @@
     margin-bottom: 2rem;
     line-height: 1.5;
   }
+
+  .form-success {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 0.5rem;
+    padding: 0.875rem 1rem;
+    color: #86efac;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .forgot-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -0.5rem;
+  }
+
+  .forgot-link { font-size: 0.8125rem; }
 
   .form-error {
     background: rgba(239, 68, 68, 0.1);

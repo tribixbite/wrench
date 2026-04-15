@@ -67,6 +67,14 @@ async function ensureTables() {
       expires_at INTEGER NOT NULL
     )
   `);
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id),
+      token TEXT NOT NULL UNIQUE,
+      expires_at INTEGER NOT NULL
+    )
+  `);
 }
 
 // Run once on module load — safe to call repeatedly (IF NOT EXISTS)
