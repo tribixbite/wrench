@@ -3,3 +3,7 @@ node_modules
 build
 ~/
 .git
+static/og-v*.webp
+static/og-v*.png
+scripts/gen-og-*
+scripts/generate_og_*
