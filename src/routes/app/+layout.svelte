@@ -306,7 +306,7 @@
       align-items: center;
       border-right: none;
       border-bottom: 1px solid var(--border);
-      padding: 0 1rem;
+      padding: 0 0.75rem;
       gap: 0;
       justify-content: space-between;
     }
@@ -314,21 +314,36 @@
     .sidebar-top {
       border-bottom: none;
       padding: 0;
+      flex-shrink: 0;
+      margin-right: 0.5rem;
     }
 
     .sidebar-nav {
       flex-direction: row;
       padding: 0;
-      gap: 0;
+      gap: 0.25rem;
       overflow-x: auto;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .sidebar-link {
+      padding: 0.5rem 0.625rem;
+      border-radius: 0.375rem;
     }
 
     .sidebar-link span { display: none; }
+
+    .sidebar-link.active {
+      border-width: 1px;
+    }
 
     .sidebar-bottom {
       border-top: none;
       padding: 0;
       flex-direction: row;
+      flex-shrink: 0;
+      margin-left: 0.5rem;
     }
 
     .user-info, .user-name, .user-role { display: none; }
