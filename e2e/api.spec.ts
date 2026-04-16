@@ -118,8 +118,8 @@ test.describe('Static assets', () => {
     expect(res.headers()['content-type']).toMatch(/text\/html/);
   });
 
-  test('GET /og-preview.png returns an image', async ({ request }) => {
-    const res = await request.get(`${base()}/og-preview.png`);
+  test('GET /og-discord.png returns an image', async ({ request }) => {
+    const res = await request.get(`${base()}/og-discord.png`);
     expect(res.status()).toBe(200);
     expect(res.headers()['content-type']).toMatch(/image/);
   });
