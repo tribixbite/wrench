@@ -7,6 +7,7 @@
  */
 import { test, expect } from '@playwright/test';
 import { createHmac } from 'crypto';
+import { skipIfCloudflareResponse } from './helpers';
 
 const AUTH_STATE = 'e2e/.auth/state.json';
 
@@ -452,23 +453,25 @@ test.describe('GET /api/bays/stream (SSE)', () => {
 test.describe('GET /api/docs', () => {
   test('returns Swagger UI HTML page', async ({ request }) => {
     const res = await request.get(`${base()}/api/docs`);
+    const body = await res.text();
+    skipIfCloudflareResponse(res.status(), body, '/api/docs');
     expect(res.status()).toBe(200);
     expect(res.headers()['content-type']).toMatch(/text\/html/);
-
-    const html = await res.text();
-    expect(html).toContain('swagger-ui');
-    expect(html).toContain('WRENCH CLUB');
-    expect(html).toContain('/api/docs/openapi.json');
+    expect(body).toContain('swagger-ui');
+    expect(body).toContain('WRENCH CLUB');
+    expect(body).toContain('/api/docs/openapi.json');
   });
 });
 
 test.describe('GET /api/docs/openapi.json', () => {
   test('returns valid OpenAPI spec', async ({ request }) => {
     const res = await request.get(`${base()}/api/docs/openapi.json`);
+    const body = await res.text();
+    skipIfCloudflareResponse(res.status(), body, '/api/docs/openapi.json');
     expect(res.status()).toBe(200);
     expect(res.headers()['content-type']).toMatch(/application\/json/);
 
-    const spec = await res.json();
+    const spec = JSON.parse(body);
     expect(spec).toHaveProperty('openapi');
     expect(spec.openapi).toMatch(/^3\./);
     expect(spec).toHaveProperty('info');
@@ -478,11 +481,15 @@ test.describe('GET /api/docs/openapi.json', () => {
 
   test('has CORS header for external tools', async ({ request }) => {
     const res = await request.get(`${base()}/api/docs/openapi.json`);
+    const body = await res.text();
+    skipIfCloudflareResponse(res.status(), body, '/api/docs/openapi.json CORS');
     expect(res.headers()['access-control-allow-origin']).toBe('*');
   });
 
   test('has cache-control header', async ({ request }) => {
     const res = await request.get(`${base()}/api/docs/openapi.json`);
+    const body = await res.text();
+    skipIfCloudflareResponse(res.status(), body, '/api/docs/openapi.json cache');
     const cc = res.headers()['cache-control'] ?? '';
     expect(cc).toMatch(/max-age=60/);
   });

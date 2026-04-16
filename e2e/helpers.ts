@@ -92,6 +92,19 @@ export async function gotoOrSkipIfCloudflare(page: Page, path: string) {
 }
 
 /**
+ * Skip the test if an API response looks like a Cloudflare block.
+ * Use for request-level (non-page) API calls in CI where Cloudflare
+ * intermittently returns 502/403/503 instead of the actual response.
+ */
+export function skipIfCloudflareResponse(status: number, body: string, label: string) {
+  if (status === 403 || status === 502 || status === 503 || (status >= 520 && status <= 530)) {
+    if (body.toLowerCase().includes('cloudflare') || body.toLowerCase().includes('error code')) {
+      test.skip(true, `Cloudflare blocked ${label} (HTTP ${status})`);
+    }
+  }
+}
+
+/**
  * Call the waitlist API directly (no browser) and return the parsed response.
  */
 export async function postWaitlist(
