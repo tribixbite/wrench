@@ -24,7 +24,23 @@ export const GET: RequestHandler = async ({ locals }) => {
 
     const bookings = allBookings
       .filter((b) => b.status !== 'CANCELLED_BY_CUSTOMER' && b.status !== 'CANCELLED_BY_SELLER' && b.status !== 'NO_SHOW')
-      .sort((a, b) => (a.startAt ?? '').localeCompare(b.startAt ?? ''));
+      .sort((a, b) => (a.startAt ?? '').localeCompare(b.startAt ?? ''))
+      .map((b) => ({
+        id: b.id,
+        status: b.status,
+        startAt: b.startAt,
+        locationId: b.locationId,
+        customerId: b.customerId,
+        customerNote: b.customerNote,
+        sellerNote: b.sellerNote,
+        createdAt: b.createdAt,
+        updatedAt: b.updatedAt,
+        appointmentSegments: b.appointmentSegments?.map((s) => ({
+          teamMemberId: s.teamMemberId,
+          durationMinutes: Number(s.durationMinutes ?? 0),
+          serviceVariationId: s.serviceVariationId
+        }))
+      }));
 
     return json({ bookings });
   } catch (err: unknown) {

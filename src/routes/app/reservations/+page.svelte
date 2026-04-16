@@ -15,7 +15,8 @@
     startAt: string;
     teamMemberId: string;
     bayNumber: number;
-    appointmentSegments: unknown[];
+    durationMinutes: number;
+    serviceVariationId: string;
   }
 
   interface Booking {

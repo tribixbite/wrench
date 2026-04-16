@@ -8,7 +8,7 @@ import { AvailabilityPostBody } from '$lib/schemas/api';
  * Body: { bayNumber?: 1-5, variationKey: "min90"|"hr3", date: "YYYY-MM-DD" }
  *
  * When bayNumber is omitted, searches all 5 bays at once (returns any available bay).
- * Returns: { slots: [{ startAt: string, teamMemberId: string, bayNumber: number, appointmentSegments: unknown[] }] }
+ * Returns: { slots: [{ startAt, teamMemberId, bayNumber, durationMinutes, serviceVariationId }] }
  */
 export const POST: RequestHandler = async ({ request, locals }) => {
   if (!locals.user) throw error(401, 'Not authenticated');
@@ -65,7 +65,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         startAt: a.startAt,
         teamMemberId: tmId,
         bayNumber: memberToBay[tmId] ?? 0,
-        appointmentSegments: a.appointmentSegments
+        durationMinutes: Number(seg?.durationMinutes ?? 0),
+        serviceVariationId: seg?.serviceVariationId ?? ''
       };
     });
 
