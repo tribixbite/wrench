@@ -47,10 +47,7 @@ I am excited to take my expertise as a mechanic and auto shop owner, and use it 
   ];
 </script>
 
-<svelte:head>
-  <SEO title="About" description="Meet the founders of Wrench Club — four gearheads building West Michigan's first membership-based DIY auto shop at 522 Stocking Ave NW, Grand Rapids." url="https://thewrench.club/about" />
-  <meta name="description" content="Meet the team behind Wrench Club — four gearheads building West Michigan's premier DIY auto shop at 522 Stocking Ave NW, Grand Rapids, MI." />
-</svelte:head>
+<SEO title="About" description="Meet the founders of Wrench Club — four gearheads building West Michigan's first membership-based DIY auto shop at 522 Stocking Ave NW, Grand Rapids." url="https://thewrench.club/about" />
 
 <!-- Page Header -->
 <div class="page-header">
@@ -70,6 +67,8 @@ I am excited to take my expertise as a mechanic and auto shop owner, and use it 
     src="/assets/team-cars.jpg"
     alt="The Wrench Club team's daily drivers — BMW M760xi, Audi RS6, Chevy Suburban, Ford F350 — lined up at 522 Stocking Ave NW"
     class="team-cars-img"
+    width="1416"
+    height="1061"
     loading="eager"
   />
   <div class="team-cars-label">
@@ -94,6 +93,8 @@ I am excited to take my expertise as a mechanic and auto shop owner, and use it 
               src={founder.photo}
               alt="{founder.name} — {founder.role} at Wrench Club"
               class="founder-photo"
+              width="600"
+              height="400"
               loading="lazy"
             />
           </div>
@@ -222,7 +223,7 @@ I am excited to take my expertise as a mechanic and auto shop owner, and use it 
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--accent);
+    color: var(--accent-text);
     margin-bottom: 1rem;
   }
 
@@ -375,7 +376,7 @@ I am excited to take my expertise as a mechanic and auto shop owner, and use it 
   .founder-role {
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--accent-text);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -428,7 +429,7 @@ I am excited to take my expertise as a mechanic and auto shop owner, and use it 
   }
 
   .daily-hp {
-    color: var(--accent);
+    color: var(--accent-text);
     font-weight: 700;
   }
 

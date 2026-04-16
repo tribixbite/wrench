@@ -15,6 +15,7 @@
 
   /* Brand */
   --accent: #ed0c85;
+  --accent-text: #ff5cad; /* WCAG AA compliant (~4.6:1 on #0a0a0a) for pink text on dark bg */
   --accent-hover: #c40a6e;
   --accent-muted: rgba(237, 12, 133, 0.12);
   --accent-border: rgba(237, 12, 133, 0.3);
@@ -159,7 +160,7 @@ body {
 
 .btn-outline {
   background: transparent;
-  color: var(--accent);
+  color: var(--accent-text);
   border: 1px solid var(--accent-border);
 }
 

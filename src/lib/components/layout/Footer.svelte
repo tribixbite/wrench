@@ -18,13 +18,13 @@
       <!-- Brand -->
       <div class="col-span-1">
         <a href="/">
-          <img src="/logo.webp" alt="Wrench Club" class="h-8 w-auto mb-4" />
+          <img src="/logo.webp" alt="Wrench Club" class="h-8 w-auto mb-4" width="250" height="63" />
         </a>
         <p class="text-sm leading-relaxed" style="color: var(--text-secondary)">
           West Michigan's premier do-it-yourself auto shop. Members-only bay rentals,
           professional hoists, and a community built for gearheads.
         </p>
-        <p class="text-xs mt-4 font-medium" style="color: var(--accent)">Coming 2026</p>
+        <p class="text-xs mt-4 font-medium" style="color: var(--accent-text)">Coming 2026</p>
       </div>
 
       <!-- Quick Links -->

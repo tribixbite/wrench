@@ -25,7 +25,7 @@
   <div class="auth-card">
     <!-- Logo -->
     <a href="/" class="auth-logo">
-      <img src="/logo.webp" alt="Wrench Club" class="h-8 w-auto" />
+      <img src="/logo.webp" alt="Wrench Club" class="h-8 w-auto" width="250" height="63" />
     </a>
 
     <h1 class="auth-title font-display">Member Login</h1>

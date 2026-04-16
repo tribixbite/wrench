@@ -61,7 +61,18 @@
 
 <!-- ── HERO ──────────────────────────────────────────────────────────────── -->
 <section class="hero">
-  <div class="hero-bg" style="background-image: url('/assets/team-cars.jpg')"></div>
+  <picture class="hero-picture">
+    <source srcset="/assets/team-cars-mobile.webp" media="(max-width: 768px)" type="image/webp" />
+    <source srcset="/assets/team-cars-desktop.webp" media="(min-width: 769px)" type="image/webp" />
+    <img
+      src="/assets/team-cars.jpg"
+      alt="Wrench Club facility — four daily drivers lined up at 522 Stocking Ave NW"
+      class="hero-bg-img"
+      width="1416"
+      height="1061"
+      fetchpriority="high"
+    />
+  </picture>
   <div class="hero-overlay"></div>
 
   <div class="hero-content container mx-auto px-6">
@@ -180,6 +191,8 @@
           src="/assets/bmw.jpg"
           alt="Coleman's BMW M760xi at Wrench Club facility — 522 Stocking Ave NW"
           class="club-img"
+          width="800"
+          height="600"
           loading="lazy"
         />
         <div class="club-img-badge">
@@ -241,17 +254,22 @@
     overflow: hidden;
   }
 
-  .hero-bg {
+  .hero-picture {
     position: absolute;
     inset: 0;
-    background-size: cover;
-    background-position: center 40%;
-    background-repeat: no-repeat;
+    overflow: hidden;
+  }
+
+  .hero-bg-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 40%;
     transform: scale(1.03);
     transition: transform 8s ease;
   }
 
-  .hero:hover .hero-bg {
+  .hero:hover .hero-bg-img {
     transform: scale(1.0);
   }
 
@@ -282,7 +300,7 @@
     background: rgba(237, 12, 133, 0.22);
     border: 1px solid rgba(237, 12, 133, 0.6);
     backdrop-filter: blur(8px);
-    color: var(--accent);
+    color: var(--accent-text);
     font-size: 0.8125rem;
     font-weight: 500;
     padding: 0.375rem 0.875rem;
@@ -474,7 +492,7 @@
     margin-top: 0.75rem;
     font-style: normal;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--accent-text);
     font-size: 0.875rem;
   }
 
@@ -505,7 +523,7 @@
   }
 
   .club-img-badge .font-mono-spec {
-    color: var(--accent);
+    color: var(--accent-text);
     font-weight: 700;
   }
 
@@ -558,8 +576,8 @@
   .pillar-num {
     font-size: 3rem;
     font-weight: 900;
-    color: var(--accent);
-    opacity: 0.25;
+    color: var(--accent-text);
+    opacity: 0.35;
     line-height: 1;
     display: block;
     margin-bottom: 0.5rem;

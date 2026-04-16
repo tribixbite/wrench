@@ -39,6 +39,8 @@
         src="/logo.webp"
         alt="Wrench Club"
         class="h-7 w-auto"
+        width="250"
+        height="63"
         loading="eager"
       />
     </a>
@@ -196,7 +198,7 @@
   .hamburger-btn:hover { color: var(--text-primary); }
 
   .hamburger-btn.open {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   /* ── Mobile menu ──────────────────────────────────────── */
@@ -266,7 +268,7 @@
   }
 
   .mobile-nav-link.active .link-label {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   /* ── Separator with drive-across animation ─────────── */

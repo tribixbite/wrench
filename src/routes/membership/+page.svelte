@@ -43,10 +43,7 @@
   ];
 </script>
 
-<svelte:head>
-  <SEO title="Membership" description="Everything included with Wrench Club membership: hoist access, full tool library, parts discounts, and a community of gearheads in Grand Rapids, MI." url="https://thewrench.club/membership" />
-  <meta name="description" content="Everything included with a Wrench Club membership — tool library, clubhouse, parts discounts, events, and priority bay booking in Grand Rapids, MI." />
-</svelte:head>
+<SEO title="Membership" description="Everything included with Wrench Club membership: hoist access, full tool library, parts discounts, and a community of gearheads in Grand Rapids, MI." url="https://thewrench.club/membership" />
 
 <!-- Page Header -->
 <div class="page-header">
@@ -156,7 +153,7 @@
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--accent);
+    color: var(--accent-text);
     margin-bottom: 1rem;
   }
 
@@ -294,7 +291,7 @@
     font-style: normal;
     font-weight: 600;
     font-size: 0.875rem;
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   /* CTA */

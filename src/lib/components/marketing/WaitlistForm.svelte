@@ -55,7 +55,9 @@
 {:else}
   <form onsubmit={handleSubmit} class="waitlist-form" class:compact>
     {#if !compact}
+      <label for="waitlist-name" class="sr-only">First name (optional)</label>
       <input
+        id="waitlist-name"
         type="text"
         bind:value={name}
         placeholder="First name (optional)"
@@ -65,7 +67,9 @@
     {/if}
 
     <div class="input-row">
+      <label for="waitlist-email" class="sr-only">Email address</label>
       <input
+        id="waitlist-email"
         type="email"
         bind:value={email}
         placeholder="your@email.com"
@@ -97,6 +101,19 @@
 {/if}
 
 <style>
+  /* Visually hidden but accessible to screen readers */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
   .waitlist-form {
     display: flex;
     flex-direction: column;

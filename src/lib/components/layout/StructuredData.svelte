@@ -38,7 +38,8 @@
     founder: [
       { '@type': 'Person', name: 'Coleman Brook' },
       { '@type': 'Person', name: 'Derick Brower' },
-      { '@type': 'Person', name: 'Mike Zandstra' }
+      { '@type': 'Person', name: 'Mike Zandstra' },
+      { '@type': 'Person', name: 'Adrian Hoogerheide' }
     ],
     hasOfferCatalog: {
       '@type': 'OfferCatalog',

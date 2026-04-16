@@ -46,6 +46,8 @@
     const source = new EventSource('/api/bays/stream');
 
     source.onopen = () => { connected = true; };
+    // Silently handle connection failures — expected when SSE endpoint is unavailable
+    // (e.g. during Lighthouse audits or when the server stream isn't active)
     source.onerror = () => { connected = false; };
 
     source.onmessage = (e) => {

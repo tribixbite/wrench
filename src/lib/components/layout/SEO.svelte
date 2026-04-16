@@ -65,6 +65,7 @@
 
 <svelte:head>
   <title>{fullTitle}</title>
+  <meta name="description" content={description} />
   {#if noindex}
     <meta name="robots" content="noindex" />
   {/if}

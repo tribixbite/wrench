@@ -54,39 +54,45 @@ export const handle: Handle = async ({ event, resolve }) => {
   if (!sessionId) {
     event.locals.user = null;
     event.locals.session = null;
-    return resolve(event);
+  } else {
+    const { session, user } = await lucia.validateSession(sessionId);
+
+    if (session?.fresh) {
+      // Refresh session cookie on active sessions
+      const cookie = lucia.createSessionCookie(session.id);
+      event.cookies.set(cookie.name, cookie.value, {
+        path: '/',
+        ...cookie.attributes
+      });
+    }
+
+    if (!session) {
+      const blankCookie = lucia.createBlankSessionCookie();
+      event.cookies.set(blankCookie.name, blankCookie.value, {
+        path: '/',
+        ...blankCookie.attributes
+      });
+    }
+
+    event.locals.session = session;
+    event.locals.user = user
+      ? {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role as 'member' | 'admin' | 'staff',
+          squareCustomerId: user.squareCustomerId,
+          emailVerified: user.emailVerified
+        }
+      : null;
   }
 
-  const { session, user } = await lucia.validateSession(sessionId);
+  const response = await resolve(event);
 
-  if (session?.fresh) {
-    // Refresh session cookie on active sessions
-    const cookie = lucia.createSessionCookie(session.id);
-    event.cookies.set(cookie.name, cookie.value, {
-      path: '/',
-      ...cookie.attributes
-    });
+  // Immutable assets (hashed by Vite) get long cache — 1 year
+  if (event.url.pathname.startsWith('/_app/')) {
+    response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
   }
 
-  if (!session) {
-    const blankCookie = lucia.createBlankSessionCookie();
-    event.cookies.set(blankCookie.name, blankCookie.value, {
-      path: '/',
-      ...blankCookie.attributes
-    });
-  }
-
-  event.locals.session = session;
-  event.locals.user = user
-    ? {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role as 'member' | 'admin' | 'staff',
-        squareCustomerId: user.squareCustomerId,
-        emailVerified: user.emailVerified
-      }
-    : null;
-
-  return resolve(event);
+  return response;
 };
