@@ -23,7 +23,7 @@
   <div class="auth-bg"></div>
   <div class="auth-card">
     <a href="/" class="auth-logo">
-      <img src="/logo.webp" alt="Wrench Club" class="h-8 w-auto" width="250" height="63" />
+      <img src="/logo.webp" alt="Wrench Club" class="h-8 w-auto" width="500" height="126" />
     </a>
 
     {#if !data.valid}

@@ -39,8 +39,8 @@
         src="/logo.webp"
         alt="Wrench Club"
         class="h-7 w-auto"
-        width="250"
-        height="63"
+        width="500"
+        height="126"
         loading="eager"
       />
     </a>
