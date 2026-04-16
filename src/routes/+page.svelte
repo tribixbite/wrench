@@ -577,7 +577,7 @@
     font-size: 3rem;
     font-weight: 900;
     color: var(--accent-text);
-    opacity: 0.35;
+    opacity: 0.65; /* 3.44:1 effective contrast — WCAG AA for large text */
     line-height: 1;
     display: block;
     margin-bottom: 0.5rem;

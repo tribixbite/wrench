@@ -353,8 +353,8 @@
   }
 
   .cta-waitlist {
-    background: var(--accent);
-    border: 1px solid var(--accent);
+    background: #d80b7a; /* Matches btn-primary — 4.94:1 with white (WCAG AA) */
+    border: 1px solid #d80b7a;
     color: white;
     position: relative;
     overflow: hidden;

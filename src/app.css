@@ -11,7 +11,7 @@
   /* Text */
   --text-primary: #f0f0f0;
   --text-secondary: #a0a0a0;
-  --text-muted: #606060;
+  --text-muted: #808080; /* 5.01:1 on #0a0a0a — WCAG AA compliant */
 
   /* Brand */
   --accent: #ed0c85;
@@ -46,7 +46,7 @@
   --bg-elevated: #ffffff;
   --text-primary: #0f0f0f;
   --text-secondary: #505050;
-  --text-muted: #a0a0a0;
+  --text-muted: #707070; /* 4.66:1 on #f8f8f8 — WCAG AA compliant */
   --border: #e0e0e0;
   --border-hover: #cccccc;
 }
@@ -132,7 +132,7 @@ body {
 }
 
 .btn-primary {
-  background-color: var(--accent);
+  background-color: #d80b7a; /* Darker than --accent for 4.94:1 contrast with white text (WCAG AA) */
   color: white;
 }
 
