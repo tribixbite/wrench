@@ -223,7 +223,7 @@ registry.registerPath({
   path: '/api/catalog',
   summary: 'Fetch catalog items',
   description:
-    'Returns Square catalog items (membership tiers, bay bookings, add-ons) with pricing. Uses catalog.search() — not catalog.list() — for sandbox compatibility.',
+    'Returns Square catalog items (membership tiers, bay bookings, add-ons) with pricing. Uses catalog.list() for the API endpoint; store page uses catalog.search() for broader coverage. Cached for 5 minutes via Cache-Control.',
   tags: ['Catalog'],
   responses: {
     200: {

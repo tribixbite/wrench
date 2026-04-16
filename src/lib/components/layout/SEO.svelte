@@ -19,7 +19,7 @@
   /** Cache-bust version — increment when og-discord.webp changes to force Discord/social re-crawl */
   const OG_V = 2;
   const DEFAULT_IMG      = `${BASE_URL}/og-discord.webp?v=${OG_V}`;
-  const DEFAULT_IMG_PNG  = `${BASE_URL}/og-discord.webp?v=${OG_V}`;
+  const DEFAULT_IMG_PNG  = `${BASE_URL}/og-discord.png?v=${OG_V}`;
   const DEFAULT_IMG_W    = 900;
   const DEFAULT_IMG_H    = 900;
   const DEFAULT_IMG_ALT  = 'Wrench Club — DIY auto shop, Grand Rapids MI';

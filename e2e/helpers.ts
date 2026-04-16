@@ -82,7 +82,8 @@ export function loadSharedCredentials(): { email: string; password: string } | n
 export async function gotoOrSkipIfCloudflare(page: Page, path: string) {
   const resp = await page.goto(path);
   const status = resp?.status() ?? 200;
-  if (status === 502 || status === 403) {
+  // Cloudflare can return 403, 502, 503, or 520-530 range error codes
+  if (status === 403 || status === 502 || status === 503 || (status >= 520 && status <= 530)) {
     const body = await page.locator('body').textContent();
     if (body?.toLowerCase().includes('cloudflare')) {
       test.skip(true, `Cloudflare blocked ${path} (HTTP ${status})`);

@@ -1,5 +1,4 @@
 import type { RequestHandler } from './$types';
-import { square } from '$lib/server/square';
 import { env } from '$env/dynamic/private';
 
 /**

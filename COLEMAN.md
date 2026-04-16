@@ -2,7 +2,7 @@
 
 **Site**: https://thewrench.club
 **Repo**: github.com/tribixbite/wrench (private)
-**Last updated**: April 15, 2026
+**Last updated**: April 16, 2026
 
 ---
 
@@ -11,72 +11,75 @@
 ### Public Marketing (5 pages)
 | Page | URL | Status |
 |------|-----|--------|
-| Landing | https://thewrench.club | Hero, features, waitlist form |
-| Pricing | https://thewrench.club/pricing | Bay types, rates, membership tiers |
-| Membership | https://thewrench.club/membership | Benefits, philosophy, booking teaser |
+| Landing | https://thewrench.club | Hero, features, waitlist form, footer |
+| Pricing | https://thewrench.club/pricing | Bay types, rates (TBD placeholders), membership tiers |
+| Membership | https://thewrench.club/membership | Benefits, philosophy, founder quotes |
 | About | https://thewrench.club/about | Founder bios (all 4), facility location, map |
-| Shop | https://thewrench.club/store | Merch renders (tee, hoodie, hats), gift cards |
+| Shop | https://thewrench.club/store | Live Square catalog (bay prices + merch placeholders) |
 
 ### Auth System (fully functional)
 | Page | URL | Status |
 |------|-----|--------|
-| Register | https://thewrench.club/auth/register | Name, email, password, waiver checkbox |
-| Login | https://thewrench.club/auth/login | Email/password, "forgot password" link |
-| Forgot Password | https://thewrench.club/auth/forgot-password | Sends reset link (1hr expiry) |
-| Password Reset | https://thewrench.club/auth/reset/[token] | New password form, token validation |
+| Register | /auth/register | Name, email, password, waiver checkbox |
+| Login | /auth/login | Email/password, "forgot password" link |
+| Forgot Password | /auth/forgot-password | Sends reset link (1hr expiry) |
+| Password Reset | /auth/reset/[token] | New password form, token validation |
+| Email Verification | /auth/verify/[token] | Verifies email address |
 | Logout | POST /auth/logout | Clears session |
 
-- Rate limiting on all auth endpoints (5 attempts/min per IP)
+- Rate limiting on all auth endpoints (10 attempts per IP / 15 min)
 - Square Customer record created automatically at registration
 - Session-based auth (Lucia v3, cookie-based, no JWTs)
+- Email verification with resend capability
 
 ### Member Portal (4 pages, login required)
 | Page | URL | Status |
 |------|-----|--------|
-| Dashboard | https://thewrench.club/app/dashboard | Stats, live bay grid (SSE), location card |
-| Reservations | https://thewrench.club/app/reservations | Select bay (1-5) + duration (90min/$40, 3hr/$60) + date + time slot → confirm booking |
-| Profile | https://thewrench.club/app/profile | View name, email, role |
-| Admin | https://thewrench.club/app/admin | Waitlist table + members table (admin-only) |
+| Dashboard | /app/dashboard | Stats, live bay grid (SSE), booking CTA, location card |
+| Reservations | /app/reservations | Bay filter (1-5), duration (90min/$40, 3hr/$60), date picker, time slot grid, booking confirmation |
+| Profile | /app/profile | View name, email, role (editing at launch) |
+| Admin | /app/admin | Waitlist table + members table (admin-only, role-guarded) |
 
 ### API Endpoints (10 routes)
-| Endpoint | Purpose |
-|----------|---------|
-| POST /api/waitlist | Add email to waitlist (dedupes) |
-| POST /api/bookings/availability | Get open time slots from Square for a bay+date |
-| POST /api/bookings/create | Book a bay (creates Square booking) |
-| GET /api/bookings/list | User's upcoming reservations |
-| GET /api/catalog | Merch + bay items from Square catalog |
-| GET /api/bays/stream | SSE live bay status (polling every 30s) |
-| POST /api/webhooks/square | Receives Square webhook events |
-| POST /api/resend-verification | Re-send email verification link |
-| GET /api/docs | Interactive API docs (Swagger UI) |
-| GET /api/docs/openapi.json | OpenAPI 3.0 spec |
+| Endpoint | Purpose | Status |
+|----------|---------|--------|
+| POST /api/waitlist | Add email to waitlist (dedupes, sends confirmation) | Live |
+| POST /api/bookings/availability | Search Square for open time slots | Live |
+| POST /api/bookings/create | Create a bay booking in Square | Live |
+| GET /api/bookings/list | User's upcoming reservations | Live |
+| GET /api/catalog | Merch + bay items from Square catalog | Live |
+| GET /api/bays/stream | SSE live bay status (30s polling) | Mock data |
+| POST /api/webhooks/square | Receives Square webhook events (HMAC validated) | Live |
+| POST /api/resend-verification | Re-send email verification link | Live |
+| GET /api/docs | Interactive API docs (Swagger UI) | Live |
+| GET /api/docs/openapi.json | OpenAPI 3.1 spec | Live |
 
 ### Square Integration
 - **Customers API** — auto-creates customer record at registration
-- **Bookings API** — search availability + create bookings (Bay 1-5, 90min or 3hr blocks)
-- **Catalog API** — fetches merch/bay items for store + pricing pages
-- **Webhooks** — endpoint live, validates HMAC signatures, handlers scaffolded for payment/subscription/booking events
+- **Bookings API** — search availability + create bookings (5 bays, 90min or 3hr blocks)
+- **Catalog API** — fetches merch/bay items for store page with live pricing
+- **Webhooks** — 149 event types subscribed, HMAC signature validation live, handlers scaffolded for payment/subscription/booking events
+- **Sandbox environment** — all APIs using sandbox credentials; switch to production before launch
 
 ### Infrastructure
 - **Hosting**: Railway (Metal tier) with persistent SQLite volume
-- **CDN**: Cloudflare (DNS + caching)
+- **CDN**: Cloudflare (DNS + caching + bot protection)
 - **Domain**: thewrench.club (Cloudflare DNS)
-- **CI/CD**: GitHub → Railway auto-deploy on push to main
-- **DB**: SQLite via Turso/Drizzle (auth sessions + waitlist only — all business data in Square)
+- **CI/CD**: GitHub Actions → Railway auto-deploy on push to main
+- **DB**: SQLite via Drizzle ORM (auth sessions + waitlist only — Square owns all business data)
 - **OG Embed**: Animated WebP with pulsing wrench logo (Discord/social verified working)
 
 ### Testing
-- **6 e2e test suites** (Playwright): auth flows, waitlist, public pages, dashboard, reservations, API endpoints
-- **4 unit test suites** (Vitest): Square config, email templates, Zod schemas, utility functions
-- **24 total route handlers tested**
+- **104 e2e tests passing** (Playwright): auth flows, waitlist, public pages, dashboard, reservations, 39 API endpoint tests
+- Covers: auth guards, rate limiting, webhook signature validation, SSE streaming, catalog structure, booking validation, all error cases
+- CI runs on every push via GitHub Actions
 
 ### Design
 - Dark-first theme with #ED0C85 hot pink brand color
-- Mobile-responsive, touch-friendly
+- Mobile-responsive, touch-friendly UI
 - Animated mobile menu (racing stripe, staggered fly-in, drive-across separators)
 - Custom 404 page ("Wrong Bay")
-- SEO: Open Graph, Twitter Cards, JSON-LD structured data
+- SEO: Open Graph, Twitter Cards, JSON-LD structured data (AutoRepair schema)
 - All imagery from founder-provided photos (no stock)
 
 ---
@@ -85,17 +88,18 @@
 
 ### Must answer before launch
 
-1. **Exact pricing** — What are the final rates?
+1. **Bay types and mapping** — The booking system has 5 bays in Square Bookings (Bay 1-5), and the dashboard shows 7 bays (3 flat, 3 hoist, 1 detail). We need to know:
+   - How many bays does the facility actually have?
+   - Which bay numbers correspond to which type (flat/hoist/detail)?
+   - This determines the labels users see when booking ("Bay 1" vs "Flat Bay 1")
+
+2. **Exact pricing** — What are the final rates?
    - Hoist bay: $/hr or per block?
    - Flat bay: same?
    - Detail bay: same?
    - Monthly membership fee?
-   - Currently showing $40/90min and $60/3hr in the booking UI — confirm or adjust.
-
-2. **Number and types of bays** — Currently configured as 5 generic bays. How many of each:
-   - Hoist bays (with lift)?
-   - Flat bays (ground level)?
-   - Detail bays?
+   - Currently showing $40/90min and $60/3hr from Square sandbox — confirm or adjust
+   - The /pricing page says "TBD" while /store shows live Square catalog prices — should /pricing show real numbers?
 
 3. **Hours of operation** — For display on the site and for time slot generation. What hours will the shop be open?
 
@@ -117,39 +121,39 @@
 
 7. **Domain** — Currently on thewrench.club. Do you also own wrenchclub.com? Want to redirect it?
 
-8. **Email provider** — Need a Resend API key for transactional emails (waitlist confirmation, password reset, email verification). I can set this up if you give me the go-ahead — it's free for up to 3,000 emails/month.
-
-9. **Square production credentials** — Everything is running on Square sandbox right now. When ready to go live:
+8. **Square production credentials** — Everything is running on Square sandbox. When ready to go live:
    - Production access token (from Square Developer Dashboard)
    - Production location ID
-   - Webhook signature secret
+   - These replace the sandbox values already configured
 
 ---
 
 ## What's Next (Roadmap)
 
 ### Before launch
-- [ ] Get answers to questions above
-- [ ] Set up Resend email delivery (currently no emails send)
+- [ ] Get answers to questions above (especially bay types + pricing)
 - [ ] Switch from Square sandbox to production credentials
-- [ ] Fix Square catalog token scope (currently UNAUTHORIZED for catalog API)
-- [ ] Wire email verification into registration flow
+- [ ] Update /pricing page with real numbers (currently "TBD")
 - [ ] Add facility photos to hero + about page
+- [ ] Verify Resend email delivery is working in production
+- [ ] Map bay numbers to bay types in booking UI labels
 
 ### Phase 2 (post-launch)
-- [ ] Live bay status from real Square bookings (SSE currently uses mock data)
-- [ ] Square webhook handlers (real-time booking/payment updates)
-- [ ] Payment processing at booking time
-- [ ] Profile editing
-- [ ] Subscription/membership management via Square
+- [ ] Live bay status from real Square bookings (SSE currently uses mock data — all show "available")
+- [ ] Square webhook event handlers (booking/payment/subscription updates currently acknowledged but no-op)
+- [ ] Payment processing integrated into booking flow
+- [ ] Profile editing (name, email, password)
+- [ ] Subscription/membership management via Square Subscriptions API
 
 ### Phase 3 (growth)
-- [ ] Member events calendar
+- [ ] Member events calendar with RSVP
 - [ ] Dyno day registration
-- [ ] Parts discount integration
-- [ ] Community features
+- [ ] Parts discount supplier integration
+- [ ] Racing sim leaderboards
+- [ ] Community project gallery / feed
+- [ ] Push notifications (PWA)
 
 ---
 
 ## Tech Stack (for reference)
-SvelteKit 5 (SSR) · TypeScript · Tailwind CSS v4 · Square APIs · Lucia v3 auth · SQLite/Drizzle · Railway · Cloudflare · Playwright + Vitest
+SvelteKit 5 (SSR) · TypeScript · Tailwind CSS v4 · Svelte 5 runes · Square APIs · Lucia v3 auth · SQLite/Drizzle · Railway · Cloudflare · Playwright e2e · GitHub Actions CI

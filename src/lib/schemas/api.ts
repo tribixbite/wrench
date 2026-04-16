@@ -40,10 +40,13 @@ export const AvailabilityPostBody = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 });
 
-/** A single availability slot returned by Square */
+/** A single availability slot (flattened from Square Bookings response) */
 export const AvailabilitySlot = z.object({
   startAt: z.string(),
-  appointmentSegments: z.array(z.unknown())
+  teamMemberId: z.string(),
+  bayNumber: z.number().int(),
+  durationMinutes: z.number().int(),
+  serviceVariationId: z.string()
 });
 
 /** Response for POST /api/bookings/availability */
@@ -72,9 +75,27 @@ export const BookingCreateResponse = z.object({
 // Bookings — list
 // ---------------------------------------------------------------------------
 
+/** A single booking from the list response */
+export const BookingItem = z.object({
+  id: z.string().optional(),
+  status: z.string().optional(),
+  startAt: z.string().optional(),
+  locationId: z.string().optional(),
+  customerId: z.string().optional(),
+  customerNote: z.string().optional(),
+  sellerNote: z.string().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+  appointmentSegments: z.array(z.object({
+    teamMemberId: z.string().optional(),
+    durationMinutes: z.number().int(),
+    serviceVariationId: z.string().optional()
+  })).optional()
+});
+
 /** Response for GET /api/bookings/list */
 export const BookingListResponse = z.object({
-  bookings: z.array(z.unknown()),
+  bookings: z.array(BookingItem),
   error: z.string().optional()
 });
 

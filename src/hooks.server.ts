@@ -23,12 +23,14 @@ export const handle: Handle = async ({ event, resolve }) => {
   if (!dbReady) await dbInit;
 
   // Rate-limit sensitive POST endpoints by IP
-  // Bypass with X-Test-Key header matching TEST_SECRET env var (for e2e testing)
+  // Bypass with X-Test-Key header matching TEST_SECRET env var (for e2e testing only)
   const limiterKey = RATE_LIMITED[event.url.pathname];
   if (limiterKey && event.request.method === 'POST') {
     const testSecret = process.env.TEST_SECRET;
     const testKey = event.request.headers.get('x-test-key');
-    const bypassRateLimit = testSecret && testKey === testSecret;
+    // Only allow bypass if TEST_SECRET is set (non-empty) and matches the header.
+    // TEST_SECRET should NOT be set in production — only in CI/dev environments.
+    const bypassRateLimit = !!(testSecret && testSecret.length >= 16 && testKey === testSecret);
 
     if (!bypassRateLimit) {
       const ip =
