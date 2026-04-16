@@ -101,13 +101,12 @@ test.describe('Pricing page (/pricing)', () => {
 
 test.describe('Membership page (/membership)', () => {
   test('loads successfully', async ({ page }) => {
-    const response = await page.goto('/membership');
-    expect(response?.status()).toBeLessThan(400);
+    await gotoOrSkipIfCloudflare(page, '/membership');
     await expect(page).toHaveTitle(/Membership|Wrench Club/);
   });
 
   test('page body has content', async ({ page }) => {
-    await page.goto('/membership');
+    await gotoOrSkipIfCloudflare(page, '/membership');
     // Confirm the page renders actual content (not empty)
     const main = page.locator('main, .container, body');
     await expect(main.first()).not.toBeEmpty();
@@ -135,12 +134,12 @@ test.describe('About page (/about)', () => {
 
 test.describe('Store page (/store)', () => {
   test('loads successfully', async ({ page }) => {
-    const response = await page.goto('/store');
-    expect(response?.status()).toBeLessThan(400);
+    await gotoOrSkipIfCloudflare(page, '/store');
+    expect(page.url()).toContain('/store');
   });
 
   test('renders catalog items or empty state', async ({ page }) => {
-    await page.goto('/store');
+    await gotoOrSkipIfCloudflare(page, '/store');
     // Either catalog content or an empty/coming-soon state — either is valid
     const body = page.locator('body');
     await expect(body).not.toBeEmpty();
