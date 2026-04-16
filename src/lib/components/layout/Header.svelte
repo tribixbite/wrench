@@ -152,6 +152,9 @@
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+    /* Force GPU compositing layer — fixes backdrop-filter pixel artifacts on mobile */
+    transform: translateZ(0);
+    will-change: backdrop-filter;
   }
 
   /* ── Desktop nav ──────────────────────────────────────── */
