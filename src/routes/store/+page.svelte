@@ -14,14 +14,16 @@
 
   const { data }: Props = $props();
 
-  /** Format price from cents to a readable string */
+  /** Format price from cents to a readable string.
+   *  Shows whole dollars for round amounts ($25) and cents for fractional ($9.95). */
   function formatPrice(cents: number, currency = 'USD'): string {
     if (cents === 0) return 'Contact us';
+    const hasCents = cents % 100 !== 0;
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency,
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
+      minimumFractionDigits: hasCents ? 2 : 0,
+      maximumFractionDigits: hasCents ? 2 : 0
     }).format(cents / 100);
   }
 

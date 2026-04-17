@@ -3,20 +3,22 @@ import { env } from '$env/dynamic/private';
 
 /**
  * Square API client — server-only. Never import this in client-side code.
- * Uses sandbox in dev, production in prod.
+ * Production by default (real catalog drives /store); set
+ * SQUARE_ENVIRONMENT=sandbox to fall back to test data.
  */
+const isProduction = env.SQUARE_ENVIRONMENT !== 'sandbox';
+
 export const square = new SquareClient({
-  token: env.SQUARE_ACCESS_TOKEN ?? env.SANDBOX_SECRET,
-  environment: env.SQUARE_ENVIRONMENT === 'production'
-    ? SquareEnvironment.Production
-    : SquareEnvironment.Sandbox
+  token: isProduction
+    ? (env.PROD_ACCESS_TOKEN ?? env.SQUARE_ACCESS_TOKEN ?? '')
+    : (env.SANDBOX_SECRET ?? env.SQUARE_ACCESS_TOKEN ?? ''),
+  environment: isProduction ? SquareEnvironment.Production : SquareEnvironment.Sandbox
 });
 
-/** Location ID — sandbox vs production */
-export const LOCATION_ID =
-  env.SQUARE_ENVIRONMENT === 'production'
-    ? (env.SQUARE_LOCATION_ID ?? '')
-    : (env.SQUARE_SANDBOX_LOCATION_ID ?? env.SQUARE_LOCATION_ID ?? '');
+/** Location ID — production by default, sandbox when explicitly opted in */
+export const LOCATION_ID = isProduction
+  ? (env.SQUARE_LOCATION_ID ?? '')
+  : (env.SQUARE_SANDBOX_LOCATION_ID ?? env.SQUARE_LOCATION_ID ?? '');
 
 /** Square Bookings — bay team member IDs (each bay = one bookable resource).
  *  TODO: Move to env vars / DB when switching to production Square account. */
