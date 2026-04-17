@@ -16,8 +16,10 @@
         'Bright overhead lighting',
         'Wi-Fi + Bluetooth speaker'
       ],
-      rate: 'TBD',
-      rateNote: 'Hourly / Daily'
+      rate: '$25',
+      rateUnit: '/ hour',
+      rateSecondary: '$250 / day',
+      rateNote: 'Hourly · Daily · Weekly / Monthly available'
     },
     {
       id: 'hoist',
@@ -31,8 +33,10 @@
         'Brake cleaner, shop rags included',
         'Priority booking for members'
       ],
-      rate: 'TBD',
-      rateNote: 'Hourly / Daily',
+      rate: '$35',
+      rateUnit: '/ hour',
+      rateSecondary: '$350 / day',
+      rateNote: 'Hourly · Daily · Weekly / Monthly available',
       featured: true
     },
     {
@@ -47,7 +51,8 @@
         'Foam cannon and wash equipment',
         'Drying area and microfiber supply'
       ],
-      rate: 'TBD',
+      rate: 'Contact',
+      rateUnit: ' for rates',
       rateNote: 'Hourly'
     }
   ];
@@ -73,16 +78,15 @@
 <div class="page-header">
   <div class="container mx-auto px-6">
     <p class="overline">Transparent Pricing</p>
-    <h1 class="page-title font-display">No Hidden Fees.<br />No Surprises.</h1>
+    <h1 class="page-title font-display">A Gym Membership<br />for Car Enthusiasts.</h1>
     <p class="page-sub">
-      We believe you should know exactly what you're paying before you book.
-      Bay time is billed separately from membership — you only pay for what you use.
+      Membership gets you in the door at $9.95/month. Bay time is booked and billed separately —
+      you only pay for the hours you use.
     </p>
     <div class="pricing-notice">
       <Info size={16} style="color: var(--accent); flex-shrink: 0; margin-top: 2px;" />
       <span>
-        Exact rates are being finalized. Join the waitlist to be notified when pricing goes live
-        — founding members receive a discount on their first 3 months.
+        Rates shown are launch pricing. Join the waitlist for opening updates and member onboarding.
       </span>
     </div>
   </div>
@@ -110,7 +114,12 @@
 
             <div class="bay-rate">
               <span class="rate-label font-mono-spec">{bay.rateNote}</span>
-              <span class="rate-value font-display">Pricing TBD</span>
+              <span class="rate-value font-display">
+                {bay.rate}<span class="rate-unit">{bay.rateUnit ?? ''}</span>
+              </span>
+              {#if bay.rateSecondary}
+                <span class="rate-secondary font-mono-spec">{bay.rateSecondary}</span>
+              {/if}
             </div>
 
             <ul class="bay-features">
@@ -147,8 +156,8 @@
 
         <div class="membership-rate">
           <span class="rate-label font-mono-spec">Monthly Membership</span>
-          <span class="rate-value-lg font-display">Pricing TBD</span>
-          <span class="rate-note">Founding member discounts available at launch</span>
+          <span class="rate-value-lg font-display">$9.95<span class="rate-unit">/ month</span></span>
+          <span class="rate-note">One-time $9.95 activation fee. Cancel anytime.</span>
         </div>
       </div>
 
@@ -201,9 +210,10 @@
     <div class="waitlist-inner">
       <div>
         <div class="divider"></div>
-        <h2 class="section-title font-display">Get Notified When<br />Pricing Goes Live</h2>
+        <h2 class="section-title font-display">Ready to Join<br />the Club?</h2>
         <p style="color: var(--text-secondary); margin-top: 0.75rem;">
-          Founding members get first pick of the bay schedule and a discount on their first 3 months.
+          Add your email to the waitlist. We'll send opening updates, onboarding details, and
+          first pick of the bay schedule when Wrench Club opens in 2026.
         </p>
       </div>
       <div class="form-wrap">
@@ -356,9 +366,24 @@
   }
 
   .rate-value {
-    font-size: 1.375rem;
+    font-size: 1.75rem;
     font-weight: 800;
     color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .rate-unit {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-left: 0.25rem;
+    letter-spacing: 0;
+  }
+
+  .rate-secondary {
+    font-size: 0.8125rem;
+    color: var(--accent-text);
+    margin-top: 0.25rem;
   }
 
   .bay-features {

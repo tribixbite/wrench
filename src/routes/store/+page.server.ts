@@ -41,20 +41,25 @@ export const load: PageServerLoad = async () => {
     });
 
     // Bay/membership items — categorised first so gift cards with "bay" in name
-    // don't bleed into the merch section
-    const bays = unique.filter(i => {
-      const n = i.name.toLowerCase();
-      return n.includes('bay') || n.includes('membership');
-    });
+    // don't bleed into the merch section. Matches: bay, membership, storage,
+    // hoist, flat bay, detail bay — the service-side of the catalog.
+    const isBayOrService = (name: string) => {
+      const n = name.toLowerCase();
+      return (
+        n.includes('bay') ||
+        n.includes('membership') ||
+        n.includes('storage') ||
+        n.includes('hoist') ||
+        n.includes('detail')
+      );
+    };
 
+    const bays = unique.filter(i => isBayOrService(i.name));
     const bayIds = new Set(bays.map(i => i.id));
 
-    // Merch = clothing/accessories that are NOT already in the bays list
-    const merch = unique.filter(i => {
-      if (bayIds.has(i.id)) return false;
-      const n = i.name.toLowerCase();
-      return n.includes('shirt') || n.includes('hat') || n.includes('tee') || n.includes('gift');
-    });
+    // Everything else = merch. This lets Coleman add any new SKU in Square
+    // (snapback, beanie, keychain, coffee mug, etc.) without code changes.
+    const merch = unique.filter(i => !bayIds.has(i.id));
 
     return { merch, bays, allItems: unique };
   } catch (err) {

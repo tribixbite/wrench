@@ -37,7 +37,7 @@ My goal is to give the Grand Rapids community the tools, the space, and the conf
     },
     {
       name: 'Adrian Hoogerheide',
-      role: 'Advisor & Partner',
+      role: 'Co-founder',
       photo: '/assets/adrian.jpg',
       bio: `I have been a "car guy" my whole life, and automotive enthusiasm has permeated both my personal and professional life. I have owned and operated Auto Fixit Body Shop in Grand Rapids for 20+ years, and have owned and modified more cars and trucks than I think I can count.
 
