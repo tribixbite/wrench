@@ -36,8 +36,8 @@
 
   // Placeholder merch with rendered product images
   const placeholderMerch = [
-    { key: 'tshirt',  name: 'Club Tee',      desc: 'Heavyweight cotton tee. Logo front chest, "522" on sleeve.' },
-    { key: 'tacker',  name: 'Wall Tacker',    desc: 'Large format club logo wall tacker. Mount in your garage or shop.' },
+    { key: 'tshirt',  name: 'Club Tee',       desc: 'Heavyweight cotton tee. Logo front chest, "522" on sleeve.' },
+    { key: 'trucker', name: 'Trucker Hat',    desc: 'Structured snapback with foam front panel. Pink accent stripe on the brim.' },
     { key: 'patch',   name: 'Iron-On Patch',  desc: '3.5" woven patch with high-density embroidery. Sew or iron on.' },
     { key: 'sticker', name: 'Die-Cut Sticker', desc: 'Weatherproof vinyl die-cut, 4" wide. Goes anywhere.' },
     { key: 'decal',   name: 'Vinyl Decal',    desc: 'Cut vinyl, 6" wide. Car-safe adhesive, outdoor rated.' },

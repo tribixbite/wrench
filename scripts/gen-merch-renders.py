@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Generate product render images for Wrench Club merch store.
-Outputs 800x800 WebP product cards for: tshirt, patch, tacker, sticker, decal.
+Outputs 800x800 WebP product cards for: tshirt, patch, trucker, sticker, decal.
 
 Brand: #ED0C85 hot pink, #0a0a0a bg, #1a1a1a card, #f0f0f0 text
 """
@@ -172,9 +172,9 @@ def gen_patch():
     return img
 
 
-# ── TACKER HAT ─────────────────────────────────────────────────────────────────
-def gen_tacker():
-    img, draw = make_base("Tacker Hat", "Structured snapback · Foam front panel")
+# ── TRUCKER HAT ────────────────────────────────────────────────────────────────
+def gen_trucker():
+    img, draw = make_base("Trucker Hat", "Structured snapback · Foam front panel")
 
     # Hat front panel (trapezoid)
     hat_col = (20, 20, 20)
@@ -311,7 +311,7 @@ def gen_decal():
 products = [
     ('tshirt',  gen_tshirt),
     ('patch',   gen_patch),
-    ('tacker',  gen_tacker),
+    ('trucker', gen_trucker),
     ('sticker', gen_sticker),
     ('decal',   gen_decal),
 ]
