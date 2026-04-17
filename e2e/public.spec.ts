@@ -79,20 +79,19 @@ test.describe('Home page (/)', () => {
 test.describe('Pricing page (/pricing)', () => {
   test('loads with correct title', async ({ page }) => {
     const errors = collectErrors(page);
-    await page.goto('/pricing');
+    await gotoOrSkipIfCloudflare(page, '/pricing');
     await expect(page).toHaveTitle(/Pricing|Wrench Club/);
     expect(errors).toHaveLength(0);
   });
 
   test('pricing content is visible', async ({ page }) => {
-    await page.goto('/pricing');
-    // Page should render the main content area with pricing info
+    await gotoOrSkipIfCloudflare(page, '/pricing');
     const body = page.locator('body');
     await expect(body).toContainText('Bay');
   });
 
   test('waitlist form is present on pricing page', async ({ page }) => {
-    await page.goto('/pricing');
+    await gotoOrSkipIfCloudflare(page, '/pricing');
     // Pricing page includes the WaitlistForm component — it uses type="email" with bind:value, no name attr
     const emailInput = page.locator('input[type="email"]').first();
     await expect(emailInput).toBeVisible();
