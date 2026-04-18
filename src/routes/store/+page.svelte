@@ -80,6 +80,8 @@
       <div class="bays-grid">
         {#each data.bays as item}
           {@const Icon = categoryIcon(item.name)}
+          {@const isHourly = item.variations.length > 3 && item.variations.every(v => /\d+\s+Hours?/i.test(v.name))}
+          {@const cheapest = item.variations.reduce((min, v) => v.priceCents > 0 && v.priceCents < min ? v.priceCents : min, Number.POSITIVE_INFINITY)}
           <div class="bay-card card">
             <div class="bay-icon">
               <Icon size={22} />
@@ -90,12 +92,20 @@
                 <p class="bay-desc">{item.description}</p>
               {/if}
               <div class="variations">
-                {#each item.variations as v}
+                {#if isHourly && cheapest !== Number.POSITIVE_INFINITY}
                   <div class="variation-row">
-                    <span class="variation-name">{v.name}</span>
-                    <span class="variation-price">{formatPrice(v.priceCents, v.currency)}</span>
+                    <span class="variation-name">Hourly · book 1–8 hours</span>
+                    <span class="variation-price">From {formatPrice(cheapest, item.variations[0].currency)}/hr</span>
                   </div>
-                {/each}
+                  <a href="/app/reservations" class="bay-cta">Reserve a Bay <ArrowRight size={14} /></a>
+                {:else}
+                  {#each item.variations as v}
+                    <div class="variation-row">
+                      <span class="variation-name">{v.name}</span>
+                      <span class="variation-price">{formatPrice(v.priceCents, v.currency)}</span>
+                    </div>
+                  {/each}
+                {/if}
               </div>
             </div>
           </div>
@@ -418,6 +428,23 @@
     font-weight: 600;
     color: var(--text-primary);
     font-variant-numeric: tabular-nums;
+  }
+
+  .bay-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-top: 0.625rem;
+    padding: 0.375rem 0;
+    color: var(--accent-text);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.15s, transform 0.15s;
+  }
+  .bay-cta:hover {
+    color: var(--text-primary);
+    transform: translateX(2px);
   }
 
   .coming-badge {
