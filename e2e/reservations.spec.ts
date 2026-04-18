@@ -1,6 +1,8 @@
 /**
- * Reservations page tests — bay selector, duration options, slot loading.
+ * Reservations page tests — bay-type pills, hour selector, slot loading.
  * Uses shared auth state from global-setup (no per-test registration).
+ *
+ * Production layout: 2 hoist + 3 flat + 1 detail = 6 bays, 1-8 hr durations.
  */
 import { test, expect } from '@playwright/test';
 import { gotoOrSkipIfCloudflare } from './helpers';
@@ -22,26 +24,46 @@ test.describe('Reservations page (authenticated)', () => {
     await expect(page).toHaveTitle(/Reservation|Booking|Wrench Club/i);
   });
 
-  test('"Any Bay" is selected by default', async ({ page }) => {
+  test('Flat Bay is selected by default', async ({ page }) => {
     await gotoOrSkipIfCloudflare(page, '/app/reservations');
-    // The "Any Bay" button should have the .selected class by default
-    const anyBayBtn = page.locator('button', { hasText: /Any Bay/i }).first();
-    await expect(anyBayBtn).toBeVisible({ timeout: 10_000 });
-    await expect(anyBayBtn).toHaveClass(/selected/);
+    const flatBtn = page.locator('button.type-btn', { hasText: 'Flat Bay' }).first();
+    await expect(flatBtn).toBeVisible({ timeout: 10_000 });
+    await expect(flatBtn).toHaveClass(/selected/);
   });
 
-  test('bay selector renders Any Bay + 5 bay options', async ({ page }) => {
+  test('bay-type selector shows Flat / Detail / Hoist with rates', async ({ page }) => {
     await gotoOrSkipIfCloudflare(page, '/app/reservations');
-    await expect(page.locator('text=Any Bay')).toBeVisible({ timeout: 10_000 });
-    for (let i = 1; i <= 5; i++) {
-      await expect(page.locator(`button:has-text("Bay ${i}")`)).toBeVisible();
+    await expect(page.locator('body')).toContainText('Flat Bay');
+    await expect(page.locator('body')).toContainText('Detail Bay');
+    await expect(page.locator('body')).toContainText('Hoist Bay');
+    await expect(page.locator('body')).toContainText('$25/hr');
+    await expect(page.locator('body')).toContainText('$30/hr');
+    await expect(page.locator('body')).toContainText('$35/hr');
+  });
+
+  test('bay grid renders Any + the configured bays for the selected type', async ({ page }) => {
+    await gotoOrSkipIfCloudflare(page, '/app/reservations');
+    // Default = Flat → 3 flat bays
+    await expect(page.locator('button.bay-btn', { hasText: 'Any Flat Bay' })).toBeVisible();
+    await expect(page.locator('button.bay-btn', { hasText: 'Flat Bay 1' })).toBeVisible();
+    await expect(page.locator('button.bay-btn', { hasText: 'Flat Bay 2' })).toBeVisible();
+    await expect(page.locator('button.bay-btn', { hasText: 'Flat Bay 3' })).toBeVisible();
+  });
+
+  test('switching to Hoist shows the 2 hoist bays', async ({ page }) => {
+    await gotoOrSkipIfCloudflare(page, '/app/reservations');
+    await page.locator('button.type-btn', { hasText: 'Hoist Bay' }).first().click();
+    await expect(page.locator('button.bay-btn', { hasText: 'Any Hoist Bay' })).toBeVisible();
+    await expect(page.locator('button.bay-btn', { hasText: 'Hoist Bay 1' })).toBeVisible();
+    await expect(page.locator('button.bay-btn', { hasText: 'Hoist Bay 2' })).toBeVisible();
+  });
+
+  test('duration selector shows 1-8 hour options', async ({ page }) => {
+    await gotoOrSkipIfCloudflare(page, '/app/reservations');
+    for (const h of [1, 2, 4, 8]) {
+      const label = h === 1 ? '1 hr' : `${h} hrs`;
+      await expect(page.locator('button.hour-btn', { hasText: label })).toBeVisible();
     }
-  });
-
-  test('duration selector shows 90 min and 3 hour options', async ({ page }) => {
-    await gotoOrSkipIfCloudflare(page, '/app/reservations');
-    await expect(page.locator('body')).toContainText('90 min');
-    await expect(page.locator('body')).toContainText('3 hour');
   });
 
   test('date input is visible and defaults to today', async ({ page }) => {
@@ -54,35 +76,17 @@ test.describe('Reservations page (authenticated)', () => {
     expect(value).toBe(today);
   });
 
-  test('availability loads automatically with all bays', async ({ page }) => {
+  test('availability area renders (loading | empty | slots | error)', async ({ page }) => {
     await gotoOrSkipIfCloudflare(page, '/app/reservations');
-
-    // Wait for slots to load or error/empty state to appear
     const body = page.locator('body');
     await expect(body).toContainText(
-      /Loading availability|No availability|Bay \d|Available Times/i,
+      /Loading availability|No availability|Available Times|Flat Bay \d|Hoist Bay \d|Detail Bay \d|temporarily unavailable/i,
       { timeout: 15_000 }
     );
   });
 
-  test('selecting a specific bay filters results', async ({ page }) => {
+  test('upcoming bookings or "Book a Bay" header is rendered', async ({ page }) => {
     await gotoOrSkipIfCloudflare(page, '/app/reservations');
-
-    // Click Bay 1 specifically
-    const bay1 = page.locator('button', { hasText: 'Bay 1' }).first();
-    await bay1.click();
-
-    // Wait for slot loading to complete
-    await page.waitForTimeout(3000);
-    const body = page.locator('body');
-    const hasResponse = await body.evaluate((el) =>
-      /available|unavailable|loading|error|no availability|bay/i.test(el.textContent ?? '')
-    );
-    expect(hasResponse).toBe(true);
-  });
-
-  test('upcoming bookings section is rendered', async ({ page }) => {
-    await gotoOrSkipIfCloudflare(page, '/app/reservations');
-    await expect(page.locator('body')).toContainText(/upcoming|reservation|booking|book a bay/i);
+    await expect(page.locator('body')).toContainText(/Book a Bay|Your Bookings/i);
   });
 });
