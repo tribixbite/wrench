@@ -1,13 +1,13 @@
 import type { RequestHandler } from './$types';
 import { json, error } from '@sveltejs/kit';
-import { square, LOCATION_ID, BAY_TEAM_MEMBERS, BAY_VARIATIONS } from '$lib/server/square';
+import { square, LOCATION_ID, BAYS, BAY_VARIATIONS } from '$lib/server/square';
 import { AvailabilityPostBody } from '$lib/schemas/api';
 
 /**
  * POST /api/bookings/availability
- * Body: { bayNumber?: 1-5, variationKey: "min90"|"hr3", date: "YYYY-MM-DD" }
+ * Body: { bayType, hours: 1-8, bayNumber?: 1-6, date: "YYYY-MM-DD" }
  *
- * When bayNumber is omitted, searches all 5 bays at once (returns any available bay).
+ * When bayNumber is omitted, searches every team member of the chosen type.
  * Returns: { slots: [{ startAt, teamMemberId, bayNumber, durationMinutes, serviceVariationId }] }
  */
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -23,14 +23,19 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   const parsed = AvailabilityPostBody.safeParse(body);
   if (!parsed.success) throw error(400, parsed.error.issues[0].message);
 
-  const { bayNumber, variationKey, date } = parsed.data;
+  const { bayType, hours, bayNumber, date } = parsed.data;
 
-  const serviceVariationId = BAY_VARIATIONS[variationKey];
+  const serviceVariationId = BAY_VARIATIONS[bayType][hours];
+  if (!serviceVariationId) throw error(400, `No variation configured for ${bayType} ${hours}h`);
 
-  // Build team member filter — single bay or all bays
-  const teamMemberIds = bayNumber
-    ? [BAY_TEAM_MEMBERS[bayNumber]]
-    : Object.values(BAY_TEAM_MEMBERS);
+  // Filter team members to bays of the chosen type (or a single specified bay)
+  const candidates = bayNumber
+    ? BAYS.filter(b => b.id === bayNumber && b.type === bayType)
+    : BAYS.filter(b => b.type === bayType);
+
+  if (!candidates.length) throw error(400, 'No bays match that selection');
+
+  const teamMemberIds = candidates.map(b => b.teamMemberId);
 
   // Search from 00:00 to 23:59 on the requested date (UTC)
   const startAt = `${date}T00:00:00Z`;
@@ -53,18 +58,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     });
 
     // Reverse-lookup team member ID → bay number
-    const memberToBay: Record<string, number> = {};
-    for (const [num, id] of Object.entries(BAY_TEAM_MEMBERS)) {
-      memberToBay[id] = Number(num);
-    }
+    const memberToBay = new Map(BAYS.map(b => [b.teamMemberId, b.id]));
 
-    const slots = (result.availabilities ?? []).map((a) => {
+    const slots = (result.availabilities ?? []).map(a => {
       const seg = a.appointmentSegments?.[0];
       const tmId = seg?.teamMemberId ?? '';
       return {
         startAt: a.startAt,
         teamMemberId: tmId,
-        bayNumber: memberToBay[tmId] ?? 0,
+        bayNumber: memberToBay.get(tmId) ?? 0,
         durationMinutes: Number(seg?.durationMinutes ?? 0),
         serviceVariationId: seg?.serviceVariationId ?? ''
       };

@@ -34,9 +34,12 @@ export const ErrorResponse = z.object({
 
 /** Request body for POST /api/bookings/availability */
 export const AvailabilityPostBody = z.object({
-  /** Omit or null to search all bays at once */
-  bayNumber: z.number().int().min(1).max(5).optional(),
-  variationKey: z.enum(['min90', 'hr3']),
+  /** Bay type — narrows the team-member search to bays of that type */
+  bayType: z.enum(['flat', 'detail', 'hoist']),
+  /** Number of hours (1-8) */
+  hours: z.number().int().min(1).max(8),
+  /** Specific bay id (1-6); omit to search any bay of the chosen type */
+  bayNumber: z.number().int().min(1).max(6).optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 });
 
@@ -60,8 +63,9 @@ export const AvailabilityPostResponse = z.object({
 
 /** Request body for POST /api/bookings/create */
 export const BookingCreateBody = z.object({
-  bayNumber: z.number().int().min(1).max(5),
-  variationKey: z.enum(['min90', 'hr3']),
+  bayNumber: z.number().int().min(1).max(6),
+  bayType: z.enum(['flat', 'detail', 'hoist']),
+  hours: z.number().int().min(1).max(8),
   startAt: z.string().datetime(),
   note: z.string().max(500).optional()
 });

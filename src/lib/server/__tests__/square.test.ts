@@ -43,129 +43,100 @@ vi.mock('square', () => {
 // ---------------------------------------------------------------------------
 
 import {
+  BAYS,
   BAY_TEAM_MEMBERS,
   BAY_VARIATIONS,
-  BAY_PRICES,
-  BAY_LABELS,
+  BAY_HOURLY_RATE,
+  BAY_TYPE_LABEL,
   LOCATION_ID
 } from '../square';
 
 // ---------------------------------------------------------------------------
-// BAY_TEAM_MEMBERS
+// BAYS — production layout: 2 hoist + 3 flat + 1 detail
 // ---------------------------------------------------------------------------
 
+describe('BAYS', () => {
+  it('has 6 entries with ids 1-6', () => {
+    expect(BAYS).toHaveLength(6);
+    expect(BAYS.map(b => b.id).sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+
+  it('has 2 hoist, 3 flat, 1 detail', () => {
+    const counts = BAYS.reduce<Record<string, number>>((acc, b) => {
+      acc[b.type] = (acc[b.type] ?? 0) + 1;
+      return acc;
+    }, {});
+    expect(counts).toEqual({ hoist: 2, flat: 3, detail: 1 });
+  });
+
+  it('every team member ID is unique and prefixed with "TM"', () => {
+    const ids = BAYS.map(b => b.teamMemberId);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const id of ids) expect(id).toMatch(/^TM/);
+  });
+});
+
 describe('BAY_TEAM_MEMBERS', () => {
-  it('has exactly 5 entries', () => {
-    expect(Object.keys(BAY_TEAM_MEMBERS)).toHaveLength(5);
-  });
-
-  it('has keys 1 through 5', () => {
-    for (let i = 1; i <= 5; i++) {
-      expect(BAY_TEAM_MEMBERS[i]).toBeDefined();
+  it('mirrors BAYS by id', () => {
+    expect(Object.keys(BAY_TEAM_MEMBERS)).toHaveLength(6);
+    for (const bay of BAYS) {
+      expect(BAY_TEAM_MEMBERS[bay.id]).toBe(bay.teamMemberId);
     }
-  });
-
-  it('does not have a key 0', () => {
-    expect(BAY_TEAM_MEMBERS[0]).toBeUndefined();
-  });
-
-  it('does not have a key 6', () => {
-    expect(BAY_TEAM_MEMBERS[6]).toBeUndefined();
-  });
-
-  it('all values are non-empty strings starting with "TM"', () => {
-    for (const [, id] of Object.entries(BAY_TEAM_MEMBERS)) {
-      expect(typeof id).toBe('string');
-      expect(id.length).toBeGreaterThan(0);
-      expect(id).toMatch(/^TM/);
-    }
-  });
-
-  it('all values are unique (no duplicate team member IDs)', () => {
-    const ids = Object.values(BAY_TEAM_MEMBERS);
-    const unique = new Set(ids);
-    expect(unique.size).toBe(ids.length);
   });
 });
 
 // ---------------------------------------------------------------------------
-// BAY_VARIATIONS
+// BAY_VARIATIONS — 1-8 hours per bay type, all FIXED_PRICING service variations
 // ---------------------------------------------------------------------------
 
 describe('BAY_VARIATIONS', () => {
-  it('has exactly the keys "min90" and "hr3"', () => {
-    const keys = Object.keys(BAY_VARIATIONS);
-    expect(keys).toHaveLength(2);
-    expect(keys).toContain('min90');
-    expect(keys).toContain('hr3');
+  it('has all three bay types', () => {
+    expect(Object.keys(BAY_VARIATIONS).sort()).toEqual(['detail', 'flat', 'hoist']);
   });
 
-  it('min90 value is a non-empty string', () => {
-    expect(typeof BAY_VARIATIONS.min90).toBe('string');
-    expect(BAY_VARIATIONS.min90.length).toBeGreaterThan(0);
+  it('each type has 8 hourly variations (1-8)', () => {
+    for (const type of ['flat', 'detail', 'hoist'] as const) {
+      const hours = Object.keys(BAY_VARIATIONS[type]).map(Number).sort((a, b) => a - b);
+      expect(hours).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+    }
   });
 
-  it('hr3 value is a non-empty string', () => {
-    expect(typeof BAY_VARIATIONS.hr3).toBe('string');
-    expect(BAY_VARIATIONS.hr3.length).toBeGreaterThan(0);
-  });
-
-  it('min90 and hr3 IDs are distinct', () => {
-    expect(BAY_VARIATIONS.min90).not.toBe(BAY_VARIATIONS.hr3);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// BAY_PRICES
-// ---------------------------------------------------------------------------
-
-describe('BAY_PRICES', () => {
-  it('has exactly 2 keys matching BAY_VARIATIONS', () => {
-    const priceKeys = Object.keys(BAY_PRICES);
-    const variationKeys = Object.keys(BAY_VARIATIONS);
-    expect(priceKeys.sort()).toEqual(variationKeys.sort());
-  });
-
-  it('min90 price is 4000 cents ($40)', () => {
-    expect(BAY_PRICES.min90).toBe(4000);
-  });
-
-  it('hr3 price is 6000 cents ($60)', () => {
-    expect(BAY_PRICES.hr3).toBe(6000);
-  });
-
-  it('all prices are positive integers', () => {
-    for (const [, price] of Object.entries(BAY_PRICES)) {
-      expect(Number.isInteger(price)).toBe(true);
-      expect(price).toBeGreaterThan(0);
+  it('all variation IDs are non-empty strings, distinct across types', () => {
+    const seen = new Set<string>();
+    for (const type of ['flat', 'detail', 'hoist'] as const) {
+      for (let h = 1; h <= 8; h++) {
+        const id = BAY_VARIATIONS[type][h];
+        expect(typeof id).toBe('string');
+        expect(id.length).toBeGreaterThan(0);
+        expect(seen.has(id)).toBe(false);
+        seen.add(id);
+      }
     }
   });
 });
 
 // ---------------------------------------------------------------------------
-// BAY_LABELS
+// BAY_HOURLY_RATE — pricing tiers (Hoist > Detail > Flat)
 // ---------------------------------------------------------------------------
 
-describe('BAY_LABELS', () => {
-  it('has exactly 2 labels matching BAY_VARIATIONS', () => {
-    const labelKeys = Object.keys(BAY_LABELS);
-    const variationKeys = Object.keys(BAY_VARIATIONS);
-    expect(labelKeys.sort()).toEqual(variationKeys.sort());
+describe('BAY_HOURLY_RATE', () => {
+  it('uses the published $25 / $30 / $35 hourly tiers', () => {
+    expect(BAY_HOURLY_RATE.flat).toBe(25);
+    expect(BAY_HOURLY_RATE.detail).toBe(30);
+    expect(BAY_HOURLY_RATE.hoist).toBe(35);
   });
 
-  it('min90 label is "90 min — $40"', () => {
-    expect(BAY_LABELS.min90).toBe('90 min — $40');
+  it('hoist is the priciest, flat the cheapest', () => {
+    expect(BAY_HOURLY_RATE.hoist).toBeGreaterThan(BAY_HOURLY_RATE.detail);
+    expect(BAY_HOURLY_RATE.detail).toBeGreaterThan(BAY_HOURLY_RATE.flat);
   });
+});
 
-  it('hr3 label is "3 hours — $60"', () => {
-    expect(BAY_LABELS.hr3).toBe('3 hours — $60');
-  });
-
-  it('all labels are non-empty strings', () => {
-    for (const [, label] of Object.entries(BAY_LABELS)) {
-      expect(typeof label).toBe('string');
-      expect(label.length).toBeGreaterThan(0);
-    }
+describe('BAY_TYPE_LABEL', () => {
+  it('has a human label for every bay type', () => {
+    expect(BAY_TYPE_LABEL.flat).toBe('Flat Bay');
+    expect(BAY_TYPE_LABEL.detail).toBe('Detail Bay');
+    expect(BAY_TYPE_LABEL.hoist).toBe('Hoist Bay');
   });
 });
 

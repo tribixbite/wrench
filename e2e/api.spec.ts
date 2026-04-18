@@ -69,7 +69,7 @@ test.describe('GET /api/bookings/list (auth-gated)', () => {
 test.describe('POST /api/bookings/availability (auth-gated)', () => {
   test('returns 401 without a session cookie', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/availability`, {
-      data: { bayNumber: 1, variationKey: 'min90', date: '2026-06-01' },
+      data: { bayType: 'flat', hours: 1, date: '2026-06-01' },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(401);
@@ -79,7 +79,7 @@ test.describe('POST /api/bookings/availability (auth-gated)', () => {
 test.describe('POST /api/bookings/create (auth-gated)', () => {
   test('returns 401 without a session cookie', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/create`, {
-      data: { bayNumber: 1, variationKey: 'min90', date: '2026-06-01', startAt: '10:00' },
+      data: { bayNumber: 1, bayType: 'flat', hours: 1, startAt: new Date().toISOString() },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(401);

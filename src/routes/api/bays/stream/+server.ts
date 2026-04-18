@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { env } from '$env/dynamic/private';
+import { BAYS } from '$lib/server/square';
 
 /**
  * GET /api/bays/stream — SSE endpoint for live bay availability.
@@ -9,7 +9,6 @@ import { env } from '$env/dynamic/private';
  * Phase 1: Returns mock bay statuses.
  */
 export const GET: RequestHandler = async ({ request }) => {
-  const LOC = env.SQUARE_LOCATION_ID ?? env.SQUARE_SANDBOX_LOCATION_ID ?? '';
 
   const encoder = new TextEncoder();
 
@@ -33,18 +32,15 @@ export const GET: RequestHandler = async ({ request }) => {
         // const bookings = await square.bookings.list({ locationId: LOC, startAtMin: now.toISOString() });
         // Map bookings to bay statuses...
 
-        // Mock data for Phase 1 / dev
+        // Phase 1: derive from configured bays, mark all available.
         return {
           ts: Date.now(),
-          bays: [
-            { id: 'flat-1', type: 'flat', label: 'Flat Bay 1', status: 'available' },
-            { id: 'flat-2', type: 'flat', label: 'Flat Bay 2', status: 'available' },
-            { id: 'flat-3', type: 'flat', label: 'Flat Bay 3', status: 'available' },
-            { id: 'hoist-1', type: 'hoist', label: 'Hoist Bay 1', status: 'available' },
-            { id: 'hoist-2', type: 'hoist', label: 'Hoist Bay 2', status: 'available' },
-            { id: 'hoist-3', type: 'hoist', label: 'Hoist Bay 3', status: 'available' },
-            { id: 'detail-1', type: 'detail', label: 'Detail Bay', status: 'available' }
-          ]
+          bays: BAYS.map(b => ({
+            id: `${b.type}-${b.id}`,
+            type: b.type,
+            label: b.label,
+            status: 'available' as const
+          }))
         };
       }
 

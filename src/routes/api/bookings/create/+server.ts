@@ -1,12 +1,12 @@
 import type { RequestHandler } from './$types';
 import { json, error } from '@sveltejs/kit';
-import { square, LOCATION_ID, BAY_TEAM_MEMBERS, BAY_VARIATIONS } from '$lib/server/square';
+import { square, LOCATION_ID, BAYS, BAY_VARIATIONS, BAY_TYPE_LABEL } from '$lib/server/square';
 import { nanoid } from 'nanoid';
 import { BookingCreateBody } from '$lib/schemas/api';
 
 /**
  * POST /api/bookings/create
- * Body: { bayNumber: 1-5, variationKey: "min90"|"hr3", startAt: ISO string, note?: string }
+ * Body: { bayNumber, bayType, hours: 1-8, startAt: ISO, note? }
  * Returns: { bookingId: string }
  */
 export const POST: RequestHandler = async ({ request, locals }) => {
@@ -22,12 +22,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   const parsed = BookingCreateBody.safeParse(body);
   if (!parsed.success) throw error(400, parsed.error.issues[0].message);
 
-  const { bayNumber, variationKey, startAt, note } = parsed.data;
+  const { bayNumber, bayType, hours, startAt, note } = parsed.data;
 
-  const teamMemberId = BAY_TEAM_MEMBERS[bayNumber];
-  const serviceVariationId = BAY_VARIATIONS[variationKey];
+  const bay = BAYS.find(b => b.id === bayNumber && b.type === bayType);
+  if (!bay) throw error(400, `Bay ${bayNumber} (${bayType}) not configured`);
 
-  // squareCustomerId is required for creating a booking
+  const serviceVariationId = BAY_VARIATIONS[bayType][hours];
+  if (!serviceVariationId) throw error(400, `No variation for ${bayType} ${hours}h`);
+
   if (!locals.user.squareCustomerId) {
     throw error(400, 'No Square customer ID on file — contact support');
   }
@@ -38,13 +40,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       booking: {
         locationId: LOCATION_ID,
         customerId: locals.user.squareCustomerId,
-        customerNote: note ?? `Bay ${bayNumber} — ${variationKey === 'min90' ? '90 min' : '3 hr'}`,
+        customerNote: note ?? `${BAY_TYPE_LABEL[bayType]} ${bay.id} — ${hours}h`,
         startAt,
         appointmentSegments: [
           {
             serviceVariationId,
-            teamMemberId,
-            serviceVariationVersion: BigInt(0) // Square resolves to latest
+            teamMemberId: bay.teamMemberId,
+            serviceVariationVersion: BigInt(0)
           }
         ]
       }

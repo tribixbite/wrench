@@ -2,14 +2,17 @@
   import { ArrowLeft, CalendarDays, Clock, Car, CheckCircle2, XCircle, Loader2 } from 'lucide-svelte';
   import { onMount } from 'svelte';
 
-  const BAYS = [1, 2, 3, 4, 5] as const;
-  type Bay = (typeof BAYS)[number];
+  type BayType = 'flat' | 'detail' | 'hoist';
+  type BayInfo = { id: number; type: BayType; label: string };
 
-  const VARIATIONS = [
-    { key: 'min90', label: '90 min', sub: '$40', duration: 90 },
-    { key: 'hr3',   label: '3 hours', sub: '$60', duration: 180 }
-  ] as const;
-  type VariationKey = 'min90' | 'hr3';
+  interface Props {
+    data: {
+      bays: BayInfo[];
+      hourlyRate: Record<BayType, number>;
+      typeLabel: Record<BayType, string>;
+    };
+  }
+  const { data }: Props = $props();
 
   interface Slot {
     startAt: string;
@@ -27,50 +30,60 @@
     customerNote: string;
   }
 
-  // ── State ───────────────────────────────────────────────────────────────────
-  /** null = "Any Bay" (search all), number = specific bay */
-  let selectedBay = $state<Bay | null>(null);
-  let selectedVariation = $state<VariationKey>('min90');
-  let selectedDate = $state<string>(todayStr());
-  let selectedSlot = $state<Slot | null>(null);
+  // ── State ────────────────────────────────────────────────────────────────
+  let selectedBayType = $state<BayType>('flat');
+  let selectedHours   = $state<number>(2);
+  /** null = "Any" of the chosen bay type */
+  let selectedBay     = $state<number | null>(null);
+  let selectedDate    = $state<string>(todayStr());
+  let selectedSlot    = $state<Slot | null>(null);
 
-  let slots = $state<Slot[]>([]);
-  let slotsLoading = $state(false);
-  let slotsError = $state<string | null>(null);
+  let slots         = $state<Slot[]>([]);
+  let slotsLoading  = $state(false);
+  let slotsError    = $state<string | null>(null);
 
-  let bookingState = $state<'idle' | 'confirming' | 'booking' | 'success' | 'error'>('idle');
-  let bookingId = $state<string | null>(null);
-  let bookingError = $state<string | null>(null);
+  let bookingState  = $state<'idle' | 'confirming' | 'booking' | 'success' | 'error'>('idle');
+  let bookingId     = $state<string | null>(null);
+  let bookingError  = $state<string | null>(null);
 
   let upcomingBookings = $state<Booking[]>([]);
-  let bookingsLoading = $state(true);
+  let bookingsLoading  = $state(true);
 
-  function todayStr() {
-    return new Date().toISOString().slice(0, 10);
-  }
+  function todayStr() { return new Date().toISOString().slice(0, 10); }
+  function minDate()  { return todayStr(); }
 
-  function minDate() {
-    return todayStr();
-  }
+  // Bays narrowed to the selected type
+  let baysOfType = $derived(data.bays.filter(b => b.type === selectedBayType));
 
-  /** Load availability whenever bay, variation, or date changes. */
+  // Reset specific-bay selection when type changes if it no longer fits
   $effect(() => {
-    // Track reactive deps (selectedBay can be null = "any")
-    const _bay = selectedBay;
-    const _var = selectedVariation;
-    const _date = selectedDate;
-    void fetchSlots(_bay, _var, _date);
+    const _t = selectedBayType;
+    if (selectedBay !== null && !baysOfType.some(b => b.id === selectedBay)) {
+      selectedBay = null;
+    }
   });
 
-  async function fetchSlots(bay: Bay | null, variation: VariationKey, date: string) {
+  /** Estimated total for the chosen type + hours (linear pricing). */
+  let estimatedPrice = $derived(data.hourlyRate[selectedBayType] * selectedHours);
+
+  /** Load availability whenever inputs change. */
+  $effect(() => {
+    const _type = selectedBayType;
+    const _hrs = selectedHours;
+    const _bay = selectedBay;
+    const _date = selectedDate;
+    void fetchSlots(_type, _hrs, _bay, _date);
+  });
+
+  async function fetchSlots(bayType: BayType, hours: number, bayNumber: number | null, date: string) {
     slotsLoading = true;
     slotsError = null;
     slots = [];
     selectedSlot = null;
 
     try {
-      const payload: Record<string, unknown> = { variationKey: variation, date };
-      if (bay) payload.bayNumber = bay;
+      const payload: Record<string, unknown> = { bayType, hours, date };
+      if (bayNumber) payload.bayNumber = bayNumber;
 
       const res = await fetch('/api/bookings/availability', {
         method: 'POST',
@@ -81,8 +94,8 @@
         const e = await res.json().catch(() => ({}));
         throw new Error(e.message ?? `HTTP ${res.status}`);
       }
-      const data = await res.json();
-      slots = data.slots ?? [];
+      const json = await res.json();
+      slots = json.slots ?? [];
     } catch (e: unknown) {
       slotsError = e instanceof Error ? e.message : 'Failed to load availability';
     } finally {
@@ -101,7 +114,8 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           bayNumber: selectedSlot.bayNumber,
-          variationKey: selectedVariation,
+          bayType: selectedBayType,
+          hours: selectedHours,
           startAt: selectedSlot.startAt
         })
       });
@@ -109,8 +123,8 @@
         const e = await res.json().catch(() => ({}));
         throw new Error(e.message ?? `HTTP ${res.status}`);
       }
-      const data = await res.json();
-      bookingId = data.bookingId;
+      const json = await res.json();
+      bookingId = json.bookingId;
       bookingState = 'success';
       void fetchUpcoming();
     } catch (e: unknown) {
@@ -124,8 +138,8 @@
     try {
       const res = await fetch('/api/bookings/list');
       if (res.ok) {
-        const data = await res.json();
-        upcomingBookings = data.bookings ?? [];
+        const json = await res.json();
+        upcomingBookings = json.bookings ?? [];
       }
     } finally {
       bookingsLoading = false;
@@ -137,41 +151,37 @@
     bookingId = null;
     bookingError = null;
     selectedSlot = null;
-    void fetchSlots(selectedBay, selectedVariation, selectedDate);
+    void fetchSlots(selectedBayType, selectedHours, selectedBay, selectedDate);
   }
 
   function fmtTime(iso: string) {
     return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   }
-
   function fmtDate(iso: string) {
     return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   }
-
-  function bayLabel(teamMemberId: string) {
-    const map: Record<string, string> = {
-      TMkMik9RL18tkTF7: 'Bay 1', TMLm78Z2tt7iGsxE: 'Bay 2',
-      'TM-ELEPsnFgo279C': 'Bay 3', TMUSbWTh7cqWRCUM: 'Bay 4',
-      TMYcymhGNoUvtitQ: 'Bay 5'
-    };
-    return map[teamMemberId] ?? 'Bay';
+  function bayLabelById(id: number) {
+    return data.bays.find(b => b.id === id)?.label ?? `Bay ${id}`;
   }
+  function bayTypeLabel(t: BayType) { return data.typeLabel[t]; }
 
-  /** Deduplicate slots by startAt — keep earliest bay number */
+  /** Deduplicate "Any Bay" slots by startAt — keep the lowest-numbered bay. */
   function dedupeSlots(allSlots: Slot[]): Slot[] {
     const seen = new Map<string, Slot>();
     for (const s of allSlots) {
-      if (!seen.has(s.startAt) || s.bayNumber < (seen.get(s.startAt)!.bayNumber)) {
+      if (!seen.has(s.startAt) || s.bayNumber < seen.get(s.startAt)!.bayNumber) {
         seen.set(s.startAt, s);
       }
     }
     return [...seen.values()].sort((a, b) => a.startAt.localeCompare(b.startAt));
   }
 
-  /** Derived: when searching all bays, group by time for display */
   let displaySlots = $derived(selectedBay ? slots : dedupeSlots(slots));
 
   onMount(() => { void fetchUpcoming(); });
+
+  const HOUR_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
+  const BAY_TYPES: BayType[] = ['flat', 'detail', 'hoist'];
 </script>
 
 <svelte:head>
@@ -185,7 +195,6 @@
     <h1 class="page-title font-display">Bay Reservations</h1>
   </div>
 
-  <!-- ── Upcoming bookings ─────────────────────────────────────────────── -->
   {#if !bookingsLoading && upcomingBookings.length > 0}
     <section class="upcoming">
       <h2 class="section-label">Your Bookings</h2>
@@ -197,9 +206,7 @@
               <span class="chip-date">{fmtDate(b.startAt)}</span>
               <span class="chip-time">{fmtTime(b.startAt)}</span>
             </div>
-            <span class="chip-bay">
-              {bayLabel(b.appointmentSegments?.[0]?.teamMemberId ?? '')}
-            </span>
+            <span class="chip-bay">{b.customerNote || 'Bay reservation'}</span>
             <span class="chip-status" class:confirmed={b.status === 'ACCEPTED' || b.status === 'APPROVED'}>
               {b.status?.toLowerCase().replace(/_/g, ' ')}
             </span>
@@ -209,12 +216,10 @@
     </section>
   {/if}
 
-  <!-- ── Booking form ──────────────────────────────────────────────────── -->
   <section class="booking-section card">
     <h2 class="section-label" style="margin-bottom: 1.5rem;">Book a Bay</h2>
 
     {#if bookingState === 'success'}
-      <!-- Success state -->
       <div class="result-state">
         <CheckCircle2 size={48} style="color: #22c55e; margin-bottom: 1rem;" />
         <h3 class="result-title">Bay reserved!</h3>
@@ -223,7 +228,6 @@
       </div>
 
     {:else if bookingState === 'error'}
-      <!-- Error state -->
       <div class="result-state">
         <XCircle size={48} style="color: #ef4444; margin-bottom: 1rem;" />
         <h3 class="result-title">Booking failed</h3>
@@ -232,72 +236,76 @@
       </div>
 
     {:else}
-      <!-- ── Step 1: Bay filter + Duration ───────────────────────── -->
+      <!-- Step 1: Bay type -->
       <div class="step">
-        <p class="step-label">Bay Filter</p>
-        <div class="bay-grid">
-          <button
-            class="bay-btn"
-            class:selected={selectedBay === null}
-            onclick={() => { selectedBay = null; selectedSlot = null; }}
-          >
-            <Car size={16} />
-            <span>Any Bay</span>
-          </button>
-          {#each BAYS as bay}
+        <p class="step-label">Bay Type</p>
+        <div class="type-grid">
+          {#each BAY_TYPES as t}
             <button
-              class="bay-btn"
-              class:selected={selectedBay === bay}
-              onclick={() => { selectedBay = bay; selectedSlot = null; }}
+              class="type-btn"
+              class:selected={selectedBayType === t}
+              onclick={() => { selectedBayType = t; selectedSlot = null; }}
             >
-              <Car size={16} />
-              <span>Bay {bay}</span>
+              <span class="type-name">{bayTypeLabel(t)}</span>
+              <span class="type-rate">${data.hourlyRate[t]}/hr</span>
             </button>
           {/each}
         </div>
       </div>
 
+      <!-- Step 2: Specific bay (optional) -->
+      <div class="step">
+        <p class="step-label">Bay</p>
+        <div class="bay-grid">
+          <button class="bay-btn" class:selected={selectedBay === null}
+            onclick={() => { selectedBay = null; selectedSlot = null; }}>
+            <Car size={16} />
+            <span>Any {bayTypeLabel(selectedBayType)}</span>
+          </button>
+          {#each baysOfType as bay}
+            <button class="bay-btn" class:selected={selectedBay === bay.id}
+              onclick={() => { selectedBay = bay.id; selectedSlot = null; }}>
+              <Car size={16} />
+              <span>{bay.label}</span>
+            </button>
+          {/each}
+        </div>
+      </div>
+
+      <!-- Step 3: Hours -->
       <div class="step">
         <p class="step-label">Duration</p>
-        <div class="var-grid">
-          {#each VARIATIONS as v}
+        <div class="hours-grid">
+          {#each HOUR_OPTIONS as h}
             <button
-              class="var-btn"
-              class:selected={selectedVariation === v.key}
-              onclick={() => { selectedVariation = v.key; selectedSlot = null; }}
+              class="hour-btn"
+              class:selected={selectedHours === h}
+              onclick={() => { selectedHours = h; selectedSlot = null; }}
             >
               <Clock size={14} />
-              <span class="var-label">{v.label}</span>
-              <span class="var-price">{v.sub}</span>
+              <span class="hour-label">{h}{h === 1 ? ' hr' : ' hrs'}</span>
+              <span class="hour-price">${data.hourlyRate[selectedBayType] * h}</span>
             </button>
           {/each}
         </div>
       </div>
 
-      <!-- ── Step 2: Date ────────────────────────────────────────── -->
+      <!-- Step 4: Date -->
       <div class="step">
         <p class="step-label">Date</p>
-        <input
-          type="date"
-          class="date-input input"
-          bind:value={selectedDate}
-          min={minDate()}
-        />
+        <input type="date" class="date-input input" bind:value={selectedDate} min={minDate()} />
       </div>
 
-      <!-- ── Step 3: Time slots ──────────────────────────────── -->
+      <!-- Step 5: Time slots -->
       <div class="step">
         <p class="step-label">Available Times</p>
 
         {#if slotsLoading}
-          <div class="slots-loading">
-            <Loader2 size={20} class="spin" />
-            <span>Loading availability…</span>
-          </div>
+          <div class="slots-loading"><Loader2 size={20} class="spin" /><span>Loading availability…</span></div>
         {:else if slotsError}
           <div class="slots-error">{slotsError}</div>
         {:else if displaySlots.length === 0}
-          <div class="slots-empty">No availability for this date. Try another day.</div>
+          <div class="slots-empty">No availability for this date. Try another day or duration.</div>
         {:else}
           <div class="slots-grid">
             {#each displaySlots as slot}
@@ -307,50 +315,31 @@
                 onclick={() => { selectedSlot = slot; bookingState = 'confirming'; }}
               >
                 <span class="slot-time">{fmtTime(slot.startAt ?? '')}</span>
-                <span class="slot-bay">Bay {slot.bayNumber}</span>
+                <span class="slot-bay">{bayLabelById(slot.bayNumber)}</span>
               </button>
             {/each}
           </div>
         {/if}
       </div>
 
-      <!-- ── Confirmation panel ──────────────────────────────────── -->
       {#if (bookingState === 'confirming' || bookingState === 'booking') && selectedSlot}
         <div class="confirm-panel">
           <p class="confirm-title">Confirm your reservation</p>
-          <div class="confirm-row">
-            <span>Bay</span><strong>Bay {selectedSlot.bayNumber}</strong>
-          </div>
-          <div class="confirm-row">
-            <span>Duration</span>
-            <strong>{selectedVariation === 'min90' ? '90 min' : '3 hours'}</strong>
-          </div>
-          <div class="confirm-row">
-            <span>Date</span><strong>{fmtDate(selectedSlot.startAt)}</strong>
-          </div>
-          <div class="confirm-row">
-            <span>Time</span><strong>{fmtTime(selectedSlot.startAt)}</strong>
-          </div>
-          <div class="confirm-row">
-            <span>Price</span>
-            <strong>{selectedVariation === 'min90' ? '$40' : '$60'}</strong>
-          </div>
+          <div class="confirm-row"><span>Bay</span><strong>{bayLabelById(selectedSlot.bayNumber)}</strong></div>
+          <div class="confirm-row"><span>Duration</span><strong>{selectedHours}{selectedHours === 1 ? ' hour' : ' hours'}</strong></div>
+          <div class="confirm-row"><span>Date</span><strong>{fmtDate(selectedSlot.startAt)}</strong></div>
+          <div class="confirm-row"><span>Time</span><strong>{fmtTime(selectedSlot.startAt)}</strong></div>
+          <div class="confirm-row"><span>Price</span><strong>${estimatedPrice}</strong></div>
 
           <div class="confirm-actions">
-            <button
-              class="btn btn-primary"
-              onclick={confirmBooking}
-              disabled={bookingState === 'booking'}
-            >
+            <button class="btn btn-primary" onclick={confirmBooking} disabled={bookingState === 'booking'}>
               {#if bookingState === 'booking'}
                 <Loader2 size={16} class="spin" /> Booking…
               {:else}
                 Confirm Reservation
               {/if}
             </button>
-            <button class="btn btn-ghost" onclick={() => { bookingState = 'idle'; selectedSlot = null; }}>
-              Cancel
-            </button>
+            <button class="btn btn-ghost" onclick={() => { bookingState = 'idle'; selectedSlot = null; }}>Cancel</button>
           </div>
         </div>
       {/if}
@@ -374,141 +363,151 @@
     margin-bottom: 2rem; line-height: 1.1;
   }
 
-  /* ── Upcoming bookings ────────────── */
-  .upcoming { margin-bottom: 2rem; }
-
   .section-label {
-    font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 0.875rem;
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem;
   }
 
-  .booking-list { display: flex; flex-direction: column; gap: 0.625rem; }
-
+  /* Upcoming bookings */
+  .upcoming { margin-bottom: 2rem; }
+  .booking-list { display: flex; flex-direction: column; gap: 0.5rem; }
   .booking-chip {
     display: flex; align-items: center; gap: 0.875rem;
-    padding: 0.875rem 1.125rem;
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: 0.625rem;
+    padding: 0.75rem 1rem; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 0.625rem;
   }
-
-  :global(.chip-icon) { color: var(--accent); flex-shrink: 0; }
-
+  .chip-icon { color: var(--accent); flex-shrink: 0; }
   .chip-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
   .chip-date { font-size: 0.875rem; font-weight: 600; color: var(--text-primary); }
-  .chip-time { font-size: 0.8125rem; color: var(--text-muted); }
-  .chip-bay { font-size: 0.875rem; font-weight: 600; color: var(--accent); flex-shrink: 0; }
+  .chip-time { font-size: 0.75rem; color: var(--text-muted); }
+  .chip-bay { font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
   .chip-status {
-    font-size: 0.75rem; color: var(--text-muted); text-transform: capitalize;
-    background: var(--bg-elevated); padding: 0.2rem 0.625rem; border-radius: 999px;
-    flex-shrink: 0;
+    font-size: 0.6875rem; padding: 0.25rem 0.5rem;
+    border-radius: 999px; background: var(--bg-secondary);
+    color: var(--text-muted); text-transform: capitalize;
   }
-  .chip-status.confirmed { color: #22c55e; background: rgba(34,197,94,0.1); }
+  .chip-status.confirmed { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
 
-  /* ── Booking card ─────────────────── */
+  /* Booking form */
   .booking-section { padding: 2rem; }
-  @media (max-width: 768px) { .booking-section { padding: 1.5rem 1.25rem; } }
+  @media (max-width: 768px) { .booking-section { padding: 1.5rem; } }
 
-  .step { margin-bottom: 2rem; }
-
+  .step { margin-bottom: 1.5rem; }
   .step-label {
-    font-size: 0.8125rem; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 0.75rem;
+    font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.625rem;
   }
 
-  /* Bay selector */
-  .bay-grid {
-    display: flex; flex-wrap: wrap; gap: 0.625rem;
+  /* Bay-type pills */
+  .type-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;
   }
+  .type-btn {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem;
+    padding: 0.875rem 1rem; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 0.5rem;
+    color: var(--text-secondary); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .type-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+  .type-btn.selected {
+    background: var(--accent-muted); border-color: var(--accent);
+    color: var(--text-primary);
+  }
+  .type-name { font-size: 0.9375rem; font-weight: 700; }
+  .type-rate { font-size: 0.75rem; color: var(--text-muted); }
+  .type-btn.selected .type-rate { color: var(--accent-text); }
 
+  /* Bay grid */
+  .bay-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
   .bay-btn {
-    display: flex; align-items: center; gap: 0.5rem;
-    padding: 0.625rem 1.125rem; border-radius: 0.5rem;
-    border: 1px solid var(--border); background: var(--bg-elevated);
-    color: var(--text-secondary); font-size: 0.9rem; font-weight: 500;
-    cursor: pointer; transition: all 0.15s;
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.625rem 0.875rem; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 0.5rem;
+    color: var(--text-secondary); cursor: pointer;
+    font-size: 0.875rem; transition: all 0.15s;
   }
-  .bay-btn:hover { border-color: var(--accent-border); color: var(--accent); }
-  .bay-btn.selected {
-    border-color: var(--accent); background: var(--accent-muted);
-    color: var(--accent); font-weight: 700;
+  .bay-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+  .bay-btn.selected { background: var(--accent-muted); border-color: var(--accent); color: var(--text-primary); }
+
+  /* Hour grid */
+  .hours-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem;
   }
-
-  /* Duration selector */
-  .var-grid { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-
-  .var-btn {
-    display: flex; align-items: center; gap: 0.5rem;
-    padding: 0.75rem 1.25rem; border-radius: 0.5rem;
-    border: 1px solid var(--border); background: var(--bg-elevated);
+  @media (max-width: 480px) { .hours-grid { grid-template-columns: repeat(2, 1fr); } }
+  .hour-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
+    padding: 0.625rem 0.5rem; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 0.5rem;
     color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
   }
-  .var-btn:hover { border-color: var(--accent-border); }
-  .var-btn.selected { border-color: var(--accent); background: var(--accent-muted); color: var(--text-primary); }
+  .hour-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+  .hour-btn.selected { background: var(--accent-muted); border-color: var(--accent); color: var(--text-primary); }
+  .hour-label { font-size: 0.8125rem; font-weight: 600; }
+  .hour-price { font-size: 0.6875rem; color: var(--text-muted); }
+  .hour-btn.selected .hour-price { color: var(--accent-text); }
 
-  .var-label { font-weight: 600; font-size: 0.9375rem; }
-  .var-price { font-size: 0.8125rem; color: var(--accent); margin-left: 0.25rem; }
-
-  /* Date input */
-  .date-input { max-width: 200px; }
+  /* Date */
+  .date-input {
+    width: 100%; max-width: 220px; padding: 0.625rem 0.875rem;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 0.5rem; color: var(--text-primary); font-size: 0.9375rem;
+  }
 
   /* Slots */
-  .slots-loading, .slots-empty, .slots-error {
+  .slots-loading, .slots-error, .slots-empty {
+    padding: 1rem; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 0.5rem;
+    color: var(--text-muted); font-size: 0.875rem;
     display: flex; align-items: center; gap: 0.625rem;
-    padding: 1rem; border-radius: 0.5rem;
-    font-size: 0.9rem; color: var(--text-muted);
-    background: var(--bg-elevated); border: 1px solid var(--border);
   }
-  .slots-error { color: #fca5a5; border-color: rgba(239,68,68,0.25); background: rgba(239,68,68,0.06); }
+  .slots-error { color: #ef4444; }
 
-  .slots-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-
+  .slots-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 0.5rem;
+  }
   .slot-btn {
     display: flex; flex-direction: column; align-items: center; gap: 0.125rem;
-    padding: 0.5rem 1rem; border-radius: 0.375rem;
-    border: 1px solid var(--border); background: var(--bg-elevated);
-    color: var(--text-secondary); font-size: 0.875rem; font-weight: 500;
-    cursor: pointer; transition: all 0.15s;
+    padding: 0.625rem 0.5rem; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 0.5rem;
+    color: var(--text-primary); cursor: pointer; transition: all 0.15s;
   }
-  .slot-btn:hover { border-color: var(--accent-border); color: var(--accent); }
-  .slot-btn.selected { border-color: var(--accent); background: var(--accent-muted); color: var(--accent); font-weight: 700; }
-
-  .slot-time { font-weight: 600; }
-  .slot-bay { font-size: 0.6875rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
-  .slot-btn.selected .slot-bay { color: var(--accent); }
+  .slot-btn:hover { border-color: var(--accent); }
+  .slot-btn.selected { background: var(--accent); color: white; border-color: var(--accent); }
+  .slot-time { font-size: 0.875rem; font-weight: 600; }
+  .slot-bay { font-size: 0.6875rem; color: var(--text-muted); }
+  .slot-btn.selected .slot-bay { color: rgba(255, 255, 255, 0.8); }
 
   /* Confirmation */
   .confirm-panel {
-    margin-top: 1rem; padding: 1.5rem;
-    background: var(--bg-elevated); border: 1px solid var(--accent-border);
-    border-radius: 0.75rem;
+    margin-top: 1.5rem; padding: 1.5rem;
+    background: var(--bg-card); border: 1px solid var(--accent);
+    border-radius: 0.625rem;
   }
-
   .confirm-title {
     font-size: 0.875rem; font-weight: 700; color: var(--text-primary);
-    text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem;
+    margin-bottom: 1rem;
   }
-
   .confirm-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 0.5rem 0; border-bottom: 1px solid var(--border);
-    font-size: 0.9rem;
+    display: flex; justify-content: space-between;
+    padding: 0.5rem 0; font-size: 0.875rem;
+    border-bottom: 1px solid var(--border);
   }
-  .confirm-row:last-of-type { border-bottom: none; }
+  .confirm-row:last-of-type { border-bottom: none; margin-bottom: 0.75rem; }
   .confirm-row span { color: var(--text-muted); }
-  .confirm-row strong { color: var(--text-primary); }
+  .confirm-row strong { color: var(--text-primary); font-weight: 600; }
 
-  .confirm-actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+  .confirm-actions { display: flex; gap: 0.625rem; margin-top: 1rem; }
 
   /* Result states */
   .result-state {
+    padding: 2.5rem 1rem; text-align: center;
     display: flex; flex-direction: column; align-items: center;
-    text-align: center; padding: 2rem 1rem;
   }
+  .result-title { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; }
+  .result-sub { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.5rem; }
 
-  .result-title { font-size: 1.5rem; font-weight: 900; color: var(--text-primary); margin-bottom: 0.5rem; }
-  .result-sub { color: var(--text-secondary); font-size: 0.9375rem; margin-bottom: 1.5rem; }
-
-  /* Spinner */
-  :global(.spin) { animation: spin 0.8s linear infinite; }
+  :global(.spin) { animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 </style>

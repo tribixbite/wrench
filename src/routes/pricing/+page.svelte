@@ -18,8 +18,25 @@
       ],
       rate: '$25',
       rateUnit: '/ hour',
-      rateSecondary: '$250 / day',
-      rateNote: 'Hourly · Daily · Weekly / Monthly available'
+      rateSecondary: 'Book 1–8 hours · 3 bays available',
+      rateNote: 'Hourly · Linear pricing'
+    },
+    {
+      id: 'detail',
+      icon: '✨',
+      name: 'Detail Bay',
+      description: 'Dedicated wash and detail station with hot water, chemicals, and equipment to bring your vehicle to showroom condition.',
+      features: [
+        'Hot and cold water supply',
+        'Pressure washer access',
+        'Detail supplies and chemicals',
+        'Foam cannon and wash equipment',
+        'Drying area and microfiber supply'
+      ],
+      rate: '$30',
+      rateUnit: '/ hour',
+      rateSecondary: 'Book 1–8 hours · 1 bay available',
+      rateNote: 'Hourly · Linear pricing'
     },
     {
       id: 'hoist',
@@ -35,25 +52,9 @@
       ],
       rate: '$35',
       rateUnit: '/ hour',
-      rateSecondary: '$350 / day',
-      rateNote: 'Hourly · Daily · Weekly / Monthly available',
+      rateSecondary: 'Book 1–8 hours · 2 bays available',
+      rateNote: 'Hourly · Linear pricing',
       featured: true
-    },
-    {
-      id: 'detail',
-      icon: '✨',
-      name: 'Detail Bay',
-      description: 'Dedicated wash and detail station with hot water, chemicals, and equipment to bring your vehicle to showroom condition.',
-      features: [
-        'Hot and cold water supply',
-        'Pressure washer access',
-        'Detail supplies and chemicals',
-        'Foam cannon and wash equipment',
-        'Drying area and microfiber supply'
-      ],
-      rate: 'Contact',
-      rateUnit: ' for rates',
-      rateNote: 'Hourly'
     }
   ];
 

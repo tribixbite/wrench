@@ -120,12 +120,12 @@ test.describe('POST /api/bookings/availability (authenticated)', () => {
   // Use a date 7 days from now to increase chance of availability
   const futureDate = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10);
 
-  test('returns 200 with slots array for all bays', async ({ request }) => {
+  test('returns 200 with slots array for all bays of a type', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/availability`, {
-      data: { variationKey: 'min90', date: futureDate },
+      data: { bayType: 'flat', hours: 1, date: futureDate },
       headers: { 'Content-Type': 'application/json' },
     });
-    // 502 = Square sandbox unavailable
+    // 502 = Square Bookings not yet enabled on the merchant
     if (res.status() === 502) { test.skip(); return; }
 
     expect(res.status()).toBe(200);
@@ -136,7 +136,7 @@ test.describe('POST /api/bookings/availability (authenticated)', () => {
 
   test('returns slots with bayNumber and teamMemberId', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/availability`, {
-      data: { variationKey: 'min90', date: futureDate },
+      data: { bayType: 'flat', hours: 1, date: futureDate },
       headers: { 'Content-Type': 'application/json' },
     });
     if (res.status() !== 200) { test.skip(); return; }
@@ -149,25 +149,25 @@ test.describe('POST /api/bookings/availability (authenticated)', () => {
     expect(typeof slot.teamMemberId).toBe('string');
     expect(typeof slot.bayNumber).toBe('number');
     expect(slot.bayNumber).toBeGreaterThanOrEqual(1);
-    expect(slot.bayNumber).toBeLessThanOrEqual(5);
+    expect(slot.bayNumber).toBeLessThanOrEqual(6);
   });
 
   test('single bay query returns slots for that bay only', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/availability`, {
-      data: { bayNumber: 1, variationKey: 'min90', date: futureDate },
+      data: { bayType: 'flat', hours: 1, bayNumber: 3, date: futureDate },
       headers: { 'Content-Type': 'application/json' },
     });
     if (res.status() !== 200) { test.skip(); return; }
 
     const { slots } = await res.json();
     for (const slot of slots) {
-      expect(slot.bayNumber).toBe(1);
+      expect(slot.bayNumber).toBe(3);
     }
   });
 
-  test('3-hour variation returns slots', async ({ request }) => {
+  test('hoist bay 4-hour search returns slots', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/availability`, {
-      data: { variationKey: 'hr3', date: futureDate },
+      data: { bayType: 'hoist', hours: 4, date: futureDate },
       headers: { 'Content-Type': 'application/json' },
     });
     if (res.status() === 502) { test.skip(); return; }
@@ -178,15 +178,15 @@ test.describe('POST /api/bookings/availability (authenticated)', () => {
 
   test('invalid bayNumber returns 400', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/availability`, {
-      data: { bayNumber: 99, variationKey: 'min90', date: futureDate },
+      data: { bayType: 'flat', hours: 1, bayNumber: 99, date: futureDate },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(400);
   });
 
-  test('invalid variationKey returns 400', async ({ request }) => {
+  test('invalid bayType returns 400', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/availability`, {
-      data: { variationKey: 'invalid', date: futureDate },
+      data: { bayType: 'invalid', hours: 1, date: futureDate },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(400);
@@ -194,7 +194,7 @@ test.describe('POST /api/bookings/availability (authenticated)', () => {
 
   test('invalid date format returns 400', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/availability`, {
-      data: { variationKey: 'min90', date: 'not-a-date' },
+      data: { bayType: 'flat', hours: 1, date: 'not-a-date' },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(400);
@@ -216,23 +216,31 @@ test.describe('POST /api/bookings/create (authenticated)', () => {
 
   test('invalid bayNumber returns 400', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/create`, {
-      data: { bayNumber: 0, variationKey: 'min90', startAt: new Date().toISOString() },
+      data: { bayNumber: 0, bayType: 'flat', hours: 1, startAt: new Date().toISOString() },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(400);
   });
 
-  test('bayNumber 6 (out of range) returns 400', async ({ request }) => {
+  test('bayNumber 7 (out of range) returns 400', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/create`, {
-      data: { bayNumber: 6, variationKey: 'min90', startAt: new Date().toISOString() },
+      data: { bayNumber: 7, bayType: 'flat', hours: 1, startAt: new Date().toISOString() },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(400);
   });
 
-  test('invalid variationKey returns 400', async ({ request }) => {
+  test('invalid bayType returns 400', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/create`, {
-      data: { bayNumber: 1, variationKey: 'invalid', startAt: new Date().toISOString() },
+      data: { bayNumber: 1, bayType: 'invalid', hours: 1, startAt: new Date().toISOString() },
+      headers: { 'Content-Type': 'application/json' },
+    });
+    expect(res.status()).toBe(400);
+  });
+
+  test('hours out of range (9) returns 400', async ({ request }) => {
+    const res = await request.post(`${base()}/api/bookings/create`, {
+      data: { bayNumber: 1, bayType: 'flat', hours: 9, startAt: new Date().toISOString() },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(400);
@@ -240,7 +248,7 @@ test.describe('POST /api/bookings/create (authenticated)', () => {
 
   test('invalid startAt (not ISO datetime) returns 400', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/create`, {
-      data: { bayNumber: 1, variationKey: 'min90', startAt: 'not-a-date' },
+      data: { bayNumber: 1, bayType: 'flat', hours: 1, startAt: 'not-a-date' },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(400);
@@ -258,7 +266,8 @@ test.describe('POST /api/bookings/create (authenticated)', () => {
     const res = await request.post(`${base()}/api/bookings/create`, {
       data: {
         bayNumber: 1,
-        variationKey: 'min90',
+        bayType: 'flat',
+        hours: 1,
         startAt: new Date().toISOString(),
         note: 'x'.repeat(501)
       },
@@ -505,7 +514,7 @@ test.describe('Auth guards (unauthenticated)', () => {
 
   test('POST /api/bookings/availability returns 401', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/availability`, {
-      data: { variationKey: 'min90', date: '2026-06-01' },
+      data: { bayType: 'flat', hours: 1, date: '2026-06-01' },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(401);
@@ -513,7 +522,7 @@ test.describe('Auth guards (unauthenticated)', () => {
 
   test('POST /api/bookings/create returns 401', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/create`, {
-      data: { bayNumber: 1, variationKey: 'min90', startAt: new Date().toISOString() },
+      data: { bayNumber: 1, bayType: 'flat', hours: 1, startAt: new Date().toISOString() },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(401);
