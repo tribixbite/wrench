@@ -74,3 +74,5 @@ bun run preview    # Preview production build
 - Don't use `tailwind.config.js` — Tailwind v4 is CSS-only
 - Don't use stock photography — all imagery from founder-provided photos
 - Don't invent content — use copy from wrenchclub.com and handoff.txt
+- Don't call `square.bookings.create()` without a fresh `searchAvailability` pre-check — Square has no conflict detection at create time. See `src/routes/api/bookings/create/+server.ts` for the pattern.
+- Don't break the `[order:X|payment:Y]` customer-note tag format — it's the only link between a booking and its payment for refund-on-cancel. Change it in both `bookings/create` and `bookings/cancel` together.
