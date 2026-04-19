@@ -224,9 +224,14 @@ test.describe('POST /api/bookings/availability (authenticated)', () => {
 test.describe('POST /api/bookings/create (authenticated)', () => {
   test.use({ storageState: AUTH_STATE });
 
+  // sourceId is required by the new payment-integrated schema; using a stub
+  // here is fine because every test in this block expects 400 from schema
+  // validation OR earlier — payment is never attempted.
+  const STUB = 'cnon:test-stub';
+
   test('invalid bayNumber returns 400', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/create`, {
-      data: { bayNumber: 0, bayType: 'flat', hours: 1, startAt: new Date().toISOString() },
+      data: { bayNumber: 0, bayType: 'flat', hours: 1, startAt: new Date().toISOString(), sourceId: STUB },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(400);
@@ -234,7 +239,7 @@ test.describe('POST /api/bookings/create (authenticated)', () => {
 
   test('bayNumber 7 (out of range) returns 400', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/create`, {
-      data: { bayNumber: 7, bayType: 'flat', hours: 1, startAt: new Date().toISOString() },
+      data: { bayNumber: 7, bayType: 'flat', hours: 1, startAt: new Date().toISOString(), sourceId: STUB },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(400);
@@ -242,7 +247,7 @@ test.describe('POST /api/bookings/create (authenticated)', () => {
 
   test('invalid bayType returns 400', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/create`, {
-      data: { bayNumber: 1, bayType: 'invalid', hours: 1, startAt: new Date().toISOString() },
+      data: { bayNumber: 1, bayType: 'invalid', hours: 1, startAt: new Date().toISOString(), sourceId: STUB },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(400);
@@ -250,7 +255,7 @@ test.describe('POST /api/bookings/create (authenticated)', () => {
 
   test('hours out of range (9) returns 400', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/create`, {
-      data: { bayNumber: 1, bayType: 'flat', hours: 9, startAt: new Date().toISOString() },
+      data: { bayNumber: 1, bayType: 'flat', hours: 9, startAt: new Date().toISOString(), sourceId: STUB },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(400);
@@ -258,7 +263,15 @@ test.describe('POST /api/bookings/create (authenticated)', () => {
 
   test('invalid startAt (not ISO datetime) returns 400', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/create`, {
-      data: { bayNumber: 1, bayType: 'flat', hours: 1, startAt: 'not-a-date' },
+      data: { bayNumber: 1, bayType: 'flat', hours: 1, startAt: 'not-a-date', sourceId: STUB },
+      headers: { 'Content-Type': 'application/json' },
+    });
+    expect(res.status()).toBe(400);
+  });
+
+  test('missing sourceId returns 400', async ({ request }) => {
+    const res = await request.post(`${base()}/api/bookings/create`, {
+      data: { bayNumber: 1, bayType: 'flat', hours: 1, startAt: new Date(Date.now() + 86_400_000).toISOString() },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(400);
@@ -279,6 +292,7 @@ test.describe('POST /api/bookings/create (authenticated)', () => {
         bayType: 'flat',
         hours: 1,
         startAt: new Date().toISOString(),
+        sourceId: STUB,
         note: 'x'.repeat(501)
       },
       headers: { 'Content-Type': 'application/json' },
@@ -532,7 +546,7 @@ test.describe('Auth guards (unauthenticated)', () => {
 
   test('POST /api/bookings/create returns 401', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/create`, {
-      data: { bayNumber: 1, bayType: 'flat', hours: 1, startAt: new Date().toISOString() },
+      data: { bayNumber: 1, bayType: 'flat', hours: 1, startAt: new Date().toISOString(), sourceId: 'cnon:test' },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(401);

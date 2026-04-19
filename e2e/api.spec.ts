@@ -79,7 +79,7 @@ test.describe('POST /api/bookings/availability (auth-gated)', () => {
 test.describe('POST /api/bookings/create (auth-gated)', () => {
   test('returns 401 without a session cookie', async ({ request }) => {
     const res = await request.post(`${base()}/api/bookings/create`, {
-      data: { bayNumber: 1, bayType: 'flat', hours: 1, startAt: new Date().toISOString() },
+      data: { bayNumber: 1, bayType: 'flat', hours: 1, startAt: new Date().toISOString(), sourceId: 'cnon:test' },
       headers: { 'Content-Type': 'application/json' },
     });
     expect(res.status()).toBe(401);

@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { ArrowLeft, CalendarDays, Clock, Car, CheckCircle2, XCircle, Loader2 } from 'lucide-svelte';
+  import { ArrowLeft, CalendarDays, Clock, Car, CheckCircle2, XCircle, Loader2, X } from 'lucide-svelte';
   import { onMount } from 'svelte';
+  import PaymentStep from '$lib/components/app/PaymentStep.svelte';
 
   type BayType = 'flat' | 'detail' | 'hoist';
   type BayInfo = { id: number; type: BayType; label: string };
@@ -10,6 +11,7 @@
       bays: BayInfo[];
       hourlyRate: Record<BayType, number>;
       typeLabel: Record<BayType, string>;
+      square: { appId: string; locationId: string; environment: 'sandbox' | 'production' };
     };
   }
   const { data }: Props = $props();
@@ -24,6 +26,7 @@
 
   interface Booking {
     id: string;
+    version: number;
     startAt: string;
     status: string;
     appointmentSegments: Array<{ teamMemberId: string }>;
@@ -42,12 +45,19 @@
   let slotsLoading  = $state(false);
   let slotsError    = $state<string | null>(null);
 
-  let bookingState  = $state<'idle' | 'confirming' | 'booking' | 'success' | 'error'>('idle');
+  let bookingState  = $state<'idle' | 'confirming' | 'paying' | 'booking' | 'success' | 'error'>('idle');
   let bookingId     = $state<string | null>(null);
   let bookingError  = $state<string | null>(null);
+  let lastReceipt   = $state<{ amountCents: number; cardSaved: boolean } | null>(null);
 
   let upcomingBookings = $state<Booking[]>([]);
   let bookingsLoading  = $state(true);
+
+  /** Cancellation state — booking ID currently being acted on, plus any error */
+  let cancelTargetId = $state<string | null>(null);
+  let cancelInFlight = $state(false);
+  let cancelError    = $state<string | null>(null);
+  let cancelToast    = $state<string | null>(null);
 
   function todayStr() { return new Date().toISOString().slice(0, 10); }
   function minDate()  { return todayStr(); }
@@ -103,7 +113,7 @@
     }
   }
 
-  async function confirmBooking() {
+  async function confirmAndPay(payload: { sourceId: string; saveCard: boolean }) {
     if (!selectedSlot) return;
     bookingState = 'booking';
     bookingError = null;
@@ -116,7 +126,9 @@
           bayNumber: selectedSlot.bayNumber,
           bayType: selectedBayType,
           hours: selectedHours,
-          startAt: selectedSlot.startAt
+          startAt: selectedSlot.startAt,
+          sourceId: payload.sourceId,
+          saveCard: payload.saveCard
         })
       });
       if (!res.ok) {
@@ -125,6 +137,7 @@
       }
       const json = await res.json();
       bookingId = json.bookingId;
+      lastReceipt = { amountCents: json.amountCents ?? 0, cardSaved: !!json.savedCardId };
       bookingState = 'success';
       void fetchUpcoming();
     } catch (e: unknown) {
@@ -146,12 +159,56 @@
     }
   }
 
+  /** Hours until the booking starts, for the 24h-cancellation policy hint. */
+  function hoursUntil(iso: string): number {
+    const ms = new Date(iso).getTime() - Date.now();
+    return Math.max(0, Math.floor(ms / (60 * 60 * 1000)));
+  }
+  function canCancel(b: Booking): boolean {
+    return hoursUntil(b.startAt) >= 24;
+  }
+
+  async function cancelBooking(b: Booking) {
+    cancelInFlight = true;
+    cancelError = null;
+    try {
+      const res = await fetch('/api/bookings/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingId: b.id })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message ?? `HTTP ${res.status}`);
+      }
+      const refunded = data.refundedCents ?? 0;
+      cancelToast = refunded > 0
+        ? `Cancelled. $${(refunded / 100).toFixed(2)} refunded to your card.`
+        : 'Cancelled.';
+      cancelTargetId = null;
+      await fetchUpcoming();
+      // Auto-clear toast
+      setTimeout(() => { cancelToast = null; }, 5000);
+    } catch (e: unknown) {
+      cancelError = e instanceof Error ? e.message : 'Cancel failed';
+    } finally {
+      cancelInFlight = false;
+    }
+  }
+
   function resetBooking() {
     bookingState = 'idle';
     bookingId = null;
     bookingError = null;
+    lastReceipt = null;
     selectedSlot = null;
     void fetchSlots(selectedBayType, selectedHours, selectedBay, selectedDate);
+  }
+
+  function formatPrice(cents: number): string {
+    const hasCents = cents % 100 !== 0;
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD',
+      minimumFractionDigits: hasCents ? 2 : 0, maximumFractionDigits: hasCents ? 2 : 0 }).format(cents / 100);
   }
 
   function fmtTime(iso: string) {
@@ -195,6 +252,10 @@
     <h1 class="page-title font-display">Bay Reservations</h1>
   </div>
 
+  {#if cancelToast}
+    <div class="toast toast-success" role="status">{cancelToast}</div>
+  {/if}
+
   {#if !bookingsLoading && upcomingBookings.length > 0}
     <section class="upcoming">
       <h2 class="section-label">Your Bookings</h2>
@@ -210,7 +271,47 @@
             <span class="chip-status" class:confirmed={b.status === 'ACCEPTED' || b.status === 'APPROVED'}>
               {b.status?.toLowerCase().replace(/_/g, ' ')}
             </span>
+
+            {#if canCancel(b)}
+              <button
+                type="button"
+                class="chip-cancel-btn"
+                title="Cancel booking"
+                aria-label="Cancel booking"
+                onclick={() => { cancelTargetId = b.id; cancelError = null; }}
+              >
+                <X size={14} />
+              </button>
+            {:else}
+              <span class="chip-locked" title="Cancellations require 24h notice">
+                {hoursUntil(b.startAt)}h to start
+              </span>
+            {/if}
           </div>
+
+          {#if cancelTargetId === b.id}
+            <div class="cancel-confirm">
+              <p class="cancel-confirm-title">Cancel this booking?</p>
+              <p class="cancel-confirm-body">
+                Your card will be refunded the full amount ({hoursUntil(b.startAt)}h until start).
+              </p>
+              {#if cancelError}
+                <p class="cancel-error">{cancelError}</p>
+              {/if}
+              <div class="cancel-actions">
+                <button class="btn btn-primary" onclick={() => cancelBooking(b)} disabled={cancelInFlight}>
+                  {#if cancelInFlight}
+                    <Loader2 size={14} class="spin" /> Cancelling…
+                  {:else}
+                    Yes, cancel & refund
+                  {/if}
+                </button>
+                <button class="btn btn-ghost" onclick={() => { cancelTargetId = null; cancelError = null; }}>
+                  Keep booking
+                </button>
+              </div>
+            </div>
+          {/if}
         {/each}
       </div>
     </section>
@@ -223,7 +324,12 @@
       <div class="result-state">
         <CheckCircle2 size={48} style="color: #22c55e; margin-bottom: 1rem;" />
         <h3 class="result-title">Bay reserved!</h3>
-        <p class="result-sub">Booking #{bookingId?.slice(0, 8)} confirmed.</p>
+        <p class="result-sub">
+          {#if lastReceipt}
+            Charged {formatPrice(lastReceipt.amountCents)}{lastReceipt.cardSaved ? ' · card saved for next time' : ''}.
+          {/if}
+          Booking #{bookingId?.slice(0, 8)} confirmed.
+        </p>
         <button class="btn btn-outline" onclick={resetBooking}>Book Another</button>
       </div>
 
@@ -322,7 +428,7 @@
         {/if}
       </div>
 
-      {#if (bookingState === 'confirming' || bookingState === 'booking') && selectedSlot}
+      {#if selectedSlot && (bookingState === 'confirming' || bookingState === 'paying' || bookingState === 'booking')}
         <div class="confirm-panel">
           <p class="confirm-title">Confirm your reservation</p>
           <div class="confirm-row"><span>Bay</span><strong>{bayLabelById(selectedSlot.bayNumber)}</strong></div>
@@ -331,16 +437,28 @@
           <div class="confirm-row"><span>Time</span><strong>{fmtTime(selectedSlot.startAt)}</strong></div>
           <div class="confirm-row"><span>Price</span><strong>${estimatedPrice}</strong></div>
 
-          <div class="confirm-actions">
-            <button class="btn btn-primary" onclick={confirmBooking} disabled={bookingState === 'booking'}>
-              {#if bookingState === 'booking'}
-                <Loader2 size={16} class="spin" /> Booking…
-              {:else}
-                Confirm Reservation
-              {/if}
-            </button>
-            <button class="btn btn-ghost" onclick={() => { bookingState = 'idle'; selectedSlot = null; }}>Cancel</button>
-          </div>
+          {#if bookingState === 'confirming'}
+            <div class="confirm-actions">
+              <button class="btn btn-primary" onclick={() => { bookingState = 'paying'; }}>
+                Continue to Payment
+              </button>
+              <button class="btn btn-ghost" onclick={() => { bookingState = 'idle'; selectedSlot = null; }}>
+                Back
+              </button>
+            </div>
+          {:else}
+            <PaymentStep
+              appId={data.square.appId}
+              locationId={data.square.locationId}
+              environment={data.square.environment}
+              amountCents={estimatedPrice * 100}
+              submitLabel={`Pay $${estimatedPrice} & Book`}
+              submitting={bookingState === 'booking'}
+              error={bookingError}
+              onsubmit={confirmAndPay}
+              oncancel={() => { bookingState = 'confirming'; bookingError = null; }}
+            />
+          {/if}
         </div>
       {/if}
     {/if}
@@ -387,6 +505,61 @@
     color: var(--text-muted); text-transform: capitalize;
   }
   .chip-status.confirmed { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+
+  .chip-cancel-btn {
+    width: 24px; height: 24px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 6px; border: 1px solid transparent;
+    background: transparent; color: var(--text-muted);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .chip-cancel-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+
+  .chip-locked {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-secondary);
+    border-radius: 999px;
+  }
+
+  .cancel-confirm {
+    margin-top: -0.25rem;
+    margin-bottom: 0.5rem;
+    padding: 0.875rem 1rem;
+    background: rgba(239, 68, 68, 0.07);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 0.625rem;
+  }
+  .cancel-confirm-title {
+    font-size: 0.875rem; font-weight: 600;
+    color: var(--text-primary); margin-bottom: 0.25rem;
+  }
+  .cancel-confirm-body {
+    font-size: 0.8125rem; color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+  }
+  .cancel-error {
+    font-size: 0.8125rem; color: #ef4444;
+    margin-bottom: 0.5rem;
+  }
+  .cancel-actions { display: flex; gap: 0.5rem; }
+
+  .toast {
+    margin: 0 0 1.25rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.625rem;
+    font-size: 0.875rem;
+  }
+  .toast-success {
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    color: #4ade80;
+  }
 
   /* Booking form */
   .booking-section { padding: 2rem; }

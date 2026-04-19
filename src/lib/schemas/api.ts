@@ -67,12 +67,53 @@ export const BookingCreateBody = z.object({
   bayType: z.enum(['flat', 'detail', 'hoist']),
   hours: z.number().int().min(1).max(8),
   startAt: z.string().datetime(),
+  /** Card-on-file ID OR a single-use card nonce from Web Payments SDK tokenize */
+  sourceId: z.string().min(1),
+  /** When true and sourceId is a nonce, save the card to the customer for future bookings */
+  saveCard: z.boolean().optional(),
   note: z.string().max(500).optional()
 });
 
 /** Response for POST /api/bookings/create */
 export const BookingCreateResponse = z.object({
-  bookingId: z.string()
+  bookingId: z.string(),
+  orderId: z.string(),
+  paymentId: z.string(),
+  amountCents: z.number().int(),
+  savedCardId: z.string().optional()
+});
+
+// ---------------------------------------------------------------------------
+// Payments — saved cards on file
+// ---------------------------------------------------------------------------
+
+export const SavedCard = z.object({
+  id: z.string(),
+  brand: z.string(),
+  last4: z.string(),
+  expMonth: z.number().int(),
+  expYear: z.number().int(),
+  cardholderName: z.string()
+});
+
+export const SavedCardsResponse = z.object({
+  cards: z.array(SavedCard),
+  error: z.string().optional()
+});
+
+// ---------------------------------------------------------------------------
+// Bookings — cancel
+// ---------------------------------------------------------------------------
+
+/** Request body for POST /api/bookings/cancel */
+export const BookingCancelBody = z.object({
+  bookingId: z.string().min(1)
+});
+
+/** Response for POST /api/bookings/cancel */
+export const BookingCancelResponse = z.object({
+  bookingId: z.string(),
+  refundedCents: z.number().int().optional()
 });
 
 // ---------------------------------------------------------------------------
@@ -82,6 +123,7 @@ export const BookingCreateResponse = z.object({
 /** A single booking from the list response */
 export const BookingItem = z.object({
   id: z.string().optional(),
+  version: z.number().int().optional(),
   status: z.string().optional(),
   startAt: z.string().optional(),
   locationId: z.string().optional(),

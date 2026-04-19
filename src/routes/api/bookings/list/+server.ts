@@ -27,6 +27,7 @@ export const GET: RequestHandler = async ({ locals }) => {
       .sort((a, b) => (a.startAt ?? '').localeCompare(b.startAt ?? ''))
       .map((b) => ({
         id: b.id,
+        version: Number(b.version ?? 0),
         status: b.status,
         startAt: b.startAt,
         locationId: b.locationId,

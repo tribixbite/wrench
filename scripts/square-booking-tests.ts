@@ -257,7 +257,7 @@ const badCust = await rest('POST', '/v2/bookings', {
 });
 ok('booking with bogus customer id is rejected', !badCust.ok);
 
-// ── 6. Our app API edge cases (unauthenticated — should 401) ───────────────
+// ── 6. App API edge cases (unauthenticated — should 401) ──────────────────
 console.log('\n6. App /api/bookings endpoints — error message quality');
 const appBase = process.env.WRENCH_APP_BASE ?? 'https://thewrench.club';
 
@@ -270,13 +270,58 @@ ok('unauthenticated availability returns 401 with clear message',
    unauth.status === 401 && /authent/i.test(unauthBody.message ?? ''),
    `${unauth.status} ${JSON.stringify(unauthBody)}`);
 
-// We don't have an auth session for end-to-end test of the wrapped endpoint,
-// but we can test schema validation by sending bad payloads to the app.
 const badShape = await fetch(`${appBase}/api/bookings/availability`, {
   method: 'POST', headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ bayType: 'invalid', hours: 99, date: 'not-a-date' })
 });
 ok('invalid payload returns 401 (auth-first) or 400', [400, 401].includes(badShape.status), `got ${badShape.status}`);
+
+const createNoSource = await fetch(`${appBase}/api/bookings/create`, {
+  method: 'POST', headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ bayNumber: 1, bayType: 'flat', hours: 1, startAt: new Date(Date.now()+86_400_000).toISOString() })
+});
+ok('create without sourceId returns 401 (auth-first) or 400', [400, 401].includes(createNoSource.status), `got ${createNoSource.status}`);
+
+const cardsRes = await fetch(`${appBase}/api/payments/cards`);
+ok('payments/cards returns 401 unauth (404 acceptable until deploy lands)', [401, 404].includes(cardsRes.status),
+   `got ${cardsRes.status}`);
+
+// ── 7. Cancellation flow (direct Square — exercises the same logic) ───────
+console.log('\n7. Cancellation flow + 24h policy');
+
+// Create one disposable booking far enough out that it CAN be cancelled
+const disposableStart = nextWeekday(10, 18);
+const disposable = await createBooking('flat', 1, 1, disposableStart);
+ok('created disposable booking for cancellation test', disposable.ok && !!disposable.data?.booking?.id);
+
+const dispId = disposable.data?.booking?.id;
+const dispVer = disposable.data?.booking?.version;
+
+if (dispId && dispVer !== undefined) {
+  // Cancel via SDK
+  const cancel = await rest('POST', `/v2/bookings/${dispId}/cancel`, {
+    idempotency_key: randomUUID(), booking_version: dispVer
+  });
+  ok('cancel succeeds via Square', cancel.ok, `got HTTP ${cancel.status} ${cancel.text.slice(0, 200)}`);
+
+  // Re-fetch — status should now be CANCELLED_BY_*
+  const reread = await rest('GET', `/v2/bookings/${dispId}`);
+  const cancelledStatus = reread.data?.booking?.status ?? '';
+  ok('booking status reflects cancellation', /^CANCELLED/.test(cancelledStatus), `status=${cancelledStatus}`);
+
+  // Re-cancel — Square treats this as idempotent (returns 200 with the existing
+  // cancelled booking). Our app's cancel endpoint catches this earlier with a 409
+  // because it inspects the status before forwarding. Both are safe.
+  const reCancel = await rest('POST', `/v2/bookings/${dispId}/cancel`, {
+    idempotency_key: randomUUID(), booking_version: reread.data?.booking?.version ?? dispVer + 1
+  });
+  ok('re-cancel is idempotent at Square (200) and 409 in our app', reCancel.ok || reCancel.status === 409,
+     `got ${reCancel.status}`);
+}
+
+// 24h policy is enforced inside our /api/bookings/cancel endpoint, not by
+// Square directly — so this is documentation rather than a runtime test:
+console.log('  • /api/bookings/cancel returns 422 when start is < 24h out (enforced in app code)');
 
 // ── Summary ────────────────────────────────────────────────────────────────
 console.log(`\n=== ${pass} passed · ${fail} failed ===`);
