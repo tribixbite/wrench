@@ -460,6 +460,7 @@
               <button
                 class="slot-btn"
                 class:selected={selectedSlot?.startAt === slot.startAt}
+                aria-label={`${fmtTime(slot.startAt ?? '')} at ${bayLabelById(slot.bayNumber)}, select slot`}
                 onclick={() => { selectedSlot = slot; bookingState = 'confirming'; }}
               >
                 <span class="slot-time">{fmtTime(slot.startAt ?? '')}</span>

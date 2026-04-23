@@ -56,17 +56,21 @@
               class="input"
               placeholder="Min. 8 characters"
               required
+              minlength="8"
               autocomplete="new-password"
+              aria-describedby="reset-password-hint"
             />
             <button
               type="button"
               class="password-toggle"
               onclick={() => (showPassword = !showPassword)}
-              aria-label={showPassword ? 'Hide' : 'Show'}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
             >
               {#if showPassword}<EyeOff size={16} />{:else}<Eye size={16} />{/if}
             </button>
           </div>
+          <p id="reset-password-hint" class="field-hint">Minimum 8 characters</p>
         </div>
 
         <div class="field">
@@ -85,7 +89,8 @@
               type="button"
               class="password-toggle"
               onclick={() => (showConfirm = !showConfirm)}
-              aria-label={showConfirm ? 'Hide' : 'Show'}
+              aria-label={showConfirm ? 'Hide password' : 'Show password'}
+              aria-pressed={showConfirm}
             >
               {#if showConfirm}<EyeOff size={16} />{:else}<Eye size={16} />{/if}
             </button>

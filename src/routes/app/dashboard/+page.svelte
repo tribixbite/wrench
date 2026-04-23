@@ -148,6 +148,7 @@
               target="_blank"
               rel="noopener noreferrer"
               class="location-link"
+              aria-label="Get directions (opens in a new tab)"
             >
               Get Directions →
             </a>

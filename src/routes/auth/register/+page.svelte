@@ -85,17 +85,19 @@
             required
             minlength="8"
             autocomplete="new-password"
+            aria-describedby="password-hint"
           />
           <button
             type="button"
             class="password-toggle"
             onclick={() => (showPassword = !showPassword)}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-pressed={showPassword}
           >
             {#if showPassword}<EyeOff size={16} />{:else}<Eye size={16} />{/if}
           </button>
         </div>
-        <p class="field-hint">Minimum 8 characters</p>
+        <p id="password-hint" class="field-hint">Minimum 8 characters</p>
       </div>
 
       <label class="waiver-label">

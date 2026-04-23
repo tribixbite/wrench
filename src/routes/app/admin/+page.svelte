@@ -34,7 +34,24 @@
     });
   }
 
-  let activeTab = $state<'waitlist' | 'users'>('waitlist');
+  type Tab = 'waitlist' | 'users';
+  let activeTab = $state<Tab>('waitlist');
+  const TAB_ORDER: Tab[] = ['waitlist', 'users'];
+
+  /** Left/Right arrow keys move between tabs; Home/End jump to ends. */
+  function onTabKeydown(e: KeyboardEvent) {
+    const idx = TAB_ORDER.indexOf(activeTab);
+    let next: number | null = null;
+    if (e.key === 'ArrowRight') next = (idx + 1) % TAB_ORDER.length;
+    else if (e.key === 'ArrowLeft') next = (idx - 1 + TAB_ORDER.length) % TAB_ORDER.length;
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = TAB_ORDER.length - 1;
+    if (next === null) return;
+    e.preventDefault();
+    activeTab = TAB_ORDER[next];
+    const el = document.getElementById(`admin-tab-${activeTab}`);
+    el?.focus();
+  }
 </script>
 
 <svelte:head>
@@ -61,8 +78,13 @@
   </div>
 
   <!-- Tabs -->
-  <div class="tabs">
+  <div class="tabs" role="tablist" aria-label="Admin sections" onkeydown={onTabKeydown}>
     <button
+      id="admin-tab-waitlist"
+      role="tab"
+      aria-selected={activeTab === 'waitlist'}
+      aria-controls="admin-panel-waitlist"
+      tabindex={activeTab === 'waitlist' ? 0 : -1}
       class="tab"
       class:active={activeTab === 'waitlist'}
       onclick={() => (activeTab = 'waitlist')}
@@ -70,6 +92,11 @@
       <List size={15} /> Waitlist ({data.waitlistEntries.length})
     </button>
     <button
+      id="admin-tab-users"
+      role="tab"
+      aria-selected={activeTab === 'users'}
+      aria-controls="admin-panel-users"
+      tabindex={activeTab === 'users' ? 0 : -1}
       class="tab"
       class:active={activeTab === 'users'}
       onclick={() => (activeTab = 'users')}
@@ -80,7 +107,12 @@
 
   <!-- Waitlist Table -->
   {#if activeTab === 'waitlist'}
-    <div class="table-wrap card">
+    <div
+      id="admin-panel-waitlist"
+      role="tabpanel"
+      aria-labelledby="admin-tab-waitlist"
+      class="table-wrap card"
+    >
       {#if data.waitlistEntries.length === 0}
         <div class="empty">
           <Mail size={32} style="color: var(--text-muted); margin-bottom: 0.75rem;" />
@@ -120,7 +152,12 @@
 
   <!-- Users Table -->
   {#if activeTab === 'users'}
-    <div class="table-wrap card">
+    <div
+      id="admin-panel-users"
+      role="tabpanel"
+      aria-labelledby="admin-tab-users"
+      class="table-wrap card"
+    >
       {#if data.allUsers.length === 0}
         <div class="empty">
           <Users size={32} style="color: var(--text-muted); margin-bottom: 0.75rem;" />

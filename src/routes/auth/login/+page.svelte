@@ -84,6 +84,7 @@
             class="password-toggle"
             onclick={() => (showPassword = !showPassword)}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-pressed={showPassword}
           >
             {#if showPassword}
               <EyeOff size={16} />
