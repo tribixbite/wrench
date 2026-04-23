@@ -1,16 +1,32 @@
 <script lang="ts">
   import { CalendarDays, Clock, Wrench, ArrowRight, AlertCircle, MapPin } from 'lucide-svelte';
   import BayGrid from '$lib/components/app/BayGrid.svelte';
+  import type { MemberBooking } from '$lib/server/bookings';
 
   interface Props {
     data: {
       user: App.Locals['user'];
-      upcomingReservations: unknown[];
-      membershipStatus: string;
+      upcoming: MemberBooking[];
+      pastHoursUsed: number;
+      membershipStatus: 'waitlist' | 'active' | 'inactive';
     };
   }
 
   const { data }: Props = $props();
+
+  function fmtDate(iso?: string): string {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+  function fmtTime(iso?: string): string {
+    if (!iso) return '';
+    return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+  function bookingLabel(b: MemberBooking): string {
+    // customerNote starts with [order:X|payment:Y] from our booking flow — strip it.
+    const note = (b.customerNote ?? '').replace(/^\[order:[^|]+\|payment:[^\]]+\]\s*/, '');
+    return note || 'Bay reservation';
+  }
 </script>
 
 <svelte:head>
@@ -30,17 +46,19 @@
     </a>
   </div>
 
-  <!-- Pre-launch notice -->
-  <div class="notice">
-    <AlertCircle size={18} style="color: var(--accent); flex-shrink: 0; margin-top: 1px;" />
-    <div>
-      <p class="notice-title">Wrench Club opens in 2026</p>
-      <p class="notice-body">
-        Your account is ready. Bay booking opens at launch — you'll get an email the moment
-        scheduling goes live. Check the bay grid below for a preview of the live status system.
-      </p>
+  <!-- Pre-launch notice (only for waitlist status) -->
+  {#if data.membershipStatus === 'waitlist'}
+    <div class="notice">
+      <AlertCircle size={18} style="color: var(--accent); flex-shrink: 0; margin-top: 1px;" />
+      <div>
+        <p class="notice-title">Wrench Club opens in 2026</p>
+        <p class="notice-body">
+          Your account is ready. Bay booking opens at launch — you'll get an email the moment
+          scheduling goes live. Check the bay grid below for a preview of the live status system.
+        </p>
+      </div>
     </div>
-  </div>
+  {/if}
 
   <!-- Stats + Bay Grid -->
   <div class="main-grid">
@@ -51,36 +69,66 @@
           <div class="stat-icon"><CalendarDays size={20} /></div>
           <div>
             <p class="stat-label">Upcoming Reservations</p>
-            <p class="stat-value font-display">0</p>
+            <p class="stat-value font-display">{data.upcoming.length}</p>
           </div>
         </div>
         <div class="stat-card card">
           <div class="stat-icon"><Clock size={20} /></div>
           <div>
             <p class="stat-label">Bay Hours Used</p>
-            <p class="stat-value font-display">0 hrs</p>
+            <p class="stat-value font-display">{data.pastHoursUsed}{data.pastHoursUsed === 1 ? ' hr' : ' hrs'}</p>
           </div>
         </div>
         <div class="stat-card card">
           <div class="stat-icon"><Wrench size={20} /></div>
           <div>
             <p class="stat-label">Status</p>
-            <p class="stat-value font-display" style="font-size: 1.25rem;">Waitlist</p>
+            <p class="stat-value font-display" style="font-size: 1.25rem; text-transform: capitalize;">
+              {data.membershipStatus}
+            </p>
           </div>
         </div>
       </div>
 
-      <!-- Reservations placeholder -->
+      <!-- Upcoming reservations -->
       <div class="section-block card">
         <h2 class="block-title font-display">Upcoming Reservations</h2>
-        <div class="empty-state">
-          <CalendarDays size={36} style="color: var(--text-muted); margin-bottom: 0.875rem;" />
-          <p class="empty-title">No reservations yet</p>
-          <p class="empty-body">Bay booking opens at launch in 2026.</p>
+        {#if data.upcoming.length === 0}
+          <div class="empty-state">
+            <CalendarDays size={36} style="color: var(--text-muted); margin-bottom: 0.875rem;" />
+            <p class="empty-title">No reservations yet</p>
+            <p class="empty-body">
+              {#if data.membershipStatus === 'waitlist'}
+                Bay booking opens at launch in 2026.
+              {:else}
+                Ready when you are — book your first bay hour.
+              {/if}
+            </p>
+            <a href="/app/reservations" class="btn btn-outline btn-sm" style="margin-top: 1rem;">
+              {data.membershipStatus === 'waitlist' ? 'Learn about booking' : 'Book a Bay'}
+            </a>
+          </div>
+        {:else}
+          <ul class="booking-list">
+            {#each data.upcoming as b (b.id)}
+              <li class="booking-row">
+                <div class="booking-when">
+                  <span class="booking-date">{fmtDate(b.startAt)}</span>
+                  <span class="booking-time">{fmtTime(b.startAt)}</span>
+                </div>
+                <div class="booking-what">
+                  <span class="booking-bay">{bookingLabel(b)}</span>
+                  <span class="booking-status" class:confirmed={b.status === 'ACCEPTED' || b.status === 'APPROVED'}>
+                    {b.status?.toLowerCase().replace(/_/g, ' ') ?? 'pending'}
+                  </span>
+                </div>
+              </li>
+            {/each}
+          </ul>
           <a href="/app/reservations" class="btn btn-outline btn-sm" style="margin-top: 1rem;">
-            Learn about booking
+            Manage reservations →
           </a>
-        </div>
+        {/if}
       </div>
     </div>
 
@@ -264,6 +312,40 @@
     color: var(--text-muted);
     margin: 0;
   }
+
+  .booking-list {
+    list-style: none; padding: 0; margin: 0;
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .booking-row {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 0.875rem 1rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+  }
+  .booking-when {
+    display: flex; flex-direction: column; min-width: 0; flex-shrink: 0;
+  }
+  .booking-date {
+    font-size: 0.875rem; font-weight: 600; color: var(--text-primary);
+  }
+  .booking-time {
+    font-size: 0.75rem; color: var(--text-muted);
+  }
+  .booking-what {
+    display: flex; align-items: center; gap: 0.75rem; flex: 1; min-width: 0;
+  }
+  .booking-bay {
+    font-size: 0.875rem; color: var(--text-secondary);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
+  }
+  .booking-status {
+    font-size: 0.6875rem; padding: 0.25rem 0.5rem;
+    border-radius: 999px; background: var(--bg-secondary);
+    color: var(--text-muted); text-transform: capitalize; flex-shrink: 0;
+  }
+  .booking-status.confirmed { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
 
   /* Location card */
   .location-card {

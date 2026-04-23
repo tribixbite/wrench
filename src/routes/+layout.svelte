@@ -4,6 +4,8 @@
   import Footer from '$lib/components/layout/Footer.svelte';
   import StructuredData from '$lib/components/layout/StructuredData.svelte';
   import { page } from '$app/stores';
+  import { onMount } from 'svelte';
+  import { watchSystemPreference } from '$lib/stores/theme';
 
   interface Props {
     data: { user: App.Locals['user'] };
@@ -17,6 +19,9 @@
     $page.url.pathname.startsWith('/app/') ||
     $page.url.pathname.startsWith('/auth/')
   );
+
+  // Flip rendered theme when OS preference changes and user is in 'auto' mode.
+  onMount(() => watchSystemPreference());
 </script>
 
 <StructuredData />

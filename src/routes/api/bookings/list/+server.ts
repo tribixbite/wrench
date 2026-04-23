@@ -1,6 +1,6 @@
 import type { RequestHandler } from './$types';
 import { json, error } from '@sveltejs/kit';
-import { square, LOCATION_ID } from '$lib/server/square';
+import { listBookingsForCustomer } from '$lib/server/bookings';
 
 /**
  * GET /api/bookings/list
@@ -11,38 +11,7 @@ export const GET: RequestHandler = async ({ locals }) => {
   if (!locals.user.squareCustomerId) return json({ bookings: [] });
 
   try {
-    const page = await square.bookings.list({
-      customerId: locals.user.squareCustomerId,
-      locationId: LOCATION_ID
-    });
-
-    // Collect all pages into a flat array
-    const allBookings = [];
-    for await (const booking of page) {
-      allBookings.push(booking);
-    }
-
-    const bookings = allBookings
-      .filter((b) => b.status !== 'CANCELLED_BY_CUSTOMER' && b.status !== 'CANCELLED_BY_SELLER' && b.status !== 'NO_SHOW')
-      .sort((a, b) => (a.startAt ?? '').localeCompare(b.startAt ?? ''))
-      .map((b) => ({
-        id: b.id,
-        version: Number(b.version ?? 0),
-        status: b.status,
-        startAt: b.startAt,
-        locationId: b.locationId,
-        customerId: b.customerId,
-        customerNote: b.customerNote,
-        sellerNote: b.sellerNote,
-        createdAt: b.createdAt,
-        updatedAt: b.updatedAt,
-        appointmentSegments: b.appointmentSegments?.map((s) => ({
-          teamMemberId: s.teamMemberId,
-          durationMinutes: Number(s.durationMinutes ?? 0),
-          serviceVariationId: s.serviceVariationId
-        }))
-      }));
-
+    const bookings = await listBookingsForCustomer(locals.user.squareCustomerId);
     return json({ bookings });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Square API error';

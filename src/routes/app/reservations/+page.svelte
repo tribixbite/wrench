@@ -271,7 +271,7 @@
   <meta name="robots" content="noindex" />
 </svelte:head>
 
-<svelte:window on:keydown={onKeydown} />
+<svelte:window onkeydown={onKeydown} />
 
 <div class="page">
   <div class="page-header">
