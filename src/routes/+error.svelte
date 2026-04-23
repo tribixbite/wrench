@@ -1,6 +1,25 @@
 <script lang="ts">
   import { page } from '$app/stores';
   import { Wrench } from 'lucide-svelte';
+  import { onMount } from 'svelte';
+
+  let canGoBack = $state(false);
+
+  onMount(() => {
+    canGoBack =
+      document.referrer !== '' &&
+      new URL(document.referrer).origin === window.location.origin;
+  });
+
+  /** Fallback when there's no usable browser history. */
+  let fallbackHref = $derived($page.url.pathname.startsWith('/app') ? '/app/dashboard' : '/');
+  let fallbackLabel = $derived($page.url.pathname.startsWith('/app') ? 'Back to Dashboard' : 'Back to Home');
+
+  function onBackClick(e: MouseEvent) {
+    if (!canGoBack) return;
+    e.preventDefault();
+    history.back();
+  }
 </script>
 
 <svelte:head>
@@ -36,8 +55,10 @@
     </p>
 
     <div class="error-actions">
-      <a href="/" class="btn btn-primary">Back to Home</a>
-      <a href="/pricing" class="btn btn-ghost">View Pricing</a>
+      <a href={fallbackHref} class="btn btn-primary" onclick={onBackClick}>
+        {canGoBack ? 'Go Back' : fallbackLabel}
+      </a>
+      <a href="/" class="btn btn-ghost">Home</a>
     </div>
   </div>
 </div>

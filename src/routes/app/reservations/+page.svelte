@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { ArrowLeft, CalendarDays, Clock, Car, CheckCircle2, XCircle, Loader2, X } from 'lucide-svelte';
+  import { CalendarDays, Clock, Car, CheckCircle2, XCircle, Loader2, X } from 'lucide-svelte';
   import { onMount } from 'svelte';
   import PaymentStep from '$lib/components/app/PaymentStep.svelte';
+  import BackLink from '$lib/components/app/BackLink.svelte';
+  import { extractErrorMessage } from '$lib/utils';
 
   type BayType = 'flat' | 'detail' | 'hoist';
   type BayInfo = { id: number; type: BayType; label: string };
@@ -58,6 +60,30 @@
   let cancelInFlight = $state(false);
   let cancelError    = $state<string | null>(null);
   let cancelToast    = $state<string | null>(null);
+  let cancelConfirmEl = $state<HTMLDivElement | null>(null);
+  let cancelToastTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Close the inline cancel panel on Escape; focus confirm button when opened. */
+  $effect(() => {
+    if (cancelTargetId && cancelConfirmEl) {
+      // Focus the destructive action once the panel mounts so keyboard users
+      // don't have to tab through the chip. But land on Keep first for safety.
+      const keep = cancelConfirmEl.querySelector<HTMLButtonElement>('[data-cancel-keep]');
+      keep?.focus();
+    }
+  });
+
+  function onKeydown(e: KeyboardEvent) {
+    if (e.key === 'Escape' && cancelTargetId && !cancelInFlight) {
+      cancelTargetId = null;
+      cancelError = null;
+    }
+  }
+
+  function dismissToast() {
+    cancelToast = null;
+    if (cancelToastTimer) { clearTimeout(cancelToastTimer); cancelToastTimer = null; }
+  }
 
   function todayStr() { return new Date().toISOString().slice(0, 10); }
   function minDate()  { return todayStr(); }
@@ -101,8 +127,7 @@
         body: JSON.stringify(payload)
       });
       if (!res.ok) {
-        const e = await res.json().catch(() => ({}));
-        throw new Error(e.message ?? `HTTP ${res.status}`);
+        throw new Error(await extractErrorMessage(res));
       }
       const json = await res.json();
       slots = json.slots ?? [];
@@ -132,8 +157,7 @@
         })
       });
       if (!res.ok) {
-        const e = await res.json().catch(() => ({}));
-        throw new Error(e.message ?? `HTTP ${res.status}`);
+        throw new Error(await extractErrorMessage(res));
       }
       const json = await res.json();
       bookingId = json.bookingId;
@@ -177,18 +201,19 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bookingId: b.id })
       });
-      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(data.message ?? `HTTP ${res.status}`);
+        throw new Error(await extractErrorMessage(res));
       }
+      const data = await res.json().catch(() => ({}));
       const refunded = data.refundedCents ?? 0;
       cancelToast = refunded > 0
-        ? `Cancelled. $${(refunded / 100).toFixed(2)} refunded to your card.`
+        ? `Cancelled. ${formatPrice(refunded)} refunded to your card.`
         : 'Cancelled.';
       cancelTargetId = null;
       await fetchUpcoming();
-      // Auto-clear toast
-      setTimeout(() => { cancelToast = null; }, 5000);
+      // Auto-clear toast (user can dismiss manually too)
+      if (cancelToastTimer) clearTimeout(cancelToastTimer);
+      cancelToastTimer = setTimeout(() => { cancelToast = null; cancelToastTimer = null; }, 6000);
     } catch (e: unknown) {
       cancelError = e instanceof Error ? e.message : 'Cancel failed';
     } finally {
@@ -246,14 +271,21 @@
   <meta name="robots" content="noindex" />
 </svelte:head>
 
+<svelte:window on:keydown={onKeydown} />
+
 <div class="page">
   <div class="page-header">
-    <a href="/app/dashboard" class="back-link"><ArrowLeft size={16} /> Dashboard</a>
+    <BackLink href="/app/dashboard" label="Dashboard" />
     <h1 class="page-title font-display">Bay Reservations</h1>
   </div>
 
   {#if cancelToast}
-    <div class="toast toast-success" role="status">{cancelToast}</div>
+    <div class="toast toast-success" role="status">
+      <span class="toast-msg">{cancelToast}</span>
+      <button type="button" class="toast-close" onclick={dismissToast} aria-label="Dismiss notification">
+        <X size={14} />
+      </button>
+    </div>
   {/if}
 
   {#if !bookingsLoading && upcomingBookings.length > 0}
@@ -290,13 +322,19 @@
           </div>
 
           {#if cancelTargetId === b.id}
-            <div class="cancel-confirm">
-              <p class="cancel-confirm-title">Cancel this booking?</p>
+            <div
+              class="cancel-confirm"
+              role="group"
+              aria-labelledby="cancel-confirm-title-{b.id}"
+              bind:this={cancelConfirmEl}
+            >
+              <p id="cancel-confirm-title-{b.id}" class="cancel-confirm-title">Cancel this booking?</p>
               <p class="cancel-confirm-body">
                 Your card will be refunded the full amount ({hoursUntil(b.startAt)}h until start).
+                Press <kbd>Esc</kbd> to keep it.
               </p>
               {#if cancelError}
-                <p class="cancel-error">{cancelError}</p>
+                <p class="cancel-error" role="alert">{cancelError}</p>
               {/if}
               <div class="cancel-actions">
                 <button class="btn btn-primary" onclick={() => cancelBooking(b)} disabled={cancelInFlight}>
@@ -306,7 +344,11 @@
                     Yes, cancel & refund
                   {/if}
                 </button>
-                <button class="btn btn-ghost" onclick={() => { cancelTargetId = null; cancelError = null; }}>
+                <button
+                  class="btn btn-ghost"
+                  data-cancel-keep
+                  onclick={() => { cancelTargetId = null; cancelError = null; }}
+                >
                   Keep booking
                 </button>
               </div>
@@ -435,7 +477,7 @@
           <div class="confirm-row"><span>Duration</span><strong>{selectedHours}{selectedHours === 1 ? ' hour' : ' hours'}</strong></div>
           <div class="confirm-row"><span>Date</span><strong>{fmtDate(selectedSlot.startAt)}</strong></div>
           <div class="confirm-row"><span>Time</span><strong>{fmtTime(selectedSlot.startAt)}</strong></div>
-          <div class="confirm-row"><span>Price</span><strong>${estimatedPrice}</strong></div>
+          <div class="confirm-row"><span>Price</span><strong>{formatPrice(estimatedPrice * 100)}</strong></div>
 
           {#if bookingState === 'confirming'}
             <div class="confirm-actions">
@@ -452,7 +494,7 @@
               locationId={data.square.locationId}
               environment={data.square.environment}
               amountCents={estimatedPrice * 100}
-              submitLabel={`Pay $${estimatedPrice} & Book`}
+              submitLabel={`Pay ${formatPrice(estimatedPrice * 100)} & Book`}
               submitting={bookingState === 'booking'}
               error={bookingError}
               onsubmit={confirmAndPay}
@@ -466,15 +508,8 @@
 </div>
 
 <style>
-  .page { padding: 2.5rem; max-width: 760px; }
+  .page { padding: 2.5rem; max-width: 760px; margin: 0 auto; }
   @media (max-width: 768px) { .page { padding: 1.5rem 1.25rem; } }
-
-  .back-link {
-    display: inline-flex; align-items: center; gap: 0.5rem;
-    font-size: 0.875rem; color: var(--text-muted); text-decoration: none;
-    margin-bottom: 1.5rem; transition: color 0.15s;
-  }
-  .back-link:hover { color: var(--text-secondary); }
 
   .page-title {
     font-size: 2.25rem; font-weight: 900; color: var(--text-primary);
@@ -507,7 +542,7 @@
   .chip-status.confirmed { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
 
   .chip-cancel-btn {
-    width: 24px; height: 24px;
+    width: 36px; height: 36px;
     display: inline-flex; align-items: center; justify-content: center;
     border-radius: 6px; border: 1px solid transparent;
     background: transparent; color: var(--text-muted);
@@ -550,15 +585,36 @@
   .cancel-actions { display: flex; gap: 0.5rem; }
 
   .toast {
+    display: flex; align-items: center; gap: 0.75rem;
     margin: 0 0 1.25rem;
     padding: 0.75rem 1rem;
     border-radius: 0.625rem;
     font-size: 0.875rem;
   }
+  .toast-msg { flex: 1; }
+  .toast-close {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px;
+    background: transparent; border: none; border-radius: 0.375rem;
+    color: inherit; opacity: 0.7; cursor: pointer;
+    transition: opacity 0.15s, background 0.15s;
+  }
+  .toast-close:hover { opacity: 1; background: rgba(255, 255, 255, 0.08); }
   .toast-success {
     background: rgba(34, 197, 94, 0.12);
     border: 1px solid rgba(34, 197, 94, 0.3);
     color: #4ade80;
+  }
+
+  .cancel-confirm kbd {
+    display: inline-block;
+    padding: 0 0.35rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 0.25rem;
+    font-size: 0.6875rem;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    color: var(--text-muted);
   }
 
   /* Booking form */

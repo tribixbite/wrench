@@ -38,7 +38,7 @@
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-top">
-      <a href="/" class="sidebar-logo">
+      <a href="/app/dashboard" class="sidebar-logo" aria-label="Wrench Club dashboard">
         <img src="/logo.webp" alt="Wrench Club" class="h-7 w-auto" width="500" height="126" />
       </a>
     </div>

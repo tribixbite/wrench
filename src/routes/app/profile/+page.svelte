@@ -1,6 +1,6 @@
 <script lang="ts">
   import { User, Mail, Shield } from 'lucide-svelte';
-  import { page } from '$app/stores';
+  import BackLink from '$lib/components/app/BackLink.svelte';
 
   interface Props {
     data: { user: App.Locals['user'] };
@@ -15,6 +15,7 @@
 </svelte:head>
 
 <div class="page">
+  <BackLink href="/app/dashboard" label="Dashboard" />
   <h1 class="page-title font-display">Your Profile</h1>
 
   <div class="profile-card card">
@@ -54,7 +55,7 @@
 </div>
 
 <style>
-  .page { padding: 2.5rem; max-width: 600px; }
+  .page { padding: 2.5rem; max-width: 600px; margin: 0 auto; }
   @media (max-width: 768px) { .page { padding: 1.5rem 1.25rem; } }
 
   .page-title {

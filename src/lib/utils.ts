@@ -28,6 +28,29 @@ export function formatDate(isoString: string): string {
 }
 
 /**
+ * Extract a user-facing error message from a non-OK fetch Response.
+ * Prefers `{ message }` or `{ error }` JSON fields; falls back to raw body
+ * text (first 200 chars) or `HTTP {status}`. Never throws.
+ */
+export async function extractErrorMessage(res: Response): Promise<string> {
+  const text = await res.text().catch(() => '');
+  if (text) {
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed && typeof parsed === 'object') {
+        if (typeof parsed.message === 'string' && parsed.message) return parsed.message;
+        if (typeof parsed.error === 'string' && parsed.error) return parsed.error;
+      }
+    } catch {
+      // Not JSON — fall through to raw text if it's short enough to be human-readable.
+      const trimmed = text.trim();
+      if (trimmed && trimmed.length <= 200) return trimmed;
+    }
+  }
+  return `HTTP ${res.status}`;
+}
+
+/**
  * Format a duration in minutes to a short human-readable string.
  * 90  → "90 min"
  * 180 → "3 hrs"

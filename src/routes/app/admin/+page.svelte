@@ -170,6 +170,7 @@
   .admin {
     padding: 2.5rem;
     max-width: 900px;
+    margin: 0 auto;
   }
 
   @media (max-width: 768px) {
