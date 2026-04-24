@@ -1,0 +1,96 @@
+{
+  "generatedAt": "2026-04-24T15:49:53.582Z",
+  "environment": "sandbox",
+  "locationId": "L2S663GS8ZPMG",
+  "itemIds": {
+    "flat": "X6B5JZ6U7VO65KNAT7SZSRTW",
+    "detail": "H7HBI4SEF5AXE6HIDIPKJ3ZY",
+    "hoist": "FIF7BV3L2G6XVR7XOQ26XZ2W"
+  },
+  "variationIds": {
+    "flat": {
+      "1": "HYWF2PKX7AWONBQNVCIRFEIK",
+      "2": "WZD7F53H6WNCSEYIIYEAWNV7",
+      "3": "5EF5ERWXUNRKSJTOTRG5JVVT",
+      "4": "WEVC4IGBQDIWT4MOMSIZBUY3",
+      "5": "I25SHYNXETB3ZQC73IDH7HI7",
+      "6": "MNPQFCEZFLOUFFASOBZCHJP2",
+      "7": "Z4NFIK6WDSJBYKHC7CG6DFJN",
+      "8": "QMVXD7NOBMIBZ2IPGIMPADZM"
+    },
+    "detail": {
+      "1": "NQLMV5BHPCCH6IC3X2LJQCDA",
+      "2": "56MIKWQTBLJYQKXH7QD2KT3L",
+      "3": "LCYWQ7SULELKPQ6YJ2LED6MB",
+      "4": "IS527PM7GW4FGDS7RCFLEODS",
+      "5": "FFDBTCGAS5JFPFGHC7XQ67TP",
+      "6": "HNJOQZLTS255OYNUIDAYZVYS",
+      "7": "AVMYTG7K5JAPYEBI7YQLCFNG",
+      "8": "DPVYSCCQBVPG3PLSE7ME2KEP"
+    },
+    "hoist": {
+      "1": "DAFEAUBINCDTM56MKP3NCHLR",
+      "2": "S5WYMNK2XNDHVDHOMXSDFUDW",
+      "3": "IDGNTQP62VEBZV2TWRN6465M",
+      "4": "YZYNYTK4LVKENYTOPMJKGVKT",
+      "5": "23PCQTZJKQTAMLGR3OQIJ2UU",
+      "6": "CNZXMYRC5UC5WNQOALGAHDAY",
+      "7": "PGNCLQGJTYSIE4ZDTACGZJVG",
+      "8": "4JITZABYRTG66BU2JDAQQZZZ"
+    }
+  },
+  "teamMemberIds": {
+    "bay-h1": "TMkMik9RL18tkTF7",
+    "bay-h2": "TMLm78Z2tt7iGsxE",
+    "bay-f1": "TM-ELEPsnFgo279C",
+    "bay-f2": "TMUSbWTh7cqWRCUM",
+    "bay-d1": "TMYcymhGNoUvtitQ"
+  },
+  "baySpecs": [
+    {
+      "type": "hoist",
+      "index": 1,
+      "refId": "bay-h1",
+      "givenName": "Hoist Bay",
+      "familyName": "1",
+      "email": "bay-h1@thewrench.club",
+      "tmId": "TMkMik9RL18tkTF7"
+    },
+    {
+      "type": "hoist",
+      "index": 2,
+      "refId": "bay-h2",
+      "givenName": "Hoist Bay",
+      "familyName": "2",
+      "email": "bay-h2@thewrench.club",
+      "tmId": "TMLm78Z2tt7iGsxE"
+    },
+    {
+      "type": "flat",
+      "index": 1,
+      "refId": "bay-f1",
+      "givenName": "Flat Bay",
+      "familyName": "1",
+      "email": "bay-f1@thewrench.club",
+      "tmId": "TM-ELEPsnFgo279C"
+    },
+    {
+      "type": "flat",
+      "index": 2,
+      "refId": "bay-f2",
+      "givenName": "Flat Bay",
+      "familyName": "2",
+      "email": "bay-f2@thewrench.club",
+      "tmId": "TMUSbWTh7cqWRCUM"
+    },
+    {
+      "type": "detail",
+      "index": 1,
+      "refId": "bay-d1",
+      "givenName": "Detail Bay",
+      "familyName": "1",
+      "email": "bay-d1@thewrench.club",
+      "tmId": "TMYcymhGNoUvtitQ"
+    }
+  ]
+}
