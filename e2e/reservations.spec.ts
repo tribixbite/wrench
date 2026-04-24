@@ -3,6 +3,11 @@
  * Uses shared auth state from global-setup (no per-test registration).
  *
  * Production layout: 2 hoist + 3 flat + 1 detail = 6 bays, 1-8 hr durations.
+ *
+ * Tests currently run against staging, which is wired to:
+ *   - Square sandbox   → 2 flat bays (not 3)
+ *   - HIDE_DETAIL_BAY=true → Detail Bay suppressed until zoning clears
+ * Re-add the Detail and Flat Bay 3 assertions when both conditions reverse.
  */
 import { test, expect } from '@playwright/test';
 import { gotoOrSkipIfCloudflare } from './helpers';
@@ -31,23 +36,22 @@ test.describe('Reservations page (authenticated)', () => {
     await expect(flatBtn).toHaveClass(/selected/);
   });
 
-  test('bay-type selector shows Flat / Detail / Hoist with rates', async ({ page }) => {
+  test('bay-type selector shows Flat / Hoist with rates', async ({ page }) => {
     await gotoOrSkipIfCloudflare(page, '/app/reservations');
     await expect(page.locator('body')).toContainText('Flat Bay');
-    await expect(page.locator('body')).toContainText('Detail Bay');
     await expect(page.locator('body')).toContainText('Hoist Bay');
     await expect(page.locator('body')).toContainText('$25/hr');
-    await expect(page.locator('body')).toContainText('$30/hr');
     await expect(page.locator('body')).toContainText('$35/hr');
+    // Detail Bay intentionally hidden on staging per PUBLIC_HIDE_DETAIL_BAY.
+    await expect(page.locator('body')).not.toContainText('Detail Bay');
   });
 
-  test('bay grid renders Any + the configured bays for the selected type', async ({ page }) => {
+  test('bay grid renders Any + the configured flat bays', async ({ page }) => {
     await gotoOrSkipIfCloudflare(page, '/app/reservations');
-    // Default = Flat → 3 flat bays
+    // Sandbox staging has 2 flat bays (prod has 3).
     await expect(page.locator('button.bay-btn', { hasText: 'Any Flat Bay' })).toBeVisible();
     await expect(page.locator('button.bay-btn', { hasText: 'Flat Bay 1' })).toBeVisible();
     await expect(page.locator('button.bay-btn', { hasText: 'Flat Bay 2' })).toBeVisible();
-    await expect(page.locator('button.bay-btn', { hasText: 'Flat Bay 3' })).toBeVisible();
   });
 
   test('switching to Hoist shows the 2 hoist bays', async ({ page }) => {
