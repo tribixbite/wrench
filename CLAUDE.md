@@ -76,3 +76,6 @@ bun run preview    # Preview production build
 - Don't invent content — use copy from wrenchclub.com and handoff.txt
 - Don't call `square.bookings.create()` without a fresh `searchAvailability` pre-check — Square has no conflict detection at create time. See `src/routes/api/bookings/create/+server.ts` for the pattern.
 - Don't break the `[order:X|payment:Y]` customer-note tag format — it's the only link between a booking and its payment for refund-on-cancel. Change it in both `bookings/create` and `bookings/cancel` together.
+- Don't widen interface fields to match the Square SDK without also normalizing nulls. Square SDK v42 returns `string | null | undefined` for most optional fields; if your interface declares `string | undefined`, normalize at the boundary with `?? undefined`. Pattern in `src/lib/server/bookings.ts`.
+- Don't reach for `.catch(() => ({}))` to silence a non-OK fetch body. Use `extractErrorMessage(res)` from `src/lib/utils.ts` so the body text or `{message,error}` field still surfaces to the user.
+- Don't add a back link by writing `<a href="/some/page">` in `/app/*`. Use `BackLink` from `$lib/components/app/BackLink.svelte` so users return to wherever they came from when same-origin history is available.
