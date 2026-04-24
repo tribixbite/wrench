@@ -2,6 +2,7 @@ import type { Handle } from '@sveltejs/kit';
 import { lucia } from '$lib/server/auth';
 import { initDb } from '$lib/server/db';
 import { authLimiter, verifyResendLimiter } from '$lib/server/rate-limit';
+import { isAllowedEmail } from '$lib/server/auth-allowlist';
 
 // Initialize DB tables on first server request
 let dbReady = false;
@@ -74,17 +75,30 @@ export const handle: Handle = async ({ event, resolve }) => {
       });
     }
 
-    event.locals.session = session;
-    event.locals.user = user
-      ? {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role as 'member' | 'admin' | 'staff',
-          squareCustomerId: user.squareCustomerId,
-          emailVerified: user.emailVerified
-        }
-      : null;
+    // Pre-launch gate — invalidate sessions whose email isn't on the allowlist.
+    // Existing test sessions get logged out on next request once AUTH_ALLOWLIST is set.
+    if (user && !isAllowedEmail(user.email)) {
+      await lucia.invalidateSession(session!.id);
+      const blankCookie = lucia.createBlankSessionCookie();
+      event.cookies.set(blankCookie.name, blankCookie.value, {
+        path: '/',
+        ...blankCookie.attributes
+      });
+      event.locals.session = null;
+      event.locals.user = null;
+    } else {
+      event.locals.session = session;
+      event.locals.user = user
+        ? {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role as 'member' | 'admin' | 'staff',
+            squareCustomerId: user.squareCustomerId,
+            emailVerified: user.emailVerified
+          }
+        : null;
+    }
   }
 
   const response = await resolve(event);

@@ -5,6 +5,7 @@ import { db } from '$lib/server/db';
 import { users } from '$lib/server/schema';
 import { eq } from 'drizzle-orm';
 import { Argon2id } from 'oslo/password';
+import { isAllowedEmail, ALLOWLIST_DENY_MSG } from '$lib/server/auth-allowlist';
 
 export const load: PageServerLoad = async ({ locals }) => {
   // Redirect already-logged-in users
@@ -19,6 +20,12 @@ export const actions: Actions = {
 
     if (!email || !password) {
       return fail(400, { error: 'Email and password are required.' });
+    }
+
+    // Pre-launch gate — refuse logins not on the allowlist (covers existing
+    // accounts seeded for testing too — they get locked out until launch).
+    if (!isAllowedEmail(email)) {
+      return fail(403, { error: ALLOWLIST_DENY_MSG });
     }
 
     const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);

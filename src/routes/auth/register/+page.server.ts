@@ -7,6 +7,7 @@ import { eq } from 'drizzle-orm';
 import { Argon2id } from 'oslo/password';
 import { nanoid } from 'nanoid';
 import { sendEmailVerification, sendRegistrationWelcome } from '$lib/server/email';
+import { isAllowedEmail, ALLOWLIST_DENY_MSG } from '$lib/server/auth-allowlist';
 import { env } from '$env/dynamic/private';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -31,6 +32,11 @@ export const actions: Actions = {
 
     if (!waiver) {
       return fail(400, { error: 'You must accept the facility waiver to continue.', fields: { name, email } });
+    }
+
+    // Pre-launch gate — refuse registrations not on the allowlist.
+    if (!isAllowedEmail(email)) {
+      return fail(403, { error: ALLOWLIST_DENY_MSG, fields: { name, email } });
     }
 
     // Check for existing user — do NOT return 409 (reveals email existence).
