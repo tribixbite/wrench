@@ -2,7 +2,10 @@
   import { User, Mail, Shield, Sun, Moon, Monitor } from 'lucide-svelte';
   import BackLink from '$lib/components/app/BackLink.svelte';
   import { onMount } from 'svelte';
+  import { env } from '$env/dynamic/public';
   import { getThemeMode, setThemeMode, type ThemeMode } from '$lib/stores/theme';
+
+  const supportEmail = env.PUBLIC_SUPPORT_EMAIL || 'info@thewrench.club';
 
   interface Props {
     data: { user: App.Locals['user'] };
@@ -105,7 +108,7 @@
 
   <p class="edit-note">
     Editing your name, email, and membership details will be available at launch.
-    Contact <a href="mailto:info@thewrench.club" style="color: var(--accent);">info@thewrench.club</a>
+    Contact <a href="mailto:{supportEmail}" style="color: var(--accent);">{supportEmail}</a>
     in the meantime.
   </p>
 </div>

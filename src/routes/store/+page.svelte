@@ -2,7 +2,10 @@
   import { ShoppingBag, Tag, Gift, Shirt, ArrowRight, Wrench } from 'lucide-svelte';
   import WaitlistForm from '$lib/components/marketing/WaitlistForm.svelte';
   import SEO from '$lib/components/layout/SEO.svelte';
+  import { env } from '$env/dynamic/public';
   import type { CatalogItem } from './+page.server';
+
+  const supportEmail = env.PUBLIC_SUPPORT_EMAIL || 'info@thewrench.club';
 
   interface Props {
     data: {
@@ -50,7 +53,7 @@
 </script>
 
 <svelte:head>
-  <SEO title="Shop" description="Wrench Club merch and bay credits. Tees, hats, patches, stickers, and gift cards — sold through our Square store." url="https://thewrench.club/store" />
+  <SEO title="Shop" description="Wrench Club merch and bay credits. Tees, hats, patches, stickers, and gift cards — sold through our Square store." />
   <meta name="description" content="Wrench Club merch — tees, hats, and bay credits. Powered by Square POS." />
 </svelte:head>
 
@@ -192,7 +195,7 @@
           Gift cards sold in any denomination — contact us to arrange.
         </p>
         <a
-          href="mailto:info@thewrench.club?subject=Bay Credit Gift Card"
+          href="mailto:{supportEmail}?subject=Bay Credit Gift Card"
           class="btn btn-outline mt-4 inline-flex"
         >
           Inquire About Gift Cards <ArrowRight size={16} />

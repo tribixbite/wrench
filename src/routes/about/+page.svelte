@@ -2,6 +2,9 @@
   import { MapPin, ExternalLink, ArrowRight } from 'lucide-svelte';
   import WaitlistForm from '$lib/components/marketing/WaitlistForm.svelte';
   import SEO from '$lib/components/layout/SEO.svelte';
+  import { env } from '$env/dynamic/public';
+
+  const supportEmail = env.PUBLIC_SUPPORT_EMAIL || 'info@thewrench.club';
 
   const founders = [
     {
@@ -47,7 +50,7 @@ I am excited to take my expertise as a mechanic and auto shop owner, and use it 
   ];
 </script>
 
-<SEO title="About" description="Meet the founders of Wrench Club — four gearheads building West Michigan's first membership-based DIY auto shop at 522 Stocking Ave NW, Grand Rapids." url="https://thewrench.club/about" />
+<SEO title="About" description="Meet the founders of Wrench Club — four gearheads building West Michigan's first membership-based DIY auto shop at 522 Stocking Ave NW, Grand Rapids." />
 
 <!-- Page Header -->
 <div class="page-header">
@@ -152,7 +155,7 @@ I am excited to take my expertise as a mechanic and auto shop owner, and use it 
           </div>
           <div class="detail-row">
             <span class="detail-label font-mono-spec">EMAIL</span>
-            <a href="mailto:info@thewrench.club" class="detail-link">info@thewrench.club</a>
+            <a href="mailto:{supportEmail}" class="detail-link">{supportEmail}</a>
           </div>
           <div class="detail-row">
             <span class="detail-label font-mono-spec">FACEBOOK</span>

@@ -10,6 +10,7 @@
  */
 import { OpenAPIRegistry, OpenApiGeneratorV31, extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
+import { env } from '$env/dynamic/public';
 
 // Extend Zod's ZodType prototype with .openapi() — must run before any
 // .openapi() calls below. Safe to call multiple times (idempotent).
@@ -282,12 +283,12 @@ export function getOpenApiSpec() {
         'Internal API for the Wrench Club member portal. Handles waitlist signup, Square catalog queries, and bay reservation booking flows. All Square calls are server-side — no API keys are exposed to clients.',
       contact: {
         name: 'Wrench Club',
-        email: 'info@thewrench.club',
-        url: 'https://thewrench.club'
+        email: env.PUBLIC_SUPPORT_EMAIL || 'info@thewrench.club',
+        url: env.PUBLIC_SITE_URL || 'https://thewrench.club'
       }
     },
     servers: [
-      { url: 'https://thewrench.club', description: 'Production' },
+      { url: env.PUBLIC_SITE_URL || 'https://thewrench.club', description: 'Production' },
       { url: 'http://localhost:5173', description: 'Local dev' }
     ]
   });

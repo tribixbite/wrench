@@ -71,7 +71,7 @@
 </script>
 
 <svelte:head>
-  <SEO title="Pricing" description="Transparent bay rental and membership pricing for Wrench Club — Grand Rapids' members-only DIY auto shop. Hoist, flat, and detail bay rates." url="https://thewrench.club/pricing" />
+  <SEO title="Pricing" description="Transparent bay rental and membership pricing for Wrench Club — Grand Rapids' members-only DIY auto shop. Hoist, flat, and detail bay rates." />
   <meta name="description" content="Transparent bay and membership pricing at Wrench Club — Grand Rapids, MI. Flat bays, hoist bays, and detail bays available by the hour, day, or month." />
 </svelte:head>
 

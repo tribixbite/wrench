@@ -44,7 +44,7 @@ export const POST: RequestHandler = async ({ locals }) => {
     expiresAt
   });
 
-  const origin = env.ORIGIN ?? 'https://thewrench.club';
+  const origin = env.ORIGIN ?? env.PUBLIC_SITE_URL ?? 'http://localhost:5173';
   await sendEmailVerification({
     to: locals.user.email,
     name: locals.user.name,

@@ -102,7 +102,7 @@ describe('sendWaitlistConfirmation', () => {
     expect(body.to).toBe('waitlister@example.com');
   });
 
-  it('includes the correct from address', async () => {
+  it('includes the brand name in the from address', async () => {
     mockEnv.RESEND_API_KEY = 'test-resend-key';
     stubFetchOk();
 
@@ -110,7 +110,8 @@ describe('sendWaitlistConfirmation', () => {
 
     const [, init] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit];
     const body = JSON.parse(init.body as string);
-    expect(body.from).toContain('thewrench.club');
+    expect(body.from).toContain('Wrench Club');
+    expect(body.from).toMatch(/<[^>]+@[^>]+>/);
   });
 
   it('does not throw when Resend returns an error response', async () => {

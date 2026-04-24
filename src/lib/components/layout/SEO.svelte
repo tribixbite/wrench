@@ -11,8 +11,11 @@
    * Defaults to Wrench Club brand values — override per-page as needed.
    */
 
+  import { env } from '$env/dynamic/public';
+  import { page } from '$app/stores';
+
   const SITE     = 'Wrench Club';
-  const BASE_URL = 'https://thewrench.club';
+  const BASE_URL = env.PUBLIC_SITE_URL || 'https://thewrench.club';
   const DEFAULT_DESC =
     "West Michigan's premier membership-based DIY auto shop. Members rent hoist bays, flat bays, " +
     'and a detail bay with access to a full tool library. Opening 2026 in Grand Rapids, MI.';
@@ -29,7 +32,7 @@
     title?: string;
     /** Overrides the default meta description */
     description?: string;
-    /** Canonical URL for this page (default: BASE_URL) */
+    /** Canonical URL for this page — absolute. Defaults to BASE_URL + current pathname. */
     url?: string;
     /** OG image URL (absolute). Defaults to og-discord.webp */
     image?: string;
@@ -50,7 +53,7 @@
   const {
     title,
     description = DEFAULT_DESC,
-    url = BASE_URL,
+    url,
     image = DEFAULT_IMG,
     imagePng = DEFAULT_IMG_PNG,
     imageAlt = DEFAULT_IMG_ALT,
@@ -60,7 +63,10 @@
     noindex = false,
   }: Props = $props();
 
-  const fullTitle = title ? `${title} — ${SITE}` : `${SITE} — West Michigan's Premier DIY Auto Shop`;
+  const fullTitle = $derived(
+    title ? `${title} — ${SITE}` : `${SITE} — West Michigan's Premier DIY Auto Shop`
+  );
+  const canonicalUrl = $derived(url ?? `${BASE_URL}${$page.url.pathname}`);
 </script>
 
 <svelte:head>
@@ -73,7 +79,8 @@
   <!-- Open Graph -->
   <meta property="og:site_name" content={SITE} />
   <meta property="og:type"      content={type} />
-  <meta property="og:url"       content={url} />
+  <meta property="og:url"       content={canonicalUrl} />
+  <link rel="canonical"         href={canonicalUrl} />
   <meta property="og:title"     content={fullTitle} />
   <meta property="og:description" content={description} />
   <meta property="og:image"        content={image} />

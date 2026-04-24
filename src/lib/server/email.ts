@@ -35,12 +35,16 @@ interface EmailVerificationData {
   to: string;
   /** Member's full name */
   name: string;
-  /** Full URL including token — e.g. https://thewrench.club/auth/verify/abc123 — valid for 24 hours */
+  /** Full URL including token — e.g. https://wrenchclub.com/auth/verify/abc123 — valid for 24 hours */
   verifyUrl: string;
 }
 
-/** Sender identity used on all outbound emails. */
-const FROM = 'Wrench Club <hello@thewrench.club>';
+/** Sender identity used on all outbound emails. Override with EMAIL_FROM. */
+const FROM = env.EMAIL_FROM || 'Wrench Club <hello@thewrench.club>';
+/** Public-facing site URL — appears in marketing copy inside emails. */
+const SITE_URL = env.PUBLIC_SITE_URL || 'https://thewrench.club';
+/** Inbox a recipient can reply to for support. */
+const SUPPORT_EMAIL = env.PUBLIC_SUPPORT_EMAIL || 'info@thewrench.club';
 
 /**
  * Escapes HTML special characters in user-supplied strings before
@@ -129,13 +133,13 @@ export async function sendWaitlistConfirmation({ to, name }: WaitlistConfirmatio
     </div>
     <p style="color:#a3a3a3;font-size:0.875rem;line-height:1.6;margin:0 0 32px;">
       In the meantime, check out
-      <a href="https://thewrench.club" style="color:#ED0C85;text-decoration:none;">thewrench.club</a>
+      <a href="${SITE_URL}" style="color:#ED0C85;text-decoration:none;">${SITE_URL.replace(/^https?:\/\//, '')}</a>
       for more details about the club, the founders, and the facility.
     </p>
     <hr style="border:none;border-top:1px solid #262626;margin:0 0 24px;">
     <p style="color:#525252;font-size:0.75rem;margin:0;">
       522 Stocking Ave NW, Grand Rapids, MI 49504<br>
-      <a href="mailto:info@thewrench.club" style="color:#525252;">info@thewrench.club</a>
+      <a href="mailto:${SUPPORT_EMAIL}" style="color:#525252;">${SUPPORT_EMAIL}</a>
     </p>
   </div>
 </body>
@@ -187,7 +191,7 @@ export async function sendPasswordReset({ to, resetUrl }: PasswordResetData) {
     <hr style="border:none;border-top:1px solid #262626;margin:0 0 24px;">
     <p style="color:#525252;font-size:0.75rem;margin:0;">
       522 Stocking Ave NW, Grand Rapids, MI 49504 ·
-      <a href="mailto:info@thewrench.club" style="color:#525252;">info@thewrench.club</a>
+      <a href="mailto:${SUPPORT_EMAIL}" style="color:#525252;">${SUPPORT_EMAIL}</a>
     </p>
   </div>
 </body>
@@ -243,7 +247,7 @@ export async function sendEmailVerification({ to, name, verifyUrl }: EmailVerifi
     <p style="color:#525252;font-size:0.75rem;margin:0;">
       If you didn't create a Wrench Club account, you can ignore this email.<br>
       522 Stocking Ave NW, Grand Rapids, MI 49504 ·
-      <a href="mailto:info@thewrench.club" style="color:#525252;">info@thewrench.club</a>
+      <a href="mailto:${SUPPORT_EMAIL}" style="color:#525252;">${SUPPORT_EMAIL}</a>
     </p>
   </div>
 </body>
@@ -283,7 +287,7 @@ export async function sendRegistrationWelcome({ to, name }: RegistrationWelcomeD
       we'll email you the moment scheduling goes live.
     </p>
     <div style="margin:0 0 32px;">
-      <a href="https://thewrench.club/app/dashboard"
+      <a href="${SITE_URL}/app/dashboard"
          style="display:inline-block;background:#ED0C85;color:#fff;text-decoration:none;
                 font-weight:700;font-size:0.9375rem;padding:12px 28px;border-radius:8px;">
         Go to Your Dashboard →
@@ -292,7 +296,7 @@ export async function sendRegistrationWelcome({ to, name }: RegistrationWelcomeD
     <hr style="border:none;border-top:1px solid #262626;margin:0 0 24px;">
     <p style="color:#525252;font-size:0.75rem;margin:0;">
       522 Stocking Ave NW, Grand Rapids, MI 49504<br>
-      <a href="mailto:info@thewrench.club" style="color:#525252;">info@thewrench.club</a>
+      <a href="mailto:${SUPPORT_EMAIL}" style="color:#525252;">${SUPPORT_EMAIL}</a>
     </p>
   </div>
 </body>

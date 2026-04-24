@@ -43,7 +43,7 @@
   ];
 </script>
 
-<SEO title="Membership" description="Everything included with Wrench Club membership: hoist access, full tool library, parts discounts, and a community of gearheads in Grand Rapids, MI." url="https://thewrench.club/membership" />
+<SEO title="Membership" description="Everything included with Wrench Club membership: hoist access, full tool library, parts discounts, and a community of gearheads in Grand Rapids, MI." />
 
 <!-- Page Header -->
 <div class="page-header">

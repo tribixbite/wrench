@@ -56,7 +56,6 @@
 
 <SEO
   description="A membership-based DIY auto shop at 522 Stocking Ave NW, Grand Rapids, MI. Professional hoists, full tool library, and a community built for gearheads. Coming 2026."
-  url="https://thewrench.club"
 />
 
 <!-- ── HERO ──────────────────────────────────────────────────────────────── -->

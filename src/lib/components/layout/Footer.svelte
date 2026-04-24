@@ -1,6 +1,8 @@
 <script lang="ts">
   import { Facebook, Mail, MapPin, ExternalLink } from 'lucide-svelte';
+  import { env } from '$env/dynamic/public';
 
+  const supportEmail = env.PUBLIC_SUPPORT_EMAIL || 'info@thewrench.club';
   const currentYear = new Date().getFullYear();
 
   const navLinks = [
@@ -73,12 +75,12 @@
           </a>
 
           <a
-            href="mailto:info@thewrench.club"
+            href="mailto:{supportEmail}"
             class="flex items-center gap-3 text-sm group"
             style="color: var(--text-secondary)"
           >
             <Mail size={16} class="shrink-0" style="color: var(--text-muted)" />
-            <span class="group-hover:text-white transition-colors">info@thewrench.club</span>
+            <span class="group-hover:text-white transition-colors">{supportEmail}</span>
           </a>
 
           <a
