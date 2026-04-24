@@ -8,7 +8,8 @@ import { Argon2id } from 'oslo/password';
 import { nanoid } from 'nanoid';
 import { sendEmailVerification, sendRegistrationWelcome } from '$lib/server/email';
 import { isAllowedEmail, ALLOWLIST_DENY_MSG } from '$lib/server/auth-allowlist';
-import { env } from '$env/dynamic/private';
+import { env as privateEnv } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (locals.user) throw redirect(302, '/app/dashboard');
@@ -92,7 +93,7 @@ export const actions: Actions = {
     });
 
     // Non-blocking verification email
-    const origin = env.ORIGIN ?? env.PUBLIC_SITE_URL ?? 'http://localhost:5173';
+    const origin = privateEnv.ORIGIN ?? publicEnv.PUBLIC_SITE_URL ?? 'http://localhost:5173';
     sendEmailVerification({
       to: email,
       name,

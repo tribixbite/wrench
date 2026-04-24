@@ -5,7 +5,8 @@ import { users, passwordResetTokens } from '$lib/server/schema';
 import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { sendPasswordReset } from '$lib/server/email';
-import { env } from '$env/dynamic/private';
+import { env as privateEnv } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
 
 export const load: PageServerLoad = async ({ locals }) => {
   // Already logged in — nothing to do here, but don't redirect (allow password reset anyway)
@@ -36,7 +37,7 @@ export const actions: Actions = {
         expiresAt
       });
 
-      const origin = env.ORIGIN ?? env.PUBLIC_SITE_URL ?? 'http://localhost:5173';
+      const origin = privateEnv.ORIGIN ?? publicEnv.PUBLIC_SITE_URL ?? 'http://localhost:5173';
       sendPasswordReset({
         to: email,
         resetUrl: `${origin}/auth/reset/${token}`

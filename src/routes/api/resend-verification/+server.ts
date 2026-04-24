@@ -5,7 +5,8 @@ import { emailVerificationTokens } from '$lib/server/schema';
 import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { sendEmailVerification } from '$lib/server/email';
-import { env } from '$env/dynamic/private';
+import { env as privateEnv } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
 
 /** POST /api/resend-verification — generates a fresh token and emails it.
  *  Requires an active session. Rate limiting via 60-second cooldown (token expiry check). */
@@ -44,7 +45,7 @@ export const POST: RequestHandler = async ({ locals }) => {
     expiresAt
   });
 
-  const origin = env.ORIGIN ?? env.PUBLIC_SITE_URL ?? 'http://localhost:5173';
+  const origin = privateEnv.ORIGIN ?? publicEnv.PUBLIC_SITE_URL ?? 'http://localhost:5173';
   await sendEmailVerification({
     to: locals.user.email,
     name: locals.user.name,

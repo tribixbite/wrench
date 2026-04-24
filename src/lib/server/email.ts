@@ -3,7 +3,8 @@
  * Set RESEND_API_KEY in .env to enable. If absent, emails are silently skipped
  * so the app remains functional without the key during development.
  */
-import { env } from '$env/dynamic/private';
+import { env as privateEnv } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
 
 /** Data required to send a waitlist confirmation email. */
 interface WaitlistConfirmationData {
@@ -40,11 +41,11 @@ interface EmailVerificationData {
 }
 
 /** Sender identity used on all outbound emails. Override with EMAIL_FROM. */
-const FROM = env.EMAIL_FROM || 'Wrench Club <hello@thewrench.club>';
+const FROM = privateEnv.EMAIL_FROM || 'Wrench Club <hello@thewrench.club>';
 /** Public-facing site URL — appears in marketing copy inside emails. */
-const SITE_URL = env.PUBLIC_SITE_URL || 'https://thewrench.club';
+const SITE_URL = publicEnv.PUBLIC_SITE_URL || 'https://thewrench.club';
 /** Inbox a recipient can reply to for support. */
-const SUPPORT_EMAIL = env.PUBLIC_SUPPORT_EMAIL || 'info@thewrench.club';
+const SUPPORT_EMAIL = publicEnv.PUBLIC_SUPPORT_EMAIL || 'info@thewrench.club';
 
 /**
  * Escapes HTML special characters in user-supplied strings before
@@ -74,7 +75,7 @@ async function send(payload: {
   subject: string;
   html: string;
 }): Promise<void> {
-  const apiKey = env.RESEND_API_KEY;
+  const apiKey = privateEnv.RESEND_API_KEY;
   if (!apiKey) {
     // Non-fatal: log in dev, silently skip in prod until key is configured
     console.log('[email] RESEND_API_KEY not set — skipping email to', payload.to);
