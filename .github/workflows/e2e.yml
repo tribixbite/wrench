@@ -23,6 +23,27 @@ jobs:
       - name: Install Playwright Chromium
         run: bunx playwright install --with-deps chromium
 
+      # Railway auto-deploys on every push to main, taking ~60-120s. CI runs
+      # in parallel, so without this wait the test suite hits the staging app
+      # mid-deploy — register endpoints hang and global-setup times out.
+      - name: Wait for staging deploy to settle
+        if: github.event_name == 'push'
+        run: |
+          echo "Giving Railway a 45s head start…"
+          sleep 45
+          echo "Polling staging for readiness…"
+          for i in $(seq 1 36); do
+            catalog=$(curl -s -o /dev/null -w '%{http_code}' https://thewrench.club/api/catalog)
+            root=$(curl -s -o /dev/null -w '%{http_code}' https://thewrench.club/)
+            if [ "$catalog" = "200" ] && [ "$root" = "200" ]; then
+              echo "Ready after poll $i (catalog=$catalog, root=$root)"
+              exit 0
+            fi
+            echo "Poll $i: catalog=$catalog root=$root — waiting 5s"
+            sleep 5
+          done
+          echo "Staging did not reach healthy state in 3m; running tests anyway"
+
       - name: Run E2E tests
         run: bunx playwright test
         env:
