@@ -2,8 +2,9 @@
   import { Zap, Calendar, Clock, ArrowRight, CheckCircle2, Info } from 'lucide-svelte';
   import WaitlistForm from '$lib/components/marketing/WaitlistForm.svelte';
   import SEO from '$lib/components/layout/SEO.svelte';
+  import { HIDE_DETAIL_BAY } from '$lib/features';
 
-  const bayTypes = [
+  const allBayTypes = [
     {
       id: 'flat',
       icon: '🔧',
@@ -58,6 +59,11 @@
     }
   ];
 
+  // Filter out Detail Bay while zoning for car-wash use is pending.
+  const bayTypes = HIDE_DETAIL_BAY
+    ? allBayTypes.filter((b) => b.id !== 'detail')
+    : allBayTypes;
+
   const membershipPerks = [
     'Access to clubhouse and lounge',
     'Online scheduling system',
@@ -71,8 +77,13 @@
 </script>
 
 <svelte:head>
-  <SEO title="Pricing" description="Transparent bay rental and membership pricing for Wrench Club — Grand Rapids' members-only DIY auto shop. Hoist, flat, and detail bay rates." />
-  <meta name="description" content="Transparent bay and membership pricing at Wrench Club — Grand Rapids, MI. Flat bays, hoist bays, and detail bays available by the hour, day, or month." />
+  {#if HIDE_DETAIL_BAY}
+    <SEO title="Pricing" description="Transparent bay rental and membership pricing for Wrench Club — Grand Rapids' members-only DIY auto shop. Hoist and flat bay rates." />
+    <meta name="description" content="Transparent bay and membership pricing at Wrench Club — Grand Rapids, MI. Flat and hoist bays available by the hour, day, or month." />
+  {:else}
+    <SEO title="Pricing" description="Transparent bay rental and membership pricing for Wrench Club — Grand Rapids' members-only DIY auto shop. Hoist, flat, and detail bay rates." />
+    <meta name="description" content="Transparent bay and membership pricing at Wrench Club — Grand Rapids, MI. Flat bays, hoist bays, and detail bays available by the hour, day, or month." />
+  {/if}
 </svelte:head>
 
 <!-- Page Header -->

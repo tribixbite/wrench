@@ -2,6 +2,7 @@
   import { Wrench, Car, Shield, Users, Zap, CheckCircle2, ArrowRight, MapPin } from 'lucide-svelte';
   import WaitlistForm from '$lib/components/marketing/WaitlistForm.svelte';
   import SEO from '$lib/components/layout/SEO.svelte';
+  import { HIDE_DETAIL_BAY } from '$lib/features';
 
   const features = [
     {
@@ -31,7 +32,9 @@
     { label: 'Vehicle modification', sub: 'Lift kits, exhaust, intakes, and more' },
     { label: 'Restoration projects', sub: 'Full builds or frame-off restores' },
     { label: 'Pre-purchase inspections', sub: "Know exactly what you're buying" },
-    { label: 'DIY detailing & washing', sub: 'Proper detail bay with all supplies' },
+    ...(HIDE_DETAIL_BAY
+      ? []
+      : [{ label: 'DIY detailing & washing', sub: 'Proper detail bay with all supplies' }]),
     { label: "Members-only events", sub: 'Car shows, dyno days, meetups' }
   ];
 
@@ -44,7 +47,9 @@
     {
       num: '02',
       title: 'Flexibility',
-      body: 'Hoist bays, flat bays, detail bay. Book by the hour, the day, or the week. Schedule exactly what you need, when you need it, from your phone.'
+      body: HIDE_DETAIL_BAY
+        ? 'Hoist bays and flat bays. Book by the hour, the day, or the week. Schedule exactly what you need, when you need it, from your phone.'
+        : 'Hoist bays, flat bays, detail bay. Book by the hour, the day, or the week. Schedule exactly what you need, when you need it, from your phone.'
     },
     {
       num: '03',

@@ -4,6 +4,7 @@
    * Place once in the root layout.
    */
   import { env } from '$env/dynamic/public';
+  import { HIDE_DETAIL_BAY } from '$lib/features';
 
   const SITE_URL = env.PUBLIC_SITE_URL || 'https://thewrench.club';
   const SUPPORT_EMAIL = env.PUBLIC_SUPPORT_EMAIL || 'info@thewrench.club';
@@ -13,8 +14,9 @@
     '@type': 'AutoRepair',
     '@id': SITE_URL,
     name: 'Wrench Club',
-    description:
-      "West Michigan's premier membership-based DIY auto shop. Members rent hoist bays, flat bays, and a detail bay with access to a full tool library, professional lifts, and a gearhead community.",
+    description: HIDE_DETAIL_BAY
+      ? "West Michigan's premier membership-based DIY auto shop. Members rent hoist bays and flat bays with access to a full tool library, professional lifts, and a gearhead community."
+      : "West Michigan's premier membership-based DIY auto shop. Members rent hoist bays, flat bays, and a detail bay with access to a full tool library, professional lifts, and a gearhead community.",
     url: SITE_URL,
     telephone: '',
     email: SUPPORT_EMAIL,
@@ -50,22 +52,12 @@
       '@type': 'OfferCatalog',
       name: 'Bay Rentals & Membership',
       itemListElement: [
-        {
-          '@type': 'Offer',
-          itemOffered: { '@type': 'Service', name: 'Flat Bay Rental' }
-        },
-        {
-          '@type': 'Offer',
-          itemOffered: { '@type': 'Service', name: 'Hoist Bay Rental' }
-        },
-        {
-          '@type': 'Offer',
-          itemOffered: { '@type': 'Service', name: 'Detail Bay Rental' }
-        },
-        {
-          '@type': 'Offer',
-          itemOffered: { '@type': 'Service', name: 'Monthly Membership' }
-        }
+        { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Flat Bay Rental' } },
+        { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Hoist Bay Rental' } },
+        ...(HIDE_DETAIL_BAY
+          ? []
+          : [{ '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Detail Bay Rental' } }]),
+        { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Monthly Membership' } }
       ]
     }
   };

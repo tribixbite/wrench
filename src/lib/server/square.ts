@@ -1,5 +1,6 @@
 import { SquareClient, SquareEnvironment } from 'square';
 import { env } from '$env/dynamic/private';
+import { HIDE_DETAIL_BAY } from '$lib/features';
 
 /**
  * Square API client — server-only. Never import this in client-side code.
@@ -59,7 +60,15 @@ const SANDBOX_BAYS: BayInfo[] = [
   { id: 5, type: 'detail', label: 'Detail Bay 1', teamMemberId: 'TMYcymhGNoUvtitQ' }
 ];
 
-export const BAYS: BayInfo[] = isProduction ? PROD_BAYS : SANDBOX_BAYS;
+/**
+ * Active roster, filtered by the HIDE_DETAIL_BAY flag when zoning for
+ * "car wash" use is still pending. Catalog/team members stay in Square
+ * so we can flip the flag back off without redoing any setup.
+ */
+const _baseBays = isProduction ? PROD_BAYS : SANDBOX_BAYS;
+export const BAYS: BayInfo[] = HIDE_DETAIL_BAY
+  ? _baseBays.filter((b) => b.type !== 'detail')
+  : _baseBays;
 
 /** Convenience map: bay id → team member id */
 export const BAY_TEAM_MEMBERS: Record<number, string> = Object.fromEntries(

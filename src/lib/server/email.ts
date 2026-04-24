@@ -5,6 +5,7 @@
  */
 import { env as privateEnv } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
+import { HIDE_DETAIL_BAY } from '$lib/features';
 
 /** Data required to send a waitlist confirmation email. */
 interface WaitlistConfirmationData {
@@ -126,7 +127,7 @@ export async function sendWaitlistConfirmation({ to, name }: WaitlistConfirmatio
     <div style="background:#141414;border:1px solid #262626;border-radius:12px;padding:24px;margin:0 0 32px;">
       <p style="color:#f8f8f8;font-weight:600;margin:0 0 12px;">What's coming:</p>
       <ul style="color:#a3a3a3;font-size:0.9375rem;line-height:1.8;margin:0;padding-left:20px;">
-        <li>Flat bays, hoist bays, and a detail bay</li>
+        <li>${HIDE_DETAIL_BAY ? 'Flat bays and hoist bays' : 'Flat bays, hoist bays, and a detail bay'}</li>
         <li>Full professional tool library</li>
         <li>Member-only community events</li>
         <li>Online bay booking — pay by the hour</li>

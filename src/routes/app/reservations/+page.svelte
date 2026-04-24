@@ -4,6 +4,7 @@
   import PaymentStep from '$lib/components/app/PaymentStep.svelte';
   import BackLink from '$lib/components/app/BackLink.svelte';
   import { extractErrorMessage } from '$lib/utils';
+  import { HIDE_DETAIL_BAY } from '$lib/features';
 
   type BayType = 'flat' | 'detail' | 'hoist';
   type BayInfo = { id: number; type: BayType; label: string };
@@ -263,7 +264,9 @@
   onMount(() => { void fetchUpcoming(); });
 
   const HOUR_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
-  const BAY_TYPES: BayType[] = ['flat', 'detail', 'hoist'];
+  const BAY_TYPES: BayType[] = HIDE_DETAIL_BAY
+    ? ['flat', 'hoist']
+    : ['flat', 'detail', 'hoist'];
 </script>
 
 <svelte:head>

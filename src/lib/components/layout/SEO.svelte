@@ -13,12 +13,14 @@
 
   import { env } from '$env/dynamic/public';
   import { page } from '$app/stores';
+  import { HIDE_DETAIL_BAY } from '$lib/features';
 
   const SITE     = 'Wrench Club';
   const BASE_URL = env.PUBLIC_SITE_URL || 'https://thewrench.club';
-  const DEFAULT_DESC =
-    "West Michigan's premier membership-based DIY auto shop. Members rent hoist bays, flat bays, " +
-    'and a detail bay with access to a full tool library. Opening 2026 in Grand Rapids, MI.';
+  const DEFAULT_DESC = HIDE_DETAIL_BAY
+    ? "West Michigan's premier membership-based DIY auto shop. Members rent hoist bays and flat bays with access to a full tool library. Opening 2026 in Grand Rapids, MI."
+    : "West Michigan's premier membership-based DIY auto shop. Members rent hoist bays, flat bays, " +
+      'and a detail bay with access to a full tool library. Opening 2026 in Grand Rapids, MI.';
   /** Cache-bust version — increment when og-discord.webp changes to force Discord/social re-crawl */
   const OG_V = 2;
   const DEFAULT_IMG      = `${BASE_URL}/og-discord.webp?v=${OG_V}`;
