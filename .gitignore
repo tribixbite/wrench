@@ -19,7 +19,33 @@ drizzle/
 
 # Static assets copied from assets/ by postinstall.sh
 /static/assets/
-screenshot-*.png\nss-*.png\nsq-probe.ts
+
+# Playwright artifacts
 test-results/
 playwright-report/
 e2e/.auth/
+
+# Claude Code session data — never commit
+.claude/
+
+# Lighthouse reports (scratch output)
+lh-*.json
+lh-*.html
+
+# Logs
+*.log
+
+# Ad-hoc screenshots
+screenshot*.png
+screenshot*.jpg
+ss_*.png
+ss_*.jpg
+
+# Marketing / product tour scratch directories
+tour/
+tour-frames/
+tour-video-raw/
+.tour-cookies.txt
+
+# One-off probe scripts
+sq-probe.ts
