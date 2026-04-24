@@ -53,16 +53,24 @@ export const actions: Actions = {
     const passwordHash = await new Argon2id().hash(password);
     const userId = nanoid();
 
-    // Create Square Customer first so we can store their ID
+    // Create Square Customer first so we can store their ID. Race against an
+    // 8s timeout — if Square is slow or hung (a prod-Square hiccup once stalled
+    // E2E signups for 120s and took down the test harness), we still register
+    // the user with squareCustomerId=null and backfill later via webhook/cron.
     let squareCustomerId: string | null = null;
     try {
       const { createSquareCustomer } = await import('$lib/server/square');
       const nameParts = name.trim().split(' ');
-      const sqCustomer = await createSquareCustomer({
-        email,
-        givenName: nameParts[0],
-        familyName: nameParts.slice(1).join(' ') || undefined
-      });
+      const sqCustomer = await Promise.race([
+        createSquareCustomer({
+          email,
+          givenName: nameParts[0],
+          familyName: nameParts.slice(1).join(' ') || undefined
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Square customer create timed out after 8s')), 8000)
+        )
+      ]);
       squareCustomerId = sqCustomer?.id ?? null;
     } catch (sqErr) {
       // Non-fatal: log but don't block registration
