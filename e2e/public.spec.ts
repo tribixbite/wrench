@@ -39,7 +39,7 @@ function collectErrors(page: import('@playwright/test').Page) {
 test.describe('Home page (/)', () => {
   test('loads with correct title', async ({ page }) => {
     const errors = collectErrors(page);
-    await page.goto('/');
+    await gotoOrSkipIfCloudflare(page, '/');
     await expect(page).toHaveTitle(/Wrench Club/);
     expect(errors).toHaveLength(0);
   });

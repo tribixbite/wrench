@@ -109,6 +109,19 @@
       </p>
     </div>
   </div>
+
+  <!-- Credit line -->
+  <div class="footer-credit">
+    <p class="text-xs text-center py-3" style="color: var(--text-muted)">
+      🔧 in Grand Rapids by
+      <a
+        href="https://tribixbite.com/wrench"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="credit-link"
+      >tribixbite</a>
+    </p>
+  </div>
 </footer>
 
 <style>
@@ -119,5 +132,22 @@
 
   .footer-bottom {
     border-top: 1px solid var(--border);
+  }
+
+  .footer-credit {
+    border-top: 1px solid var(--border);
+  }
+
+  .credit-link {
+    color: var(--text-secondary);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--text-muted) 40%, transparent);
+    text-underline-offset: 2px;
+    transition: color 0.15s, text-decoration-color 0.15s;
+  }
+
+  .credit-link:hover {
+    color: var(--accent-text);
+    text-decoration-color: currentColor;
   }
 </style>
