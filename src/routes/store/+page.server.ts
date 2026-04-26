@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { square } from '$lib/server/square';
+import { HIDE_DETAIL_BAY } from '$lib/features';
 
 export interface CatalogItem {
   id: string;
@@ -33,12 +34,16 @@ export const load: PageServerLoad = async () => {
 
     // Deduplicate by name — Square sandbox often contains duplicate entries
     const seen = new Set<string>();
-    const unique = items.filter(i => {
-      const key = i.name.toLowerCase().trim();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+    const unique = items
+      .filter(i => {
+        const key = i.name.toLowerCase().trim();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      // Drop Detail Bay items from the public store entirely when zoning is pending.
+      // The catalog SKU stays live in Square so dashboard bookings still work.
+      .filter(i => !HIDE_DETAIL_BAY || !i.name.toLowerCase().includes('detail'));
 
     // Bay/membership items — categorised first so gift cards with "bay" in name
     // don't bleed into the merch section. Matches: bay, membership, storage,
