@@ -41,7 +41,7 @@
       <p class="dash-greeting">Welcome back</p>
       <h1 class="dash-name font-display">{data.user?.name}</h1>
     </div>
-    <a href="/app/reservations" class="btn btn-primary">
+    <a href="/app/reservations" class="btn btn-primary" data-umami-event="dashboard-book-bay-click">
       Book a Bay <ArrowRight size={16} />
     </a>
   </div>

@@ -66,8 +66,13 @@
           <button type="submit" class="btn btn-ghost text-sm py-2 px-4">Sign Out</button>
         </form>
       {:else}
-        <a href="/auth/login" class="nav-link text-sm font-medium">Member Login</a>
-        <a href="#waitlist" class="btn btn-primary py-2 px-5 text-sm" onclick={closeMobile}>
+        <a href="/auth/login" class="nav-link text-sm font-medium" data-umami-event="header-login-click">Member Login</a>
+        <a
+          href="#waitlist"
+          class="btn btn-primary py-2 px-5 text-sm"
+          onclick={closeMobile}
+          data-umami-event="header-waitlist-click"
+        >
           Join Waitlist
         </a>
       {/if}
@@ -130,10 +135,20 @@
               Dashboard
             </a>
           {:else}
-            <a href="/auth/login" class="mobile-cta-btn cta-login" onclick={closeMobile}>
+            <a
+              href="/auth/login"
+              class="mobile-cta-btn cta-login"
+              onclick={closeMobile}
+              data-umami-event="mobilenav-login-click"
+            >
               Member Login
             </a>
-            <a href="#waitlist" class="mobile-cta-btn cta-waitlist" onclick={closeMobile}>
+            <a
+              href="#waitlist"
+              class="mobile-cta-btn cta-waitlist"
+              onclick={closeMobile}
+              data-umami-event="mobilenav-waitlist-click"
+            >
               Join Waitlist
             </a>
           {/if}

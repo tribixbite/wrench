@@ -5,6 +5,7 @@
   import BackLink from '$lib/components/app/BackLink.svelte';
   import { extractErrorMessage } from '$lib/utils';
   import { HIDE_DETAIL_BAY } from '$lib/features';
+  import { track } from '$lib/analytics';
 
   type BayType = 'flat' | 'detail' | 'hoist';
   type BayInfo = { id: number; type: BayType; label: string };
@@ -164,10 +165,21 @@
       bookingId = json.bookingId;
       lastReceipt = { amountCents: json.amountCents ?? 0, cardSaved: !!json.savedCardId };
       bookingState = 'success';
+      track('booking-confirmed', {
+        bayType: selectedBayType,
+        hours: selectedHours,
+        priceCents: json.amountCents ?? 0,
+        savedNewCard: !!json.savedCardId
+      });
       void fetchUpcoming();
     } catch (e: unknown) {
       bookingError = e instanceof Error ? e.message : 'Booking failed';
       bookingState = 'error';
+      track('booking-payment-failed', {
+        bayType: selectedBayType,
+        hours: selectedHours,
+        message: bookingError
+      });
     }
   }
 
@@ -211,6 +223,7 @@
         ? `Cancelled. ${formatPrice(refunded)} refunded to your card.`
         : 'Cancelled.';
       cancelTargetId = null;
+      track('booking-cancelled', { refundedCents: refunded });
       await fetchUpcoming();
       // Auto-clear toast (user can dismiss manually too)
       if (cancelToastTimer) clearTimeout(cancelToastTimer);

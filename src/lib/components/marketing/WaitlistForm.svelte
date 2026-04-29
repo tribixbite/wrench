@@ -1,5 +1,6 @@
 <script lang="ts">
   import { CheckCircle, AlertCircle, Loader } from 'lucide-svelte';
+  import { track } from '$lib/analytics';
 
   interface Props {
     compact?: boolean;
@@ -33,9 +34,11 @@
         message = data.message ?? "You're on the list! We'll be in touch soon.";
         email = '';
         name = '';
+        track('waitlist-submitted', { compact });
       } else {
         status = 'error';
         message = data.error ?? 'Something went wrong. Please try again.';
+        track('waitlist-error', { statusCode: res.status });
       }
     } catch {
       status = 'error';
