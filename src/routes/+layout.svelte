@@ -3,6 +3,7 @@
   import Header from '$lib/components/layout/Header.svelte';
   import Footer from '$lib/components/layout/Footer.svelte';
   import StructuredData from '$lib/components/layout/StructuredData.svelte';
+  import Analytics from '$lib/components/layout/Analytics.svelte';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
   import { watchSystemPreference } from '$lib/stores/theme';
@@ -25,6 +26,7 @@
 </script>
 
 <StructuredData />
+<Analytics />
 <a href="#main-content" class="skip-link">Skip to content</a>
 {#if !hideChrome}
   <Header user={data.user} />

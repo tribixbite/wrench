@@ -167,6 +167,24 @@ save. Auto-redeploys. Then delete the old key on Resend.
 **Session secret**: Railway → Variables → `SESSION_SECRET` → generate a new
 random string (32+ chars) → save. ⚠️ **This logs out every active session.**
 
+## View site analytics
+
+Traffic and visitor data live in our self-hosted **Umami** instance — a
+sibling service in the same Railway project. Cookie-less, GDPR-friendly,
+no consent banner needed.
+
+1. Open the Umami URL set in Railway as the umami service's domain
+   (currently `https://umami-production-f110.up.railway.app/`)
+2. Log in (admin account credentials are in the team password vault — **NOT
+   the default `admin`/`umami`**, that was rotated on first login)
+3. The **Wrench Club** website dashboard shows pageviews, sessions, top
+   pages, referrers, devices, countries, and bounce rate
+
+**To stop sending analytics** (e.g. GDPR request, debugging): Railway →
+production → Variables → blank out `PUBLIC_UMAMI_SRC` or
+`PUBLIC_UMAMI_WEBSITE_ID` → redeploy. The `<script>` tag stops rendering
+when either var is empty.
+
 ## When something breaks
 
 | Symptom | First check |
