@@ -8,13 +8,13 @@
       icon: Monitor,
       title: 'Clubhouse Access',
       description: 'The Wrench Club clubhouse features racing simulators, an automotive library, a lounge, and a community of people who love cars as much as you do.',
-      bullets: ['Full-motion racing simulators', 'Automotive reference library', 'Lounge and common area', 'TV and streaming for race day']
+      bullets: ['High End racing simulators', 'Automotive reference library', 'Lounge and common area', 'TV and streaming for race day']
     },
     {
       icon: Wrench,
       title: 'Full Tool Library',
       description: 'Access to a comprehensive selection of specialty tools, air tools, diagnostic equipment, and hand tools — all organized and maintained by our staff.',
-      bullets: ['Specialty hand tools', 'Air tools (impact, ratchets, cutoffs)', 'OBD diagnostic equipment', 'Torque wrenches, pullers, bearing kits']
+      bullets: ['Specialty hand tools (torque wrenches, pullers, and more)', 'Air tools (Impacts, cutoffs, air hammers)', 'OBD diagnostic equipment', 'Hand tools (wrenches, pliers, ect)']
     },
     {
       icon: Tag,
@@ -26,18 +26,18 @@
       icon: Calendar,
       title: 'Events & Community',
       description: 'The club hosts regular events for members — car shows, dyno days, group drives, and meetups with vendors and enthusiast groups from across West Michigan.',
-      bullets: ['Monthly member meetups', 'Annual car show (members + guests)', 'Dyno day events', 'Guest speaker nights']
+      bullets: ['Monthly member meetups', 'Annual car show (members + guests)']
     },
     {
       icon: Car,
-      title: 'Priority Bay Booking',
+      title: 'Service Bay Booking',
       description: 'Members get first access to the scheduling system and priority booking windows — so your favorite bay is there when you need it.',
-      bullets: ['Online booking system', 'Priority reservation windows', 'Bay holds and recurring bookings', 'SMS / email reminders']
+      bullets: ['Online booking system', 'Transparent reservation windows', 'Bay holds and recurring bookings', 'SMS / email reminders']
     },
     {
       icon: Users,
       title: 'Orientation & Support',
-      description: 'New members complete a facility orientation covering every piece of equipment, safety protocols, and best practices — so you\'re never on your own.',
+      description: 'New members complete a facility orientation covering equipment, safety protocols, and best practices — so you\'re never on your own.',
       bullets: ['Facility orientation session', 'Equipment training', 'Staff available during operating hours', 'Member community for advice']
     }
   ];
@@ -49,10 +49,10 @@
 <div class="page-header">
   <div class="container mx-auto px-6">
     <p class="overline">Membership Benefits</p>
-    <h1 class="page-title font-display">Everything You Need.<br />Nothing You Don't.</h1>
+    <h1 class="page-title font-display">Everything You Need, and More.</h1>
     <p class="page-sub">
       Your Wrench Club membership isn't just a bay rental. It's access to a professional facility,
-      a community of enthusiasts, and every tool you'd ever need — at a rate that makes sense.
+      a community of enthusiasts, and every tool you'd ever need — just $9.95/month.
     </p>
     <a href="#waitlist" class="btn btn-primary btn-lg" style="margin-top: 0.5rem;">
       Join the Waitlist <ArrowRight size={18} />
@@ -93,14 +93,14 @@
     <div class="phil-grid">
       <div>
         <div class="divider"></div>
-        <h2 class="section-title font-display">Working on Your Own Car<br />Shouldn't Require a Trust Fund</h2>
+        <h2 class="section-title font-display">Auto Repair Shouldn't Cost A Fortune.</h2>
         <p class="phil-body">
           Dealer labor rates have never been higher. Professional shops are backed up for weeks.
           And if you don't have your own equipped garage, you're stuck.
         </p>
         <p class="phil-body">
           Wrench Club was built to change that. We give you the space, the tools, and the
-          professional equipment to tackle any job yourself — from a $30 oil change to a
+          professional equipment to tackle any job yourself — from an oil change to a
           full engine rebuild.
         </p>
         <p class="phil-body">
@@ -130,7 +130,6 @@
         <h2 class="section-title font-display">Founding Member Benefits</h2>
         <p style="color: var(--text-secondary); margin-top: 0.75rem; font-size: 1.0625rem; line-height: 1.7;">
           Join the waitlist now and lock in founding member pricing when we open in 2026.
-          First 100 signups receive a discount on their first three months.
         </p>
       </div>
       <div class="form-wrap">

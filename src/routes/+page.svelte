@@ -8,12 +8,12 @@
     {
       icon: Wrench,
       title: 'Full Tool Library',
-      body: 'Comprehensive selection of specialty tools, air tools, diagnostic equipment, and everything you need to tackle any job—right at your workstation.'
+      body: 'Comprehensive selection of hands tools, air tools, specialty tools, diagnostic equipment, and everything you need to tackle your job—right at your workstation.'
     },
     {
       icon: Car,
       title: 'Employee-Operated Hoists',
-      body: 'Professional two-post and drive-on lifts, set up by our staff for every job. Safe, reliable, and zero DIY lift hazards.'
+      body: 'Professional two-post hoist and flat bays, set up by our staff for every job. Safe, reliable and consistent.'
     },
     {
       icon: Shield,
@@ -22,7 +22,7 @@
     },
     {
       icon: Users,
-      title: 'More Than a Shop',
+      title: 'The Clubhouse',
       body: 'Racing simulators, automotive resources, community events, and a clubhouse full of like-minded gearheads who love this stuff as much as you do.'
     }
   ];
@@ -30,31 +30,31 @@
   const uses = [
     { label: 'Routine maintenance', sub: 'Oil changes, fluids, brakes, suspension' },
     { label: 'Vehicle modification', sub: 'Lift kits, exhaust, intakes, and more' },
-    { label: 'Restoration projects', sub: 'Full builds or frame-off restores' },
+    { label: 'Vehicle Diagnostics', sub: 'Professional grade code scanning and repair instruction look up' },
     { label: 'Pre-purchase inspections', sub: "Know exactly what you're buying" },
     ...(HIDE_DETAIL_BAY
       ? []
       : [{ label: 'DIY detailing & washing', sub: 'Proper detail bay with all supplies' }]),
-    { label: "Members-only events", sub: 'Car shows, dyno days, meetups' }
+    { label: "Wheel and Tire", sub: 'Tire and wheel balancing, seasonal tire change overs' }
   ];
 
   const pillars = [
     {
       num: '01',
       title: 'Affordability',
-      body: 'Membership rates comparable to a gym. Get access to the facility, clubhouse, and scheduling system—bay time billed separately at transparent hourly rates.'
+      body: 'Membership rates comparable to a gym. Get access to the clubhouse, repair library, parts discounts, and rentable service bays billed separately at transparent rates.'
     },
     {
       num: '02',
       title: 'Flexibility',
       body: HIDE_DETAIL_BAY
-        ? 'Hoist bays and flat bays. Book by the hour, the day, or the week. Schedule exactly what you need, when you need it, from your phone.'
-        : 'Hoist bays, flat bays, detail bay. Book by the hour, the day, or the week. Schedule exactly what you need, when you need it, from your phone.'
+        ? 'Hoist bays and flat bays. Book by the hour, the day, or the week. Schedule exactly what you need, when you need it, from your phone. If your timeline makes an unexpected detour, our team can help you find a time to finish your project.'
+        : 'Hoist bays, flat bays, detail bay. Book by the hour, the day, or the week. Schedule exactly what you need, when you need it, from your phone. If your timeline makes an unexpected detour, our team can help you find a time to finish your project.'
     },
     {
       num: '03',
       title: 'Community',
-      body: 'A downtown Grand Rapids clubhouse for enthusiasts of every level—from first oil changes to full engine swaps. Dyno days, car shows, member meetups, and more.'
+      body: 'A downtown Grand Rapids clubhouse for enthusiasts to connect with one another. From racing simulator challenges, to motorsport watch parties, car shows and more.'
     }
   ];
 </script>
@@ -124,7 +124,7 @@
       <h2 class="section-title font-display">What Is Wrench Club?</h2>
       <p class="section-sub">
         A fully-equipped do-it-yourself garage club. Members book a hoist or flat bay with access
-        to their own tool cart and workstation — everything you need, nothing you don't.
+        to their own tool cart and workstation — everything you need to tackle almost any job.
       </p>
     </div>
 
@@ -147,10 +147,10 @@
   <div class="container mx-auto px-6">
     <div class="section-header">
       <div class="divider"></div>
-      <h2 class="section-title font-display">What Can I Use My Membership For?</h2>
+      <h2 class="section-title font-display">What Can I Do in the Shop?</h2>
       <p class="section-sub">
         Wrench Club is built for everyday car owners and serious enthusiasts alike.
-        Your membership unlocks the whole facility.
+        2 post hoists and flat bays available to rent by the hour.
       </p>
     </div>
 
@@ -200,7 +200,7 @@
           loading="lazy"
         />
         <div class="club-img-badge">
-          <span class="font-mono-spec">522 Stocking Ave NW</span><br />
+          <span class="font-mono-spec">522 Stocking Ave</span><br />
           <span>Grand Rapids, MI</span>
         </div>
       </div>

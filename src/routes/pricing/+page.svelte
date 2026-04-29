@@ -12,15 +12,16 @@
       description: 'Ground-level workspace with your own tool cart. Perfect for maintenance, inspections, and jobs that don\'t require a lift.',
       features: [
         'Personal tool cart and workstation',
-        'Air tool hookup',
+        'Hand and air tools',
+        'Access to specialty tools',
         'Drain pan and spill containment',
         'Bright overhead lighting',
-        'Wi-Fi + Bluetooth speaker'
+        'WiFi and smart TV'
       ],
       rate: '$25',
       rateUnit: '/ hour',
       rateSecondary: 'Book 1–8 hours · 3 bays available',
-      rateNote: 'Hourly · Linear pricing'
+      rateNote: 'Hourly / Daily / Weekly'
     },
     {
       id: 'detail',
@@ -37,7 +38,7 @@
       rate: '$30',
       rateUnit: '/ hour',
       rateSecondary: 'Book 1–8 hours · 1 bay available',
-      rateNote: 'Hourly · Linear pricing'
+      rateNote: 'Hourly / Daily / Weekly'
     },
     {
       id: 'hoist',
@@ -45,16 +46,19 @@
       name: 'Hoist Bay',
       description: 'Two-post lift or drive-on hoist, set up and operated by our staff. The right tool for any underbody work.',
       features: [
-        'Employee-operated 2-post or drive-on lift',
-        'Staff assist for safe vehicle positioning',
-        'Full tool access and air supply',
-        'Brake cleaner, shop rags included',
-        'Priority booking for members'
+        'Staff operated 2 post hoist',
+        'Safe and secure vehicle positioning',
+        'Hand and air tools',
+        'Access to specialty tools',
+        'Personal tool cart and workstation',
+        'Drain pan and spill containment',
+        'Bright overhead lighting',
+        'WiFi and smart TV'
       ],
       rate: '$35',
       rateUnit: '/ hour',
       rateSecondary: 'Book 1–8 hours · 2 bays available',
-      rateNote: 'Hourly · Linear pricing',
+      rateNote: 'Hourly / Daily / Weekly',
       featured: true
     }
   ];
@@ -65,13 +69,12 @@
     : allBayTypes;
 
   const membershipPerks = [
-    'Access to clubhouse and lounge',
-    'Online scheduling system',
-    'Tool library access (all specialty tools)',
-    'Priority bay booking',
+    'Access to the clubhouse',
+    'High end racing simulators',
     'Negotiated parts discounts',
+    'Repair library, and individual computer stations',
+    'Scheduling system for service bay rentals',
     'Member-only events and car shows',
-    'Racing simulator access',
     'Community forum and resources'
   ];
 </script>
@@ -104,8 +107,46 @@
   </div>
 </div>
 
-<!-- Bay Types -->
+<!-- Membership -->
 <section class="section" style="background: var(--bg-secondary)">
+  <div class="container mx-auto px-6">
+    <div class="membership-wrap">
+      <div class="membership-copy">
+        <div class="divider"></div>
+        <h2 class="section-title font-display">Membership</h2>
+        <p style="color: var(--text-secondary); font-size: 1.0625rem; line-height: 1.7; margin-bottom: 1.5rem;">
+          Membership rates comparable to a gym. Get access to the clubhouse, repair library,
+          parts discounts, and rentable service bays billed separately at transparent rates.
+        </p>
+        <p style="color: var(--text-secondary); font-size: 1.0625rem; line-height: 1.7; margin-bottom: 2rem;">
+          Think of it like a gym membership — the base membership gets you in the door. Bay time
+          is your "personal trainer session" billed on top.
+        </p>
+
+        <div class="membership-rate">
+          <span class="rate-label font-mono-spec">Monthly Membership</span>
+          <span class="rate-value-lg font-display">$9.95<span class="rate-unit">/ month</span></span>
+          <span class="rate-note"> </span>
+        </div>
+      </div>
+
+      <div class="membership-perks">
+        <h3 class="perks-title">Included with Membership</h3>
+        <ul class="perks-list">
+          {#each membershipPerks as perk}
+            <li>
+              <CheckCircle2 size={16} style="color: var(--accent);" />
+              {perk}
+            </li>
+          {/each}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Bay Types -->
+<section class="section" style="background: var(--bg-primary)">
   <div class="container mx-auto px-6">
     <div class="section-header">
       <div class="divider"></div>
@@ -149,51 +190,12 @@
   </div>
 </section>
 
-<!-- Membership -->
-<section class="section" style="background: var(--bg-primary)">
-  <div class="container mx-auto px-6">
-    <div class="membership-wrap">
-      <div class="membership-copy">
-        <div class="divider"></div>
-        <h2 class="section-title font-display">Membership</h2>
-        <p style="color: var(--text-secondary); font-size: 1.0625rem; line-height: 1.7; margin-bottom: 1.5rem;">
-          Your monthly membership covers access to the entire facility, clubhouse, and scheduling
-          system. Bay time is booked and billed separately at the per-use rates above — you pay
-          only for the hours you use.
-        </p>
-        <p style="color: var(--text-secondary); font-size: 1.0625rem; line-height: 1.7; margin-bottom: 2rem;">
-          Think of it like a gym membership — the base membership gets you in the door. Bay time
-          is your "personal training session" billed on top.
-        </p>
-
-        <div class="membership-rate">
-          <span class="rate-label font-mono-spec">Monthly Membership</span>
-          <span class="rate-value-lg font-display">$9.95<span class="rate-unit">/ month</span></span>
-          <span class="rate-note">One-time $9.95 activation fee. Cancel anytime.</span>
-        </div>
-      </div>
-
-      <div class="membership-perks">
-        <h3 class="perks-title">Included with Membership</h3>
-        <ul class="perks-list">
-          {#each membershipPerks as perk}
-            <li>
-              <CheckCircle2 size={16} style="color: var(--accent);" />
-              {perk}
-            </li>
-          {/each}
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- Booking Options -->
 <section class="section" style="background: var(--bg-secondary)">
   <div class="container mx-auto px-6">
     <div class="section-header">
       <div class="divider"></div>
-      <h2 class="section-title font-display">How Booking Works</h2>
+      <h2 class="section-title font-display">Flexible Booking Options</h2>
     </div>
 
     <div class="booking-grid">

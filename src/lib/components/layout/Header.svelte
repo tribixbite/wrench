@@ -161,7 +161,7 @@
 
   /* ── Desktop nav ──────────────────────────────────────── */
   .nav-link {
-    color: var(--text-secondary);
+    color: #a0a0a0;
     text-decoration: none;
     position: relative;
   }
@@ -177,25 +177,25 @@
     transition: width 0.2s ease;
   }
 
-  .nav-link:hover { color: var(--text-primary); }
+  .nav-link:hover { color: #f0f0f0; }
 
   .nav-link:hover::after,
   .nav-link.active::after { width: 100%; }
 
-  .nav-link.active { color: var(--text-primary); }
+  .nav-link.active { color: #f0f0f0; }
 
   /* ── Hamburger ──────────────────────────────────────── */
   .hamburger-btn {
     padding: 0.5rem;
     border-radius: 0.375rem;
-    color: var(--text-secondary);
+    color: #a0a0a0;
     transition: all 0.2s;
     border: none;
     background: transparent;
     cursor: pointer;
   }
 
-  .hamburger-btn:hover { color: var(--text-primary); }
+  .hamburger-btn:hover { color: #f0f0f0; }
 
   .hamburger-btn.open {
     color: var(--accent-text);
@@ -249,7 +249,7 @@
   .link-label {
     font-size: 1.125rem;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: #a0a0a0;
     transition: all 0.2s;
     font-family: 'Barlow Condensed', sans-serif;
     text-transform: uppercase;
@@ -258,7 +258,7 @@
 
   .mobile-nav-link:hover .link-label,
   .mobile-nav-link.active .link-label {
-    color: var(--text-primary);
+    color: #f0f0f0;
   }
 
   .mobile-nav-link:hover :global(.link-chevron),
@@ -333,23 +333,23 @@
   .cta-login {
     background: transparent;
     border: 1px solid var(--border);
-    color: var(--text-secondary);
+    color: #a0a0a0;
   }
 
   .cta-login:hover {
     border-color: var(--accent);
-    color: var(--text-primary);
+    color: #f0f0f0;
   }
 
   .cta-dashboard {
     background: transparent;
     border: 1px solid var(--border);
-    color: var(--text-secondary);
+    color: #a0a0a0;
   }
 
   .cta-dashboard:hover {
     border-color: var(--accent);
-    color: var(--text-primary);
+    color: #f0f0f0;
   }
 
   .cta-waitlist {

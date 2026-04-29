@@ -53,7 +53,7 @@
 </script>
 
 <svelte:head>
-  <SEO title="Shop" description="Wrench Club merch and bay credits. Tees, hats, patches, stickers, and gift cards — sold through our Square store." />
+  <SEO title="Shop" description="Wrench Club merch and bay credits. Tees, hats, patches, stickers, and gift cards." />
   <meta name="description" content="Wrench Club merch — tees, hats, and bay credits. Powered by Square POS." />
 </svelte:head>
 
@@ -63,8 +63,7 @@
     <p class="overline">Wrench Club Store</p>
     <h1 class="page-title font-display">Gear for<br />Gearheads</h1>
     <p class="page-sub">
-      Tees, hats, and bay credits — all sold through our Square store.
-      Buy online or pick up at the shop.
+      Merch, bay credits, and more — buy online or pick up at the shop.
     </p>
   </div>
 </div>
