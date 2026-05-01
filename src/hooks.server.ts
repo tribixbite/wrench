@@ -1,8 +1,10 @@
 import type { Handle } from '@sveltejs/kit';
 import { lucia } from '$lib/server/auth';
-import { initDb } from '$lib/server/db';
+import { db, initDb } from '$lib/server/db';
+import { users } from '$lib/server/schema';
+import { eq } from 'drizzle-orm';
 import { authLimiter, verifyResendLimiter } from '$lib/server/rate-limit';
-import { isAllowedEmail } from '$lib/server/auth-allowlist';
+import { isAllowedEmail, isAdminEmail } from '$lib/server/auth-allowlist';
 
 // Initialize DB tables on first server request
 let dbReady = false;
@@ -87,13 +89,24 @@ export const handle: Handle = async ({ event, resolve }) => {
       event.locals.session = null;
       event.locals.user = null;
     } else {
+      // Auto-promote: any email in AUTH_ADMIN_EMAILS that's currently below
+      // 'admin' gets bumped here, idempotently. Avoids manual DB surgery to
+      // grant admin to founders/operators — set the env var, they get admin
+      // on their next request. The branch only fires when the role is stale,
+      // so it's a no-op once promoted.
+      let effectiveRole = user?.role ?? 'member';
+      if (user && isAdminEmail(user.email) && effectiveRole !== 'admin') {
+        await db.update(users).set({ role: 'admin' }).where(eq(users.id, user.id));
+        effectiveRole = 'admin';
+      }
+
       event.locals.session = session;
       event.locals.user = user
         ? {
             id: user.id,
             email: user.email,
             name: user.name,
-            role: user.role as 'member' | 'admin' | 'staff',
+            role: effectiveRole as 'member' | 'admin' | 'staff',
             squareCustomerId: user.squareCustomerId,
             emailVerified: user.emailVerified
           }

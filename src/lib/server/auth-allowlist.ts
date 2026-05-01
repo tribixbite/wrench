@@ -24,3 +24,17 @@ export function isAllowlistActive(): boolean {
 /** Public-facing message shown when registration is denied. */
 export const ALLOWLIST_DENY_MSG =
   "Member sign-ups aren't open yet. Join the waitlist below and we'll email you when accounts go live.";
+
+/**
+ * Auto-promote list. Any email in AUTH_ADMIN_EMAILS gets `role='admin'` —
+ * applied at signup time and on every authenticated request via the auth
+ * hook, so existing 'member' rows get upgraded automatically without DB
+ * surgery. Comma-separated, case-insensitive. Empty/unset → nobody auto-
+ * promoted.
+ */
+export function isAdminEmail(email: string): boolean {
+  const list = (env.AUTH_ADMIN_EMAILS ?? '').trim();
+  if (!list) return false;
+  const allowed = list.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+  return allowed.includes(email.trim().toLowerCase());
+}

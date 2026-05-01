@@ -124,6 +124,22 @@ behind the scenes.
 The Detail Bay reappears on /pricing, the bay-type picker, marketing copy,
 and the waitlist email template the moment the redeploy finishes.
 
+## Grant someone admin
+
+Edit `AUTH_ADMIN_EMAILS` on Railway → production → Variables. Comma-separated
+list of emails — anyone in there gets `role='admin'` on signup AND on their
+next authenticated request, so existing 'member' accounts upgrade
+automatically the moment they hit any page.
+
+```
+AUTH_ADMIN_EMAILS=info@wrenchclub.com,willstone@gmail.com
+```
+
+To revoke admin: remove the email from `AUTH_ADMIN_EMAILS` AND manually
+downgrade their `users.role` row in the DB — the auto-promote logic upgrades
+but doesn't downgrade (so a removed entry doesn't accidentally demote a
+seeded admin).
+
 ## View the waitlist
 
 1. Log into https://wrenchclub.com/app/admin as an admin account

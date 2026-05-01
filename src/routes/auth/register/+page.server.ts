@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 import { Argon2id } from 'oslo/password';
 import { nanoid } from 'nanoid';
 import { sendEmailVerification, sendRegistrationWelcome } from '$lib/server/email';
-import { isAllowedEmail, ALLOWLIST_DENY_MSG } from '$lib/server/auth-allowlist';
+import { isAllowedEmail, isAdminEmail, ALLOWLIST_DENY_MSG } from '$lib/server/auth-allowlist';
 import { env as privateEnv } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 
@@ -82,7 +82,7 @@ export const actions: Actions = {
       email,
       name,
       passwordHash,
-      role: 'member',
+      role: isAdminEmail(email) ? 'admin' : 'member',
       squareCustomerId
     });
 
