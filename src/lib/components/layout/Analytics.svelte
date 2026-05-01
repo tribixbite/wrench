@@ -25,16 +25,25 @@
    *   PUBLIC_UMAMI_HOST_URL    = /_a                              (beacons go here)
    *   PUBLIC_UMAMI_WEBSITE_ID  = <uuid from Umami "Settings → Websites">
    *   PUBLIC_UMAMI_DOMAINS     = wrenchclub.com                   (optional, CSV)
-   *   PUBLIC_BUILD_ID          = ${{RAILWAY_GIT_COMMIT_SHA}}      (optional, segmenting)
+   *
+   * `buildId` (short git SHA) comes in as a prop from the root layout's
+   * server load — Railway injects RAILWAY_GIT_COMMIT_SHA at deploy time,
+   * which is server-only. Plumbing it as page data is the SvelteKit
+   * idiomatic way to surface a private env var on a client-rendered tag.
    */
 
   import { env } from '$env/dynamic/public';
+
+  interface Props {
+    /** Short git SHA tagged on every event for per-deploy segmentation. */
+    buildId?: string;
+  }
+  const { buildId = '' }: Props = $props();
 
   const src        = env.PUBLIC_UMAMI_SRC;
   const websiteId  = env.PUBLIC_UMAMI_WEBSITE_ID;
   const hostUrl    = env.PUBLIC_UMAMI_HOST_URL;
   const domains    = env.PUBLIC_UMAMI_DOMAINS;
-  const buildId    = env.PUBLIC_BUILD_ID;
   const enabled    = !!(src && websiteId);
 
   // Defense-in-depth: scrub quote/angle chars before interpolating into the

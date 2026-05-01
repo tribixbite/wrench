@@ -9,7 +9,7 @@
   import { watchSystemPreference } from '$lib/stores/theme';
 
   interface Props {
-    data: { user: App.Locals['user'] };
+    data: { user: App.Locals['user']; buildId: string };
     children: import('svelte').Snippet;
   }
 
@@ -26,7 +26,7 @@
 </script>
 
 <StructuredData />
-<Analytics />
+<Analytics buildId={data.buildId} />
 <a href="#main-content" class="skip-link">Skip to content</a>
 {#if !hideChrome}
   <Header user={data.user} />
