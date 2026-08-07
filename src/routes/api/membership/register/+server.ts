@@ -112,6 +112,21 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     }
 
     // Step 3: Subscription
+    // RELATIVE-priced plans (catalog-connected) require phases[].orderTemplateId.
+    // Fetch the plan variation to extract it; fall back gracefully for STATIC plans.
+    let subscriptionPhases: Array<{ ordinal: bigint; orderTemplateId: string }> | undefined;
+    try {
+      const { objects } = await square.catalog.batchGet({ objectIds: [planVariationId!] });
+      const rawPhases = (objects?.[0] as any)?.subscriptionPlanVariationData?.phases as unknown[] | undefined;
+      if (rawPhases?.length) {
+        subscriptionPhases = (rawPhases as any[])
+          .filter((p) => p.orderTemplateId)
+          .map((p, i) => ({ ordinal: BigInt(p.ordinal ?? i), orderTemplateId: p.orderTemplateId as string }));
+      }
+    } catch (phaseErr) {
+      console.warn('[register] Could not fetch plan phases — proceeding without:', phaseErr);
+    }
+
     try {
       const { subscription } = await square.subscriptions.create({
         idempotencyKey: nanoid(),
@@ -119,7 +134,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
         planVariationId: planVariationId!,
         customerId: squareCustomerId,
         cardId,
-        source: { name: 'Wrench Club Website' }
+        source: { name: 'Wrench Club Website' },
+        phases: subscriptionPhases?.length ? subscriptionPhases : undefined
       });
       if (!subscription?.id) throw new Error('No subscription ID in response');
     } catch (e: any) {
