@@ -130,14 +130,17 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       if (res.ok) {
         const data = await res.json() as any;
         const rawPhases: any[] = data?.object?.subscription_plan_variation_data?.phases ?? [];
+        // Log the full raw phase objects so we can see every field Square returns
+        console.log('[register] raw phases from Square:', JSON.stringify(rawPhases));
         if (rawPhases.length) {
           subscriptionPhases = rawPhases.map((p: any, i: number) => ({
             ordinal: BigInt(p.ordinal ?? i),
             ...(p.uid ? { planPhaseUid: p.uid } : {}),
-            ...(p.pricing?.order_template_id ? { orderTemplateId: p.pricing.order_template_id } : {})
+            ...(p.pricing?.order_template_id ? { orderTemplateId: p.pricing.order_template_id } : {}),
+            ...(p.order_template_id ? { orderTemplateId: p.order_template_id } : {})
           }));
         }
-        console.log('[register] plan phases (raw):', JSON.stringify(subscriptionPhases, (_k, v) =>
+        console.log('[register] mapped phases:', JSON.stringify(subscriptionPhases, (_k, v) =>
           typeof v === 'bigint' ? v.toString() : v
         ));
       } else {
