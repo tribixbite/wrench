@@ -34,14 +34,18 @@ export async function registerUser(
   email: string,
   password = 'TestPass123!'
 ): Promise<boolean> {
+  // Registration now requires Square payment (step 2). In CI the TEST_SECRET
+  // bypass is used via the API directly; this helper tests step 1 UI only and
+  // checks that the payment step appears.
   await page.goto('/auth/register');
-  await page.fill('[name="name"]', 'QA Test User');
+  await page.fill('[name="firstName"]', 'QA');
+  await page.fill('[name="lastName"]', 'User');
   await page.fill('[name="email"]', email);
   await page.fill('[name="password"]', password);
   await page.check('[name="waiver"]');
   await page.click('[type="submit"]');
 
-  // Poll — SvelteKit enhance does client-side navigation
+  // After step 1, we land on step 2 (payment). That counts as success for UI tests.
   return pollForURL(page, /\/(app\/dashboard|auth\/verify|auth\/login)/, 60_000);
 }
 

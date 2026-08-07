@@ -43,9 +43,10 @@ test.describe('Registration (/auth/register)', () => {
     expect(page.url()).toContain('/auth/register');
   });
 
-  test('password shorter than 8 chars shows server-side error', async ({ page }) => {
+  test('password shorter than 8 chars shows error', async ({ page }) => {
     await page.goto('/auth/register');
-    await page.fill('[name="name"]', 'Short PW');
+    await page.fill('[name="firstName"]', 'Short');
+    await page.fill('[name="lastName"]', 'PW');
     await page.fill('[name="email"]', testEmail('short-pw'));
     await page.evaluate(() => {
       const pw = document.querySelector('[name="password"]') as HTMLInputElement;

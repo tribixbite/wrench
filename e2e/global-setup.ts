@@ -25,69 +25,50 @@ async function globalSetup(config: FullConfig) {
   const context = await browser.newContext({ baseURL, extraHTTPHeaders });
   const page = await context.newPage();
 
-  console.log('[global-setup] Registering:', email);
+  console.log('[global-setup] Registering via API:', email);
 
-  await page.goto('/auth/register');
-  await page.fill('[name="name"]', 'E2E Shared User');
-  await page.fill('[name="email"]', email);
-  await page.fill('[name="password"]', password);
-  await page.check('[name="waiver"]');
-
-  // Click submit and wait for the form action response
-  const [response] = await Promise.all([
-    page.waitForResponse(
-      (res) => res.url().includes('/auth/register') && res.request().method() === 'POST',
-      { timeout: 120_000 }
-    ).catch(() => null),
-    page.click('[type="submit"]'),
-  ]);
-
-  if (response) {
-    console.log('[global-setup] Form response:', response.status());
-
-    // Handle rate limit — wait and retry
-    if (response.status() === 429) {
-      console.log('[global-setup] Rate limited, waiting 60s...');
-      await page.waitForTimeout(60_000);
-      await page.click('[type="submit"]');
-      await page.waitForResponse(
-        (res) => res.url().includes('/auth/register') && res.request().method() === 'POST',
-        { timeout: 120_000 }
-      ).catch(() => null);
+  // Registration now requires Square payment — use the API directly with the
+  // TEST_SECRET bypass so CI doesn't need a real card.
+  const registerRes = await context.request.post(`${baseURL}/api/membership/register`, {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(testSecret ? { 'X-Test-Key': testSecret } : {})
+    },
+    data: {
+      firstName: 'E2E',
+      lastName: 'User',
+      email,
+      password,
+      waiver: true,
+      cardNonce: 'bypass'
     }
-  } else {
-    console.log('[global-setup] No form response within 120s');
+  });
+
+  console.log('[global-setup] Register response:', registerRes.status());
+
+  if (!registerRes.ok()) {
+    const body = await registerRes.text().catch(() => '');
+    console.log('[global-setup] Register failed:', body);
+    // Save empty state — authenticated tests will be skipped via loadSharedCredentials()
+    mkdirSync('e2e/.auth', { recursive: true });
+    await context.storageState({ path: STORAGE_STATE_PATH });
+    writeFileSync(CREDENTIALS_PATH, JSON.stringify({ email, password }));
+    await browser.close();
+    return;
   }
 
-  // Poll URL for navigation after form response
+  // Session cookie is now set on the context — navigate to dashboard to confirm
+  await page.goto('/app/dashboard');
   const deadline = Date.now() + 30_000;
   while (Date.now() < deadline) {
     const url = page.url();
-    if (url.includes('/app/dashboard') || url.includes('/auth/verify') || url.includes('/auth/login')) {
-      console.log('[global-setup] Redirected to:', url);
+    if (url.includes('/app/dashboard') || url.includes('/auth/verify')) {
+      console.log('[global-setup] Authenticated at:', url);
       break;
     }
     await page.waitForTimeout(500);
   }
-
-  // If still on register page, check for errors and retry
-  if (page.url().includes('/auth/register')) {
-    const errorText = await page.locator('[role="alert"], .form-error').textContent().catch(() => null);
-    console.log('[global-setup] Still on register page. Error:', errorText ?? 'none');
-  }
-
-  // If we ended up at /auth/login (duplicate email), log in
-  if (page.url().includes('/auth/login')) {
-    console.log('[global-setup] Logging in...');
-    await page.fill('[name="email"]', email);
-    await page.fill('[name="password"]', password);
-    await page.click('[type="submit"]');
-    const loginDeadline = Date.now() + 30_000;
-    while (Date.now() < loginDeadline) {
-      if (page.url().includes('/app/dashboard') || page.url().includes('/auth/verify')) break;
-      await page.waitForTimeout(500);
-    }
-  }
+  console.log('[global-setup] Final URL:', page.url());
 
   console.log('[global-setup] Final URL:', page.url());
 
