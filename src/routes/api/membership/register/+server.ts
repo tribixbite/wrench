@@ -111,45 +111,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       return json({ error: 'Could not save your card. Please check the details and try again.' }, { status: 400 });
     }
 
-    // Step 3: Subscription
-    // RELATIVE-priced plans require orderTemplateId on each phase. The Square SDK
-    // serializer strips this field (not in SubscriptionPricing schema), so we
-    // fetch the catalog object via raw HTTP to get the unstripped JSON.
-    let subscriptionPhases: Array<{ ordinal: bigint; planPhaseUid?: string; orderTemplateId?: string }> | undefined;
-    try {
-      const isProduction = env.SQUARE_ENVIRONMENT !== 'sandbox';
-      const token = isProduction
-        ? (env.PROD_ACCESS_TOKEN ?? env.SQUARE_ACCESS_TOKEN ?? '')
-        : (env.SANDBOX_SECRET ?? env.SQUARE_ACCESS_TOKEN ?? '');
-      const base = isProduction
-        ? 'https://connect.squareup.com'
-        : 'https://connect.squareupsandbox.com';
-      const res = await fetch(`${base}/v2/catalog/object/${planVariationId}`, {
-        headers: { Authorization: `Bearer ${token}`, 'Square-Version': '2025-05-21' }
-      });
-      if (res.ok) {
-        const data = await res.json() as any;
-        const rawPhases: any[] = data?.object?.subscription_plan_variation_data?.phases ?? [];
-        // Log the full raw phase objects so we can see every field Square returns
-        console.log('[register] raw phases from Square:', JSON.stringify(rawPhases));
-        if (rawPhases.length) {
-          subscriptionPhases = rawPhases.map((p: any, i: number) => ({
-            ordinal: BigInt(p.ordinal ?? i),
-            ...(p.uid ? { planPhaseUid: p.uid } : {}),
-            ...(p.pricing?.order_template_id ? { orderTemplateId: p.pricing.order_template_id } : {}),
-            ...(p.order_template_id ? { orderTemplateId: p.order_template_id } : {})
-          }));
-        }
-        console.log('[register] mapped phases:', JSON.stringify(subscriptionPhases, (_k, v) =>
-          typeof v === 'bigint' ? v.toString() : v
-        ));
-      } else {
-        console.warn('[register] catalog raw fetch failed:', res.status, await res.text().catch(() => ''));
-      }
-    } catch (phaseErr) {
-      console.warn('[register] Could not fetch plan phases:', phaseErr);
-    }
-
+    // Step 3: Subscription (STATIC pricing plan — no phases override needed)
     try {
       const { subscription } = await square.subscriptions.create({
         idempotencyKey: nanoid(),
@@ -157,8 +119,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
         planVariationId: planVariationId!,
         customerId: squareCustomerId,
         cardId,
-        source: { name: 'Wrench Club Website' },
-        phases: subscriptionPhases?.length ? subscriptionPhases : undefined
+        source: { name: 'Wrench Club Website' }
       });
       if (!subscription?.id) throw new Error('No subscription ID in response');
     } catch (e: any) {
