@@ -112,17 +112,24 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     }
 
     // Step 3: Subscription
-    // RELATIVE-priced plans (catalog-connected) require phases[].orderTemplateId.
-    // Fetch the plan variation to extract it; fall back gracefully for STATIC plans.
-    let subscriptionPhases: Array<{ ordinal: bigint; orderTemplateId: string }> | undefined;
+    // RELATIVE-priced plans (catalog-connected) require a non-empty phases array.
+    // Fetch the plan variation's phase UIDs so Square can resolve the order template.
+    let subscriptionPhases: Array<{ ordinal: bigint; planPhaseUid?: string }> | undefined;
     try {
-      const { objects } = await square.catalog.batchGet({ objectIds: [planVariationId!] });
-      const rawPhases = (objects?.[0] as any)?.subscriptionPlanVariationData?.phases as unknown[] | undefined;
-      if (rawPhases?.length) {
-        subscriptionPhases = (rawPhases as any[])
-          .filter((p) => p.orderTemplateId)
-          .map((p, i) => ({ ordinal: BigInt(p.ordinal ?? i), orderTemplateId: p.orderTemplateId as string }));
+      const { objects } = await square.catalog.batchGet({
+        objectIds: [planVariationId!],
+        includeRelatedObjects: false
+      });
+      const catalogPhases = (objects?.[0] as any)?.subscriptionPlanVariationData?.phases as Array<{ uid?: string | null; ordinal?: bigint | number | null }> | undefined;
+      if (catalogPhases?.length) {
+        subscriptionPhases = catalogPhases.map((p, i) => ({
+          ordinal: BigInt(p.ordinal ?? i),
+          ...(p.uid ? { planPhaseUid: p.uid } : {})
+        }));
       }
+      console.log('[register] plan phases:', JSON.stringify(subscriptionPhases, (_k, v) =>
+        typeof v === 'bigint' ? v.toString() : v
+      ));
     } catch (phaseErr) {
       console.warn('[register] Could not fetch plan phases — proceeding without:', phaseErr);
     }
