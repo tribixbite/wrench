@@ -40,9 +40,9 @@ export interface BayInfo {
 const PROD_BAYS: BayInfo[] = [
   { id: 1, type: 'hoist',  label: 'Hoist Bay 1',  teamMemberId: 'TMiRX0Ke9zvPD41I' },
   { id: 2, type: 'hoist',  label: 'Hoist Bay 2',  teamMemberId: 'TMhyzQEsQZVnr-2r' },
-  { id: 3, type: 'flat',   label: 'Flat Bay 1',   teamMemberId: 'TMZIBkR6K6ehUYn1' },
-  { id: 4, type: 'flat',   label: 'Flat Bay 2',   teamMemberId: 'TMy4YFOq7XXbx3dS' },
-  { id: 5, type: 'flat',   label: 'Flat Bay 3',   teamMemberId: 'TMSsGetF72Ze9Qwf' },
+  { id: 3, type: 'hoist',  label: 'Hoist Bay 3',  teamMemberId: 'TMDkfTPfhGhv9ofs' },
+  { id: 4, type: 'hoist',  label: 'Hoist Bay 4',  teamMemberId: 'TMf1LcV_igqIIut4' },
+  { id: 5, type: 'flat',   label: 'Flat Bay 1',   teamMemberId: 'TMZIBkR6K6ehUYn1' },
   { id: 6, type: 'detail', label: 'Detail Bay 1', teamMemberId: 'TMuuAI_z-nwKx_cZ' }
 ];
 
@@ -148,6 +148,22 @@ export async function createSquareCustomer(opts: {
     referenceId: 'wrench-web'
   });
   return result.customer;
+}
+
+/**
+ * Update an existing Square customer's name and/or email.
+ */
+export async function updateSquareCustomer(customerId: string, opts: {
+  givenName?: string;
+  familyName?: string;
+  email?: string;
+}) {
+  await square.customers.update({
+    customerId,
+    givenName: opts.givenName ?? undefined,
+    familyName: opts.familyName ?? undefined,
+    emailAddress: opts.email ?? undefined
+  });
 }
 
 /**

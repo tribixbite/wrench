@@ -45,6 +45,16 @@ export const sessions = sqliteTable('sessions', {
   expiresAt: integer('expires_at').notNull()
 });
 
+/** Member vehicles — stored locally since Square has no multi-vehicle concept */
+export const vehicles = sqliteTable('vehicles', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  year: text('year').notNull(),
+  make: text('make').notNull(),
+  model: text('model').notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`)
+});
+
 /** Pre-launch waitlist — migrates to Square Marketing API at launch */
 export const waitlist = sqliteTable('waitlist', {
   id: text('id').primaryKey(), // nanoid
@@ -58,3 +68,4 @@ export type Session = typeof sessions.$inferSelect;
 export type WaitlistEntry = typeof waitlist.$inferSelect;
 export type EmailVerificationToken = typeof emailVerificationTokens.$inferSelect;
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type Vehicle = typeof vehicles.$inferSelect;

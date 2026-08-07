@@ -10,29 +10,45 @@ import { sendEmailVerification, sendRegistrationWelcome } from '$lib/server/emai
 import { isAllowedEmail, isAdminEmail, ALLOWLIST_DENY_MSG } from '$lib/server/auth-allowlist';
 import { env as privateEnv } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
+import { LOCATION_ID } from '$lib/server/square';
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (locals.user) throw redirect(302, '/app/dashboard');
+
+  const isProduction = privateEnv.SQUARE_ENVIRONMENT !== 'sandbox';
+  const squareAppId = isProduction
+    ? (privateEnv.PROD_APP_ID ?? '')
+    : (privateEnv.SANDBOX_APP_ID ?? '');
+
+  return {
+    square: {
+      appId: squareAppId,
+      locationId: LOCATION_ID,
+      environment: isProduction ? 'production' : 'sandbox'
+    }
+  };
 };
 
 export const actions: Actions = {
   default: async ({ request, cookies }) => {
     const data = await request.formData();
-    const name = data.get('name')?.toString().trim() ?? '';
+    const firstName = data.get('firstName')?.toString().trim() ?? '';
+    const lastName = data.get('lastName')?.toString().trim() ?? '';
+    const name = [firstName, lastName].filter(Boolean).join(' ');
     const email = data.get('email')?.toString().trim().toLowerCase() ?? '';
     const password = data.get('password')?.toString() ?? '';
     const waiver = data.get('waiver') === 'on';
 
-    if (!name || !email || !password) {
-      return fail(400, { error: 'All fields are required.', fields: { name, email } });
+    if (!firstName || !lastName || !email || !password) {
+      return fail(400, { error: 'All fields are required.', fields: { firstName, lastName, email } });
     }
 
     if (password.length < 8) {
-      return fail(400, { error: 'Password must be at least 8 characters.', fields: { name, email } });
+      return fail(400, { error: 'Password must be at least 8 characters.', fields: { firstName, lastName, email } });
     }
 
     if (!waiver) {
-      return fail(400, { error: 'You must accept the facility waiver to continue.', fields: { name, email } });
+      return fail(400, { error: 'You must accept the facility waiver to continue.', fields: { firstName, lastName, email } });
     }
 
     // Pre-launch gate — refuse registrations not on the allowlist.
@@ -60,12 +76,11 @@ export const actions: Actions = {
     let squareCustomerId: string | null = null;
     try {
       const { createSquareCustomer } = await import('$lib/server/square');
-      const nameParts = name.trim().split(' ');
       const sqCustomer = await Promise.race([
         createSquareCustomer({
           email,
-          givenName: nameParts[0],
-          familyName: nameParts.slice(1).join(' ') || undefined
+          givenName: firstName,
+          familyName: lastName || undefined
         }),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('Square customer create timed out after 8s')), 8000)

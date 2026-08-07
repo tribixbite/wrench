@@ -359,6 +359,8 @@ Everything else — bays, reservations, orders, catalog, subscriptions — lives
 - [x] Email verification flow on registration
 - [ ] Bay reservations: calendar UI → Square Bookings API → payment
   - Blocked: Square Bookings must be enabled in Developer portal for the sandbox app
+- [ ] Add Square Team Member IDs for Hoist Bay 3 and Hoist Bay 4 in `src/lib/server/square.ts` (currently placeholder values — create TMs in Square Dashboard first)
+- [ ] Member profile editing: update name, email, and password from /app/profile
 - [ ] In-app merch store: Square Catalog → cart → Square Web Payments checkout → webhooks
 
 ### Phase 3: Growth (ongoing)

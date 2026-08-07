@@ -132,6 +132,10 @@
       </div>
     </div>
 
+      <a href="/Member%20Code%20of%20Conduct.pdf" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm conduct-link">
+        View Member Code of Conduct (PDF)
+      </a>
+
     <div class="right-col">
       <!-- Live bay grid -->
       <BayGrid />
@@ -381,5 +385,10 @@
   .btn-sm {
     padding: 0.5rem 1.25rem;
     font-size: 0.875rem;
+  }
+
+  .conduct-link {
+    display: inline-flex;
+    align-self: flex-start;
   }
 </style>

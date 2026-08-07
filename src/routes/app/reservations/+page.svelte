@@ -155,7 +155,8 @@
           hours: selectedHours,
           startAt: selectedSlot.startAt,
           sourceId: payload.sourceId,
-          saveCard: payload.saveCard
+          saveCard: payload.saveCard,
+          note: workNote() || undefined
         })
       });
       if (!res.ok) {
@@ -280,6 +281,31 @@
   const BAY_TYPES: BayType[] = HIDE_DETAIL_BAY
     ? ['flat', 'hoist']
     : ['flat', 'detail', 'hoist'];
+
+  const WORK_OPTIONS = [
+    'Oil change',
+    'Brakes',
+    'Suspension',
+    'Tires / Wheels',
+    'Engine work',
+    'Exhaust',
+    'Electrical',
+  ] as const;
+
+  let selectedWork = $state<Set<string>>(new Set());
+  let otherWork = $state('');
+
+  function toggleWork(item: string) {
+    const next = new Set(selectedWork);
+    next.has(item) ? next.delete(item) : next.add(item);
+    selectedWork = next;
+  }
+
+  let workNote = $derived(() => {
+    const parts = [...selectedWork];
+    if (otherWork.trim()) parts.push(`Other: ${otherWork.trim()}`);
+    return parts.join(', ');
+  });
 </script>
 
 <svelte:head>
@@ -497,6 +523,27 @@
           <div class="confirm-row"><span>Price</span><strong>{formatPrice(estimatedPrice * 100)}</strong></div>
 
           {#if bookingState === 'confirming'}
+            <div class="work-section">
+              <p class="work-label">What are you working on? <span class="work-optional">(optional)</span></p>
+              <div class="work-grid">
+                {#each WORK_OPTIONS as item}
+                  <button
+                    type="button"
+                    class="work-chip"
+                    class:selected={selectedWork.has(item)}
+                    onclick={() => toggleWork(item)}
+                  >
+                    {item}
+                  </button>
+                {/each}
+              </div>
+              <input
+                type="text"
+                class="input other-input"
+                placeholder="Other (describe what you're working on)"
+                bind:value={otherWork}
+              />
+            </div>
             <div class="confirm-actions">
               <button class="btn btn-primary" onclick={() => { bookingState = 'paying'; }}>
                 Continue to Payment
@@ -743,6 +790,56 @@
   .confirm-row:last-of-type { border-bottom: none; margin-bottom: 0.75rem; }
   .confirm-row span { color: var(--text-muted); }
   .confirm-row strong { color: var(--text-primary); font-weight: 600; }
+
+  .work-section {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .work-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+  }
+
+  .work-optional {
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+
+  .work-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .work-chip {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .work-chip:hover { border-color: var(--accent); color: var(--text-primary); }
+
+  .work-chip.selected {
+    background: var(--accent-muted);
+    border-color: var(--accent);
+    color: var(--text-primary);
+  }
+
+  .other-input {
+    width: 100%;
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
 
   .confirm-actions { display: flex; gap: 0.625rem; margin-top: 1rem; }
 
