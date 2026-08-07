@@ -88,6 +88,16 @@ async function ensureTables() {
       expires_at INTEGER NOT NULL
     )
   `);
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS vehicles (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id),
+      year TEXT NOT NULL,
+      make TEXT NOT NULL,
+      model TEXT NOT NULL,
+      created_at INTEGER DEFAULT (unixepoch())
+    )
+  `);
 }
 
 // Run once on module load — safe to call repeatedly (IF NOT EXISTS)
