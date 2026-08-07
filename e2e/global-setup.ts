@@ -39,7 +39,6 @@ async function globalSetup(config: FullConfig) {
       lastName: 'User',
       email,
       password,
-      waiver: true,
       cardNonce: 'bypass'
     }
   });

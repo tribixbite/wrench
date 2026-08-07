@@ -38,7 +38,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
   const lastName   = String(body.lastName   ?? '').trim();
   const email      = String(body.email      ?? '').trim().toLowerCase();
   const password   = String(body.password   ?? '');
-  const waiver     = Boolean(body.waiver);
   const cardNonce  = String(body.cardNonce  ?? '').trim();
 
   if (!firstName || !lastName || !email || !password || !cardNonce) {
@@ -49,9 +48,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
   }
   if (password.length < 8) {
     return json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
-  }
-  if (!waiver) {
-    return json({ error: 'You must accept the facility waiver to continue.' }, { status: 400 });
   }
   if (!isAllowedEmail(email)) {
     return json({ error: ALLOWLIST_DENY_MSG }, { status: 403 });

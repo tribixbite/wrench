@@ -34,18 +34,27 @@ export async function registerUser(
   email: string,
   password = 'TestPass123!'
 ): Promise<boolean> {
-  // Registration now requires Square payment (step 2). In CI the TEST_SECRET
-  // bypass is used via the API directly; this helper tests step 1 UI only and
-  // checks that the payment step appears.
+  // Registration requires Square payment. In CI we bypass via the API using
+  // TEST_SECRET so no card is needed. The session cookie is set on the context.
+  const testSecret = process.env.TEST_SECRET;
+  if (testSecret) {
+    const baseURL = process.env.TEST_BASE_URL ?? 'https://thewrench.club';
+    const res = await page.request.post(`${baseURL}/api/membership/register`, {
+      headers: { 'Content-Type': 'application/json', 'X-Test-Key': testSecret },
+      data: { firstName: 'QA', lastName: 'User', email, password, cardNonce: 'bypass' }
+    });
+    if (!res.ok()) return false;
+    await page.goto('/app/dashboard');
+    return pollForURL(page, /\/(app\/dashboard|auth\/verify|auth\/login)/, 30_000);
+  }
+
+  // Local dev: UI flow (step 1 only — step 2 requires a real card)
   await page.goto('/auth/register');
   await page.fill('[name="firstName"]', 'QA');
   await page.fill('[name="lastName"]', 'User');
   await page.fill('[name="email"]', email);
   await page.fill('[name="password"]', password);
-  await page.check('[name="waiver"]');
   await page.click('[type="submit"]');
-
-  // After step 1, we land on step 2 (payment). That counts as success for UI tests.
   return pollForURL(page, /\/(app\/dashboard|auth\/verify|auth\/login)/, 60_000);
 }
 

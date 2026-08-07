@@ -37,7 +37,6 @@ export const actions: Actions = {
     const name = [firstName, lastName].filter(Boolean).join(' ');
     const email = data.get('email')?.toString().trim().toLowerCase() ?? '';
     const password = data.get('password')?.toString() ?? '';
-    const waiver = data.get('waiver') === 'on';
 
     if (!firstName || !lastName || !email || !password) {
       return fail(400, { error: 'All fields are required.', fields: { firstName, lastName, email } });
@@ -45,10 +44,6 @@ export const actions: Actions = {
 
     if (password.length < 8) {
       return fail(400, { error: 'Password must be at least 8 characters.', fields: { firstName, lastName, email } });
-    }
-
-    if (!waiver) {
-      return fail(400, { error: 'You must accept the facility waiver to continue.', fields: { firstName, lastName, email } });
     }
 
     // Pre-launch gate — refuse registrations not on the allowlist.

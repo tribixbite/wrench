@@ -55,7 +55,6 @@ test.describe('Registration (/auth/register)', () => {
       }
     });
     await page.fill('[name="password"]', '123');
-    await page.check('[name="waiver"]');
     await page.keyboard.press('Enter');
 
     await page.waitForTimeout(2000);

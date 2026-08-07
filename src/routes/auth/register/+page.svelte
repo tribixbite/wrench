@@ -19,7 +19,6 @@
   let lastName    = $state('');
   let email       = $state('');
   let password    = $state('');
-  let waiver      = $state(false);
   let showPassword = $state(false);
   let step1Error  = $state('');
 
@@ -78,9 +77,6 @@
     if (password.length < 8) {
       step1Error = 'Password must be at least 8 characters.'; return;
     }
-    if (!waiver) {
-      step1Error = 'You must accept the facility waiver to continue.'; return;
-    }
     step = 2;
     setTimeout(() => void initCard(), 50); // init after DOM renders
   }
@@ -115,7 +111,6 @@
           lastName: lastName.trim(),
           email: email.trim().toLowerCase(),
           password,
-          waiver,
           cardNonce: result.token
         })
       });
@@ -193,11 +188,6 @@
           </div>
           <p id="password-hint" class="field-hint">Minimum 8 characters</p>
         </div>
-
-        <label class="waiver-label">
-          <input type="checkbox" bind:checked={waiver} required />
-          <span>I agree to Wrench Club's facility waiver and safety orientation requirements</span>
-        </label>
 
         <button type="submit" class="btn btn-primary w-full">
           Continue to Payment
@@ -381,22 +371,6 @@
   }
 
   .password-toggle:hover { color: var(--text-secondary); }
-
-  .waiver-label {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-    cursor: pointer;
-    line-height: 1.5;
-  }
-
-  .waiver-label input {
-    margin-top: 2px;
-    accent-color: var(--accent);
-    flex-shrink: 0;
-  }
 
   .w-full { width: 100%; margin-top: 0.25rem; }
 
