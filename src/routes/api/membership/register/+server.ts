@@ -112,26 +112,39 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     }
 
     // Step 3: Subscription
-    // RELATIVE-priced plans (catalog-connected) require a non-empty phases array.
-    // Fetch the plan variation's phase UIDs so Square can resolve the order template.
-    let subscriptionPhases: Array<{ ordinal: bigint; planPhaseUid?: string }> | undefined;
+    // RELATIVE-priced plans require orderTemplateId on each phase. The Square SDK
+    // serializer strips this field (not in SubscriptionPricing schema), so we
+    // fetch the catalog object via raw HTTP to get the unstripped JSON.
+    let subscriptionPhases: Array<{ ordinal: bigint; planPhaseUid?: string; orderTemplateId?: string }> | undefined;
     try {
-      const { objects } = await square.catalog.batchGet({
-        objectIds: [planVariationId!],
-        includeRelatedObjects: false
+      const isProduction = env.SQUARE_ENVIRONMENT !== 'sandbox';
+      const token = isProduction
+        ? (env.PROD_ACCESS_TOKEN ?? env.SQUARE_ACCESS_TOKEN ?? '')
+        : (env.SANDBOX_SECRET ?? env.SQUARE_ACCESS_TOKEN ?? '');
+      const base = isProduction
+        ? 'https://connect.squareup.com'
+        : 'https://connect.squareupsandbox.com';
+      const res = await fetch(`${base}/v2/catalog/object/${planVariationId}`, {
+        headers: { Authorization: `Bearer ${token}`, 'Square-Version': '2025-05-21' }
       });
-      const catalogPhases = (objects?.[0] as any)?.subscriptionPlanVariationData?.phases as Array<{ uid?: string | null; ordinal?: bigint | number | null }> | undefined;
-      if (catalogPhases?.length) {
-        subscriptionPhases = catalogPhases.map((p, i) => ({
-          ordinal: BigInt(p.ordinal ?? i),
-          ...(p.uid ? { planPhaseUid: p.uid } : {})
-        }));
+      if (res.ok) {
+        const data = await res.json() as any;
+        const rawPhases: any[] = data?.object?.subscription_plan_variation_data?.phases ?? [];
+        if (rawPhases.length) {
+          subscriptionPhases = rawPhases.map((p: any, i: number) => ({
+            ordinal: BigInt(p.ordinal ?? i),
+            ...(p.uid ? { planPhaseUid: p.uid } : {}),
+            ...(p.pricing?.order_template_id ? { orderTemplateId: p.pricing.order_template_id } : {})
+          }));
+        }
+        console.log('[register] plan phases (raw):', JSON.stringify(subscriptionPhases, (_k, v) =>
+          typeof v === 'bigint' ? v.toString() : v
+        ));
+      } else {
+        console.warn('[register] catalog raw fetch failed:', res.status, await res.text().catch(() => ''));
       }
-      console.log('[register] plan phases:', JSON.stringify(subscriptionPhases, (_k, v) =>
-        typeof v === 'bigint' ? v.toString() : v
-      ));
     } catch (phaseErr) {
-      console.warn('[register] Could not fetch plan phases — proceeding without:', phaseErr);
+      console.warn('[register] Could not fetch plan phases:', phaseErr);
     }
 
     try {
