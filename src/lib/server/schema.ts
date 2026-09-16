@@ -63,9 +63,36 @@ export const waitlist = sqliteTable('waitlist', {
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`)
 });
 
+/** Media articles — newsletters, press coverage, announcements */
+export const mediaArticles = sqliteTable('media_articles', {
+  id: text('id').primaryKey(), // nanoid
+  slug: text('slug').notNull().unique(),
+  title: text('title').notNull(),
+  /** ISO date string YYYY-MM-DD — display date, not necessarily created_at */
+  date: text('date').notNull(),
+  /** 'newsletter' | 'press' | 'announcement' */
+  category: text('category').notNull(),
+  /** Publisher name shown on the card e.g. "Wrench Club" or "MLive" */
+  source: text('source').notNull(),
+  /** 1–3 sentence excerpt shown on the media index card; optional for newsletter type */
+  summary: text('summary').notNull().default(''),
+  /** External URL for 'link' type; empty string for 'newsletter' type */
+  url: text('url').notNull().default(''),
+  /** Optional cover image path relative to /static (e.g. "/assets/bmw.jpg") */
+  image: text('image'),
+  /** 1 = visible on the public /media page; 0 = draft */
+  published: integer('published').notNull().default(1),
+  /** 'link' = external URL article | 'newsletter' = full body written in admin */
+  articleType: text('article_type').notNull().default('link'),
+  /** Full HTML body for newsletter type — supports inline images and rich formatting */
+  body: text('body'),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`)
+});
+
 export type User = typeof users.$inferSelect;
 export type Session = typeof sessions.$inferSelect;
 export type WaitlistEntry = typeof waitlist.$inferSelect;
 export type EmailVerificationToken = typeof emailVerificationTokens.$inferSelect;
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type Vehicle = typeof vehicles.$inferSelect;
+export type MediaArticle = typeof mediaArticles.$inferSelect;

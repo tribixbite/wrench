@@ -14,6 +14,7 @@
  * are rolled back (card disabled, customer deleted) before returning an error.
  */
 import { json } from '@sveltejs/kit';
+import { dev } from '$app/environment';
 import type { RequestHandler } from './$types';
 import { db } from '$lib/server/db';
 import { users, emailVerificationTokens } from '$lib/server/schema';
@@ -53,10 +54,10 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
     return json({ error: ALLOWLIST_DENY_MSG }, { status: 403 });
   }
 
-  // CI test bypass — skip Square payment when TEST_SECRET header matches env var.
-  // TEST_SECRET is never set in Railway production, so real users always pay.
+  // CI/dev test bypass — skip Square payment when TEST_SECRET header matches env var.
+  // Gated behind `dev` so this branch is dead code in production builds.
   const testSecret = env.TEST_SECRET;
-  const isTestBypass = !!testSecret && request.headers.get('x-test-key') === testSecret;
+  const isTestBypass = dev && !!testSecret && testSecret.length >= 16 && request.headers.get('x-test-key') === testSecret;
 
   const planVariationId = env.SQUARE_MEMBERSHIP_PLAN_VARIATION_ID;
   if (!planVariationId && !isTestBypass) {

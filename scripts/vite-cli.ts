@@ -13,6 +13,14 @@
 const cmd = process.argv[2] ?? 'dev';
 
 if (cmd === 'dev') {
+  // Delete .svelte-kit/types before Vite loads so the SvelteKit plugin always
+  // starts from a clean slate. On Windows + Bun, the plugin's internal `rm`
+  // of route_meta_data.json fails with EFAULT when the directory already
+  // exists, leaving types in a broken state. Deleting it here, outside the
+  // Vite plugin context, avoids that bug entirely.
+  const { rmSync } = await import('fs');
+  try { rmSync('.svelte-kit/types', { recursive: true, force: true }); } catch {}
+
   const { createServer } = await import('vite');
   const server = await createServer({
     configFile: './vite.config.ts',

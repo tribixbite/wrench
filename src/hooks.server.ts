@@ -3,22 +3,27 @@ import { lucia } from '$lib/server/auth';
 import { db, initDb } from '$lib/server/db';
 import { users } from '$lib/server/schema';
 import { eq } from 'drizzle-orm';
-import { authLimiter, verifyResendLimiter } from '$lib/server/rate-limit';
+import { authLimiter, verifyResendLimiter, membershipLimiter, waitlistLimiter } from '$lib/server/rate-limit';
+import { dev } from '$app/environment';
 import { isAllowedEmail, isAdminEmail } from '$lib/server/auth-allowlist';
+import { env } from '$env/dynamic/private';
 
 // Initialize DB tables on first server request
 let dbReady = false;
 const dbInit = initDb().then(() => { dbReady = true; }).catch(console.error);
 
 /**
- * Auth endpoints that are subject to rate limiting.
+ * Endpoints subject to rate limiting.
  * Keyed by pathname → which limiter to apply.
  */
-const RATE_LIMITED: Record<string, 'auth' | 'resend'> = {
+const RATE_LIMITED: Record<string, 'auth' | 'resend' | 'membership' | 'waitlist'> = {
   '/auth/login': 'auth',
   '/auth/register': 'auth',
   '/auth/forgot-password': 'auth',
-  '/api/resend-verification': 'resend'
+  '/api/resend-verification': 'resend',
+  '/api/membership/subscribe': 'membership',
+  '/api/membership/register': 'membership',
+  '/api/waitlist': 'waitlist'
 };
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -29,20 +34,23 @@ export const handle: Handle = async ({ event, resolve }) => {
   // Bypass with X-Test-Key header matching TEST_SECRET env var (for e2e testing only)
   const limiterKey = RATE_LIMITED[event.url.pathname];
   if (limiterKey && event.request.method === 'POST') {
-    const testSecret = process.env.TEST_SECRET;
+    const testSecret = env.TEST_SECRET;
     const testKey = event.request.headers.get('x-test-key');
-    // Only allow bypass if TEST_SECRET is set (non-empty) and matches the header.
-    // TEST_SECRET should NOT be set in production — only in CI/dev environments.
-    const bypassRateLimit = !!(testSecret && testSecret.length >= 16 && testKey === testSecret);
+    // Only allow bypass in dev/CI — never in production builds.
+    const bypassRateLimit = dev && !!(testSecret && testSecret.length >= 16 && testKey === testSecret);
 
     if (!bypassRateLimit) {
-      const ip =
-        event.request.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
-        event.getClientAddress();
+      // Use the platform-verified client address — not X-Forwarded-For, which
+      // can be spoofed by the client to rotate IPs and bypass the rate limiter.
+      const ip = event.getClientAddress();
       const limited =
         limiterKey === 'resend'
           ? verifyResendLimiter.isLimited(ip)
-          : authLimiter.isLimited(ip);
+          : limiterKey === 'membership'
+            ? membershipLimiter.isLimited(ip)
+            : limiterKey === 'waitlist'
+              ? waitlistLimiter.isLimited(ip)
+              : authLimiter.isLimited(ip);
       if (limited) {
         return new Response(JSON.stringify({ error: 'Too many requests — try again later' }), {
           status: 429,
@@ -120,6 +128,37 @@ export const handle: Handle = async ({ event, resolve }) => {
   if (event.url.pathname.startsWith('/_app/')) {
     response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
   }
+
+  // Security headers — applied to every response
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  // HSTS: browsers ignore this on plain HTTP (dev), so it's safe to set unconditionally
+  response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+
+  // Content Security Policy
+  // 'unsafe-inline' for scripts/styles is required by SvelteKit SSR hydration.
+  // Square CDN domains are required by the Web Payments SDK (script load + card iframe).
+  // Note: the Swagger UI at /api/docs loads from unpkg.com and will break under this CSP.
+  // That endpoint is dev-only; self-host swagger-ui-dist to fix it if needed.
+  const squareCdn = 'https://web.squarecdn.com https://sandbox.web.squarecdn.com';
+  const squareFrame = 'https://pci-connect.squareup.com https://pci-connect.squareupsandbox.com';
+  response.headers.set(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      `script-src 'self' 'unsafe-inline' ${squareCdn}`,
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      "font-src 'self'",
+      "connect-src 'self'",
+      `frame-src ${squareFrame}`,
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'"
+    ].join('; ')
+  );
 
   return response;
 };

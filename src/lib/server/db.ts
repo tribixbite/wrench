@@ -98,6 +98,30 @@ async function ensureTables() {
       created_at INTEGER DEFAULT (unixepoch())
     )
   `);
+  await client.execute(`
+    CREATE TABLE IF NOT EXISTS media_articles (
+      id TEXT PRIMARY KEY,
+      slug TEXT NOT NULL UNIQUE,
+      title TEXT NOT NULL,
+      date TEXT NOT NULL,
+      category TEXT NOT NULL,
+      source TEXT NOT NULL,
+      summary TEXT NOT NULL DEFAULT '',
+      url TEXT NOT NULL DEFAULT '',
+      image TEXT,
+      published INTEGER NOT NULL DEFAULT 1,
+      article_type TEXT NOT NULL DEFAULT 'link',
+      body TEXT,
+      created_at INTEGER DEFAULT (unixepoch())
+    )
+  `);
+  // Backfill: add article_type and body to existing media_articles tables
+  try {
+    await client.execute(`ALTER TABLE media_articles ADD COLUMN article_type TEXT NOT NULL DEFAULT 'link'`);
+  } catch { /* column already exists */ }
+  try {
+    await client.execute(`ALTER TABLE media_articles ADD COLUMN body TEXT`);
+  } catch { /* column already exists */ }
 }
 
 // Run once on module load — safe to call repeatedly (IF NOT EXISTS)

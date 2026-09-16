@@ -10,7 +10,13 @@
     { href: '/pricing', label: 'Pricing' },
     { href: '/membership', label: 'Membership' },
     { href: '/about', label: 'About' },
-    { href: '/store', label: 'Shop' }
+    { href: '/store', label: 'Shop' },
+    { href: '/media', label: 'Media' }
+  ];
+
+  const legalLinks = [
+    { href: '/privacy', label: 'Privacy Policy' },
+    { href: '/terms', label: 'Terms of Service' }
   ];
 </script>
 
@@ -100,13 +106,21 @@
 
   <!-- Bottom bar -->
   <div class="footer-bottom">
-    <div class="container mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+    <div class="container mx-auto px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
       <p class="text-xs" style="color: var(--text-muted)">
         © {currentYear} Wrench Club, LLC. All rights reserved.
       </p>
-      <p class="text-xs" style="color: var(--text-muted)">
-        Built for gearheads, by gearheads — Grand Rapids, MI
-      </p>
+      <nav class="flex items-center gap-4">
+        {#each legalLinks as link}
+          <a
+            href={link.href}
+            class="text-xs hover:text-white transition-colors"
+            style="color: var(--text-muted)"
+          >
+            {link.label}
+          </a>
+        {/each}
+      </nav>
     </div>
   </div>
 

@@ -6,6 +6,15 @@ import { BAYS, BAY_HOURLY_RATE, BAY_TYPE_LABEL, LOCATION_ID } from '$lib/server/
 export const load: PageServerLoad = async ({ locals }) => {
   if (!locals.user) throw redirect(303, '/auth/login?next=/app/reservations');
 
+  // Membership required to access bay reservations
+  const { getMembershipStatus } = await import('$lib/server/square');
+  const membershipStatus = locals.user.squareCustomerId
+    ? await getMembershipStatus(locals.user.squareCustomerId)
+    : 'inactive';
+  if (membershipStatus === 'inactive') {
+    throw redirect(303, '/app/dashboard?membership=required');
+  }
+
   // App ID + environment are needed by the Web Payments SDK on the client.
   // The App ID is a public identifier (it's literally meant to be in HTML);
   // the access token stays server-side.

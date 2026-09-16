@@ -1,4 +1,5 @@
 import type { RequestHandler } from './$types';
+import { error } from '@sveltejs/kit';
 import { BAYS } from '$lib/server/square';
 
 /**
@@ -8,7 +9,8 @@ import { BAYS } from '$lib/server/square';
  * Phase 2: Wire up to real Square Bookings resources once configured.
  * Phase 1: Returns mock bay statuses.
  */
-export const GET: RequestHandler = async ({ request }) => {
+export const GET: RequestHandler = async ({ request, locals }) => {
+  if (!locals.user) throw error(401, 'Unauthorized');
 
   const encoder = new TextEncoder();
 

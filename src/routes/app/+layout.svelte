@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { LayoutDashboard, CalendarDays, User, LogOut, Wrench, ShieldCheck, MailCheck, X } from 'lucide-svelte';
+  import { LayoutDashboard, CalendarDays, User, LogOut, ShieldCheck, MailCheck, X, List, Newspaper } from 'lucide-svelte';
   import { page } from '$app/stores';
 
   interface Props {
@@ -56,14 +56,27 @@
         </a>
       {/each}
       {#if isAdmin}
+        <div class="sidebar-section">
+          <ShieldCheck size={12} />
+          <span>Admin</span>
+        </div>
         <a
           href="/app/admin"
-          class="sidebar-link admin-link"
-          class:active={$page.url.pathname.startsWith('/app/admin')}
-          aria-current={$page.url.pathname.startsWith('/app/admin') ? 'page' : undefined}
+          class="sidebar-link sidebar-sub"
+          class:active={$page.url.pathname === '/app/admin'}
+          aria-current={$page.url.pathname === '/app/admin' ? 'page' : undefined}
         >
-          <ShieldCheck size={18} />
-          <span>Admin</span>
+          <List size={17} />
+          <span>Waitlist</span>
+        </a>
+        <a
+          href="/app/admin/media"
+          class="sidebar-link sidebar-sub"
+          class:active={$page.url.pathname.startsWith('/app/admin/media')}
+          aria-current={$page.url.pathname.startsWith('/app/admin/media') ? 'page' : undefined}
+        >
+          <Newspaper size={17} />
+          <span>Manage Media</span>
         </a>
       {/if}
     </nav>
@@ -222,12 +235,23 @@
     text-transform: capitalize;
   }
 
-  .admin-link {
-    margin-top: auto;
-    border-top: 1px solid var(--border);
-    border-radius: 0;
-    padding-top: 0.875rem;
+  .sidebar-section {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0.875rem 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent);
     margin-top: 0.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .sidebar-sub {
+    padding-left: 1.25rem;
+    font-size: 0.875rem;
   }
 
   .logout-link {

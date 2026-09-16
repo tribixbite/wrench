@@ -10,23 +10,10 @@ import { sendEmailVerification, sendRegistrationWelcome } from '$lib/server/emai
 import { isAllowedEmail, isAdminEmail, ALLOWLIST_DENY_MSG } from '$lib/server/auth-allowlist';
 import { env as privateEnv } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
-import { LOCATION_ID } from '$lib/server/square';
 
 export const load: PageServerLoad = async ({ locals }) => {
   if (locals.user) throw redirect(302, '/app/dashboard');
-
-  const isProduction = privateEnv.SQUARE_ENVIRONMENT !== 'sandbox';
-  const squareAppId = isProduction
-    ? (privateEnv.PROD_APP_ID ?? '')
-    : (privateEnv.SANDBOX_APP_ID ?? '');
-
-  return {
-    square: {
-      appId: squareAppId,
-      locationId: LOCATION_ID,
-      environment: isProduction ? 'production' : 'sandbox'
-    }
-  };
+  return {};
 };
 
 export const actions: Actions = {

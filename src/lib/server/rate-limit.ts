@@ -66,6 +66,9 @@ export class RateLimiter {
  *
  * Login / register / forgot-password: 10 attempts per IP per 15 minutes.
  * Email verification resend: 5 attempts per IP per minute.
+ * Membership purchase/subscribe: 5 attempts per IP per hour (Square API is billable).
  */
 export const authLimiter = new RateLimiter({ limit: 10, windowMs: 15 * 60_000 });
 export const verifyResendLimiter = new RateLimiter({ limit: 5, windowMs: 60_000 });
+export const membershipLimiter = new RateLimiter({ limit: 5, windowMs: 60 * 60_000 });
+export const waitlistLimiter = new RateLimiter({ limit: 5, windowMs: 60 * 60_000 });

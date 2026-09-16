@@ -174,3 +174,29 @@ export async function addToSquareMarketing(_email: string): Promise<void> {
   // TODO: Implement via Square Marketing API when sandbox is ready
   // For now, waitlist emails are stored only in the local DB
 }
+
+/**
+ * Check whether a Square customer has an active Wrench Club subscription.
+ * Returns 'active' if any subscription for this customer is ACTIVE or PAUSED,
+ * 'inactive' otherwise. Failures default to 'inactive' (non-fatal).
+ */
+export async function getMembershipStatus(
+  squareCustomerId: string
+): Promise<'active' | 'inactive'> {
+  try {
+    const { subscriptions } = await square.subscriptions.search({
+      query: {
+        filter: {
+          customerIds: [squareCustomerId],
+          locationIds: [LOCATION_ID]
+        }
+      }
+    });
+    const active = subscriptions?.some(
+      (s) => s.status === 'ACTIVE' || s.status === 'PAUSED'
+    );
+    return active ? 'active' : 'inactive';
+  } catch {
+    return 'inactive';
+  }
+}

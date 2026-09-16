@@ -15,6 +15,7 @@
   const navLinks = [
     { href: '/pricing', label: 'Pricing' },
     { href: '/membership', label: 'Membership' },
+    { href: '/media', label: 'Media' },
     { href: '/about', label: 'About' },
     { href: '/store', label: 'Shop' }
   ];
@@ -196,8 +197,6 @@
 
   .nav-link:hover::after,
   .nav-link.active::after { width: 100%; }
-
-  .nav-link.active { color: #f0f0f0; }
 
   /* ── Hamburger ──────────────────────────────────────── */
   .hamburger-btn {

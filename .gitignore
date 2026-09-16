@@ -49,3 +49,4 @@ tour-video-raw/
 
 # One-off probe scripts
 sq-probe.ts
+scripts/square-inspect-plan.ts

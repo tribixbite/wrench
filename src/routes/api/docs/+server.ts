@@ -7,8 +7,11 @@
  * The topbar is hidden since branding is handled inline.
  */
 import type { RequestHandler } from './$types';
+import { dev } from '$app/environment';
+import { error } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async () => {
+  if (!dev) throw error(404, 'Not found');
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>

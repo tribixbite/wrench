@@ -1,10 +1,14 @@
 import type { PageServerLoad, Actions } from './$types';
 import { fail } from '@sveltejs/kit';
+import { lucia } from '$lib/server/auth';
 import { db } from '$lib/server/db';
-import { users, vehicles } from '$lib/server/schema';
+import { users, vehicles, emailVerificationTokens } from '$lib/server/schema';
 import { eq, and } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { Argon2id } from 'oslo/password';
+import { sendEmailVerification } from '$lib/server/email';
+import { env as privateEnv } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
 
 export const load: PageServerLoad = async ({ locals }) => {
   const user = locals.user;
@@ -61,7 +65,15 @@ export const actions: Actions = {
     const [existing] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (existing && existing.id !== locals.user.id) return fail(400, { emailError: 'That email is already in use.' });
 
-    await db.update(users).set({ email }).where(eq(users.id, locals.user.id));
+    await db.update(users).set({ email, emailVerified: 0 }).where(eq(users.id, locals.user.id));
+
+    // Send a fresh verification email to the new address
+    const verifyToken = nanoid(32);
+    const expiresAt = Math.floor(Date.now() / 1000) + 60 * 60 * 24;
+    await db.delete(emailVerificationTokens).where(eq(emailVerificationTokens.userId, locals.user.id));
+    await db.insert(emailVerificationTokens).values({ id: nanoid(), userId: locals.user.id, token: verifyToken, expiresAt });
+    const origin = privateEnv.ORIGIN ?? publicEnv.PUBLIC_SITE_URL ?? 'http://localhost:5173';
+    sendEmailVerification({ to: email, name: locals.user.name, verifyUrl: `${origin}/auth/verify/${verifyToken}` }).catch(() => {});
 
     if (locals.user.squareCustomerId) {
       const { updateSquareCustomer } = await import('$lib/server/square');
@@ -71,7 +83,7 @@ export const actions: Actions = {
     return { emailSuccess: true };
   },
 
-  updatePassword: async ({ request, locals }) => {
+  updatePassword: async ({ request, locals, cookies }) => {
     if (!locals.user) return fail(401, { passwordError: 'Not authenticated' });
     const data = await request.formData();
     const current    = data.get('currentPassword')?.toString() ?? '';
@@ -88,6 +100,13 @@ export const actions: Actions = {
 
     const passwordHash = await new Argon2id().hash(newPass);
     await db.update(users).set({ passwordHash }).where(eq(users.id, locals.user.id));
+
+    // Invalidate all sessions so any stolen session cookies are immediately dead,
+    // then issue a fresh one so the current user stays logged in.
+    await lucia.invalidateUserSessions(locals.user.id);
+    const newSession = await lucia.createSession(locals.user.id, {});
+    const cookie = lucia.createSessionCookie(newSession.id);
+    cookies.set(cookie.name, cookie.value, { path: '/', ...cookie.attributes });
 
     return { passwordSuccess: true };
   },

@@ -259,6 +259,45 @@ Merch catalog powered by Square Catalog API:
 
 ---
 
+### Make Public — Go-Live Checklist
+
+Registration is currently **gated** via the `AUTH_ALLOWLIST` env var. Do not clear it until every item below is checked off. Work through this list top-to-bottom before announcing to the waitlist.
+
+#### Production Environment
+- [ ] Switch Square credentials from **sandbox → production** (`SQUARE_ACCESS_TOKEN`, `SQUARE_APP_ID`, `SQUARE_LOCATION_ID`)
+- [ ] Set `SQUARE_WEBHOOK_SECRET` to the production webhook signing key
+- [ ] Set `SESSION_SECRET` to a strong random value (not the default)
+- [ ] Set `ORIGIN` and `PUBLIC_SITE_URL` to the production domain (e.g. `https://thewrench.club`)
+- [ ] Confirm `EMAIL_FROM` domain is verified in Resend and sending works end-to-end
+- [ ] Confirm `DATABASE_URL` points to production Turso (not a local SQLite file)
+- [ ] Set `AUTH_ADMIN_EMAILS` to the full team email list in production
+- [ ] Decide on `PUBLIC_HIDE_DETAIL_BAY` — set `true` if car-wash zoning is still pending, leave blank to show the Detail Bay
+
+#### Content & Legal
+- [ ] All public pages reviewed and copy finalized (Home, Pricing, Membership, About, Store, Media)
+- [ ] Privacy Policy (`/privacy`) accurate and up to date
+- [ ] Terms of Service (`/terms`) accurate and reviewed by counsel if needed
+- [ ] Founder photos and bios approved by each founder
+- [ ] Pricing numbers confirmed with Coleman and reflected in Square catalog
+
+#### Payments & Square
+- [ ] End-to-end membership subscription tested in **production** Square (not sandbox) — subscribe, receive confirmation email, cancel
+- [ ] Bay reservation booking tested in production Square — book, pay, cancel with refund
+- [ ] Square webhook endpoint (`/api/webhooks/square`) verified receiving production events
+- [ ] Merch store items confirmed in production Square catalog with correct prices and inventory
+
+#### Go-Live Gate — Open Registration
+- [ ] Set `AUTH_ALLOWLIST=` (empty) in production env to open registration to the public
+
+  > **How**: In your hosting dashboard (Railway/Vercel), remove or clear the `AUTH_ALLOWLIST` variable. A redeploy is not required — the app reads it dynamically. To re-lock at any time, set it back to a comma-separated email list and the gate goes back up instantly.
+
+#### Post-Launch
+- [ ] Send waitlist announcement email via Square Marketing / Resend
+- [ ] Monitor error logs and Square webhook delivery for the first 24 hours
+- [ ] Confirm Umami analytics is recording sessions on the production domain
+
+---
+
 ## Square Integration Map
 
 | Feature | Square API | Notes |
